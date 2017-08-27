@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,pack.so -o ../../runtime/lua/pack.so CMakeFiles/pack.dir/lpack.c.o 

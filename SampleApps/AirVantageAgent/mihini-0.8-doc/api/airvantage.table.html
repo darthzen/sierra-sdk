@@ -1,0 +1,696 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li>airvantage.table</li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>airvantage.table</code></h1>
+   
+<p>Airvantage objects handling staging database tables, to buffer, consolidate
+and send structured data.</p>
+
+   
+
+<p><a href="##(table)">#table</a> instances should be created with <a href="airvantage.asset.html##(asset).newTable">airvantage.asset#asset.newTable</a>.</p>
+
+<p><strong>NOTE:</strong> The <a href="##(table)">#table</a> API is currently in BETA, and is subject to change in
+the subsequent release.</p>
+
+
+			<h2><a id="#(airvantage.asset)">Type <code>airvantage.asset</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage.asset).newTable">airvantage.asset:newTable(path, columns, storage, sendPolicy, purge)</a></td>
+		<td class="summary">
+<p>Creates and returns a <a href="##(table)">#table</a> instance.</p>
+
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(columnspec)">Type <code>columnspec</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).asfloat">columnspec.asfloat</a></td>
+		<td class="summary">
+<p>boolean to force encoding of doubles as float (default: false).</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).consolidation">columnspec.consolidation</a></td>
+		<td class="summary">
+<p>consolidation method, mandatory for
+ table:<a href="airvantage.table.html##(table).newConsolidation">airvantage.table#table.newConsolidation</a> calls. Possible values are <code>first</code>,
+ <code>last</code>, <code>max</code>, <code>mean</code>, <code>median</code>, <code>middle</code>, <code>min</code>, <code>sum</code>.</p>
+
+<p><strong>Note:</strong> QuasiPeriodic Vector is <strong>not</strong> part of AWT-DA 2 and should not be
+used (it will not be choosen by <code>smallest</code> encoding).</p>
+
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).factor">columnspec.factor</a></td>
+		<td class="summary">
+<p>this is the DeltasVector factor, i.e. the precision to use when
+ serializing floating point numbers. Set it to 1 to round to integer, 0.1 to
+ round all numbers to 1/10 (that is 12.345 will be sent as 12.3). This field
+ is mandatory for <code>deltasvector</code> serialization and optional for
+ <code>smallest</code> (otherwise GCD will be computed, and non-integer numbers will
+ cause fallback to vector).</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).name">columnspec.name</a></td>
+		<td class="summary">
+<p>column name</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).period">columnspec.period</a></td>
+		<td class="summary">
+<p>period for Quasi-periodic vector (number). Mandatory for
+ <code>quasiperiodicvector</code> serialization.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(columnspec).serialization">columnspec.serialization</a></td>
+		<td class="summary">
+<p>serialization method. Possible values are <code>fastest</code>,
+ <code>smallest</code>, <code>list</code>, <code>deltasvector</code>, <code>quasiperiodicvector</code>. Optional,
+ defaults to <code>list</code>.</p>
+
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(table)">Type <code>table</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).consolidate">table:consolidate(dont_reset)</a></td>
+		<td class="summary">
+<p>Consolidates the table content into its consolidation table, and empties it
+unless <code>dont_reset</code> is true.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).newConsolidation">table:newConsolidation(path, columns, storage, consoPolicy, sendPolicy, purge)</a></td>
+		<td class="summary">
+<p>Creates a table where data will be consolidated.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).pushRow">table:pushRow(row)</a></td>
+		<td class="summary">
+<p>Adds a row of data to the table.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).reset">table:reset()</a></td>
+		<td class="summary">
+<p>Empties all content in the table.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).send">table:send(dont_reset)</a></td>
+		<td class="summary">
+<p>Sends the table content to the server and empties it unless dont_reset is true.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).setMaxRows">table:setMaxRows(n)</a></td>
+		<td class="summary">
+<p>Sets the maximum number of rows for a given table.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(airvantage.table)" >Type <code>airvantage.table</code></a></h2>
+	
+			<h2><a id="#(airvantage.asset)" >Type <code>airvantage.asset</code></a></h2>
+				<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(airvantage.asset).newTable" >
+<strong>airvantage.asset:newTable(path, columns, storage, sendPolicy, purge)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates and returns a <a href="##(table)">#table</a> instance.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+(relative to the asset root) where the data will be sent.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> columns </em></code>: 
+list of either <a href="airvantage.table.html##(columnspec)">airvantage.table#columnspec</a> or column names (to
+ use default values).</p>
+
+				</li>
+				<li>
+				
+<p><code><em> storage </em></code>: 
+either "file" or "ram", how the table must be persisted.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sendPolicy </em></code>: 
+name of the policy controlling when the table content is
+ sent to the server.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> purge </em></code>: 
+boolean indicating if existing table (if any) is recreated
+ (<code>true</code>) or reused (<code>false</code>/<code>nil</code>). Recreated means the table will be
+ dropped and then created from scratch (so any data inside table will be
+ lost).</p>
+
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><a href="##(table)">#table</a> to store and consolidate structured data.</p>
+
+				</li>
+				<li>
+				
+<p><em>#nil, #string:</em>
+error message.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+			<h2><a id="#(columnspec)" >Type <code>columnspec</code></a></h2>
+				
+<p>Column descriptors describes a table column with a name, a serialization
+method and some serialization options.</p>
+
+	
+
+<p>Depending on serialization methods, some fields can be either unused,
+optional or mandatory. Whenever a full column descriptor is expected, a
+simple string can be passed: in this case, the default serialization method
+and options will be used.</p>
+
+
+	<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(columnspec).asfloat" >
+<strong>columnspec.asfloat</strong>
+</a>
+</dt>
+<dd>
+	
+<p>boolean to force encoding of doubles as float (default: false).</p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(columnspec).consolidation" >
+<strong>columnspec.consolidation</strong>
+</a>
+</dt>
+<dd>
+	
+<p>consolidation method, mandatory for
+ table:<a href="airvantage.table.html##(table).newConsolidation">airvantage.table#table.newConsolidation</a> calls. Possible values are <code>first</code>,
+ <code>last</code>, <code>max</code>, <code>mean</code>, <code>median</code>, <code>middle</code>, <code>min</code>, <code>sum</code>.</p>
+
+<p><strong>Note:</strong> QuasiPeriodic Vector is <strong>not</strong> part of AWT-DA 2 and should not be
+used (it will not be choosen by <code>smallest</code> encoding).</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(columnspec).factor" >
+<strong>columnspec.factor</strong>
+</a>
+</dt>
+<dd>
+	
+<p>this is the DeltasVector factor, i.e. the precision to use when
+ serializing floating point numbers. Set it to 1 to round to integer, 0.1 to
+ round all numbers to 1/10 (that is 12.345 will be sent as 12.3). This field
+ is mandatory for <code>deltasvector</code> serialization and optional for
+ <code>smallest</code> (otherwise GCD will be computed, and non-integer numbers will
+ cause fallback to vector).</p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+		<em>#string</em>
+<a id="#(columnspec).name" >
+<strong>columnspec.name</strong>
+</a>
+</dt>
+<dd>
+	
+<p>column name</p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(columnspec).period" >
+<strong>columnspec.period</strong>
+</a>
+</dt>
+<dd>
+	
+<p>period for Quasi-periodic vector (number). Mandatory for
+ <code>quasiperiodicvector</code> serialization.</p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(columnspec).serialization" >
+<strong>columnspec.serialization</strong>
+</a>
+</dt>
+<dd>
+	
+<p>serialization method. Possible values are <code>fastest</code>,
+ <code>smallest</code>, <code>list</code>, <code>deltasvector</code>, <code>quasiperiodicvector</code>. Optional,
+ defaults to <code>list</code>.</p>
+
+
+</dd>
+</dl>
+
+			<h2><a id="#(table)" >Type <code>table</code></a></h2>
+				<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(table).consolidate" >
+<strong>table:consolidate(dont_reset)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Consolidates the table content into its consolidation table, and empties it
+unless <code>dont_reset</code> is true.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> dont_reset </em></code>: 
+if true, the table content is not emptied after being
+ consolidated.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).newConsolidation" >
+<strong>table:newConsolidation(path, columns, storage, consoPolicy, sendPolicy, purge)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates a table where data will be consolidated.</p>
+
+	
+
+<p>When a consolidation is declared, a new table (<em>destination</em>), whose column
+names must be a subset of the <em>source</em> table column names, will be created.
+Everytime the source table is consolidated, it will flush everything from
+source and create in a single row  in destination. The values in this row
+depend on <em>consolidation method</em> (average value, minimum, median, ...) which
+is set for each column.</p>
+
+<p>A table can have only one consolidation table (trying to set a consolidation
+twice will result in a error).</p>
+
+<pre><code>--create source and destination tables
+local src = asset:newTable('example', {'timestamp', 'temp'}, 'ram', 'never')
+local dst = src:newConsolidation('consolidated',
+             { timestamp='median', temp='mean' })
+-- fill data into src
+src:pushRow{ timestamp=1, temp=25 }
+src:pushRow{ timestamp=2, temp=28 }
+src:pushRow{ timestamp=3, temp=25 }
+src:consolidate() -- will create the row { timestamp=2, temp=26 }
+dst:send()        -- send only consolidated data to server
+</code></pre>
+
+<p>The data can be consolidated by:</p>
+
+<ul>
+    <li>Calling <a href="##(table).consolidate">table.consolidate</a></li>
+    <li>Setting <a href="##(table).setMaxRows">table.setMaxRows</a> on source table</li>
+    <li>Giving the consoPolicy parameter (see next paragraph)</li>
+</ul>
+
+<p><strong>Note:</strong> a consolidation policy can be set only if the send policy of the
+source table is <code>never</code> (trying to call this method otherwise will result
+in a error). This means that automatic policies are mutually  exclusive for
+sending and consolidating data. However <a href="airvantage.table.html">airvantage.table</a> and
+<a href="airvantage.table.html">airvantage.table</a> methods are always available for more advanced
+use cases.</p>
+
+<p><strong>Note 2:</strong> when the policies of the consolidation of a source and the
+sending of its destination are the same, consolidation is guaranteed to be
+done first. However, they are in different policies and if both are
+triggered at the same time, the behavior is undefined.</p>
+
+<p><strong>Note 3:</strong> in order to be consolidated, data must be numeric, any other
+kind of value will result in inserting <code>null</code> in destination table.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+(relative to the asset root) where the data will be sent.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> columns </em></code>: 
+either a list of <a href="airvantage.table.columnspec.html">airvantage.table.columnspec</a> with <code>consolidation</code>
+ field and the same names as source table which associate each column
+ name (key) to its consolidation method (value), like in example.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> storage </em></code>: 
+either "file" or "ram", how the table must be persisted.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> consoPolicy </em></code>: 
+name of the policy controlling when the <em>source</em> table
+ content is consolidated.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sendPolicy </em></code>: 
+name of the policy controlling when the <em>destination</em> table
+ content is sent to the server.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> purge </em></code>: 
+boolean indicating if existing table (if any) is supposed to be
+ recreated (<code>true</code>) or reused (<code>false</code>/<code>nil</code>). If you want to use this
+ feature in consolidation, you have to recreate tables in the same order as
+ they have been created (that is start by recreate the main source and then
+ its consolidation, and so on). In particular you cannot recreate a
+ destination table as long as its source is still active.</p>
+
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+<p><em>#table:</em>
+where consolidated data will be stored.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).pushRow" >
+<strong>table:pushRow(row)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Adds a row of data to the table.</p>
+
+	
+<p>The table needs to be created with <a href="airvantage.asset.html">airvantage.asset</a>:newTable().</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> row </em></code>: 
+table of key/value pairs,
+ value must be a <a href="##(columnspec)">#columnspec</a>,
+ keys must match creation column names.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+<p><em>#string:</em>
+"ok" on success.</p>
+
+				</li>
+				<li>
+				
+<p><em>#nil, #string:</em>
+error message otherwise.</p>
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).reset" >
+<strong>table:reset()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Empties all content in the table.</p>
+
+
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).send" >
+<strong>table:send(dont_reset)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sends the table content to the server and empties it unless dont_reset is true.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em>#boolean dont_reset </em></code>: 
+if true, the table content is not emptied after being sent.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+<p><em>#nil, #string:</em>
+error message otherwise.</p>
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).setMaxRows" >
+<strong>table:setMaxRows(n)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sets the maximum number of rows for a given table.</p>
+
+	
+<p>Once a table's number of
+rows reaches its max, table content is either sent or consolidated, depending
+on policies: <code>never</code> policies are not triggered. This means that if a table
+is consolidated (that is, its send policy is <code>never</code>), data will be
+consolidated and not sent. Table is emptyed after trigering policy.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> n </em></code>: 
+max number of rows accepted in the table.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

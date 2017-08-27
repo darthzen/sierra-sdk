@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="modbus">Modbus</h1>
+<h1 id="protocol-overview">Protocol overview</h1>
+<p>Modbus Protocol is a messaging structure developed by Modicon in 1979.</p>
+<ul>
+<li>Master-slave/client-server communication between intelligent devices</li>
+<li>De facto standard</li>
+<li>Open</li>
+<li>Most widely used network protocol in the industrial manufacturing environment</li>
+</ul>
+<p>Modbus is a &quot;request response&quot; protocol type</p>
+<h4 id="modbus-application-protocol">MODBUS Application Protocol</h4>
+<p>Key features:</p>
+<ul>
+<li>Application layer messaging protocol (OSI 7)</li>
+<li>Client/Server oriented
+<ul>
+<li>Reserved port TCP/IP 502</li>
+<li>Request/reply protocol offering services specified by function codes</li>
+</ul></li>
+<li>MODBUS PDU (max 253 bytes) = [FuntionCode][Data]</li>
+<li>ADU = PDU + additionnal fields related to specific buses or networks = [Additional adress][FuntionCode][Data][ErrorCheck]
+<ul>
+<li>RS232/RS485 ADU max size = 256 bytes</li>
+<li>TCP/IP ADU max size = 260 bytes</li>
+</ul></li>
+<li>3 types of PDU
+<ul>
+<li>request</li>
+<li>response</li>
+<li>exception response</li>
+</ul></li>
+<li>big-Endian representation (to send value 0x1234, the first byte sent is 0x12 then 0x34)</li>
+</ul>
+<h4 id="modbus-over-serial-line-protocol">MODBUS over serial line protocol</h4>
+<p>Key features:</p>
+<ul>
+<li>Data Link layer protocol (OSI 2)</li>
+<li>Master/Slave type (Master=Client, Slave=Server)</li>
+<li>Request/response oriented
+<ul>
+<li>Slave cannot respond without a request from the master</li>
+<li>Slave cannot communicate with each other</li>
+</ul></li>
+<li>The master initialises only one transaction at a time
+<ul>
+<li>unicast mode, the master adresses a specific slave</li>
+<li>broadcast mode, the master adresses all slaves but no reponse is returned</li>
+</ul></li>
+<li>MODBUS PDU (max 253 bytes) = [FuntionCode][Data]</li>
+<li>MODBUS serial line PDU = (max 256 bytes) = [Additional field][FuntionCode][Data][CRC (or LRC)]</li>
+<li>2 transmission modes
+<ul>
+<li>RTU [SlaveAdress 1 byte][FunctionCode 1 byte][Data max 252 bytes][CRC 2 bytes]</li>
+<li>ASCII [Start 1 char :][Adress 2 chars][Function 2 chars][Data max 2 * 252 chars][LRC 2 chars][End 2 chars CR,LF]</li>
+</ul></li>
+</ul>
+<h4 id="modbus-data-model">MODBUS data model</h4>
+<p>The MODBUS data model is based on a series of tables having distinguishing characteristics.</p>
+<p>The four primary tables are:</p>
+<table>
+<col width="23%" />
+<col width="16%" />
+<col width="16%" />
+<col width="43%" />
+<thead>
+<tr class="header">
+<th align="left">Primary tables</th>
+<th align="left">Object type</th>
+<th align="left">Type of</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Discrete Input</td>
+<td align="left">Single bit</td>
+<td align="left">Read-Only</td>
+<td align="left">can be provided by an I/O system</td>
+</tr>
+<tr class="even">
+<td align="left">Coils</td>
+<td align="left">Single bit</td>
+<td align="left">Read-Write</td>
+<td align="left">can be altered by an apllication program</td>
+</tr>
+<tr class="odd">
+<td align="left">Input Registers</td>
+<td align="left">16-bit word</td>
+<td align="left">Read-Only</td>
+<td align="left">can be provided by an I/O system</td>
+</tr>
+<tr class="even">
+<td align="left">Holding Registers</td>
+<td align="left">16-bit word</td>
+<td align="left">Read-Write</td>
+<td align="left">can be altered by an application program</td>
+</tr>
+</tbody>
+</table>
+<p>The distinction between inputs and outputs, and between bit-addressable and word-adressable data items is conceptual. The tables may be overlaying one another.<br /> For each of the primary tables, the protocol allow individual selection of 65536 data items.<br /> All data handled via modbus (bits or registers) must be allocated in device application memory but physical adress in memory should not be confused with data reference.<br /> Modbus logical reference are unsigned integer starting at 0.</p>
+<h1 id="protocol-implementations">Protocol implementations</h1>
+<p>Supported code functions:</p>
+<ul>
+<li>READ_COILS = (0x01),</li>
+<li>READ_DISCRETE_INPUTS = (0x02),</li>
+<li>READ_HOLDING_REGISTERS = (0x03),</li>
+<li>READ_INPUT_REGISTERS = (0x04),</li>
+<li>WRITE_SINGLE_COIL = (0x05),</li>
+<li>WRITE_SINGLE_REGISTER = (0x06),</li>
+<li>READ_EXCEPTION_STATUS = (0x07),</li>
+<li>DIAGNOSTICS = (0x08),</li>
+<li>GET_COMM_EVENT_COUNTER = (0x0B),</li>
+<li>GET_COMM_EVENT_LOG = (0x0C),</li>
+<li>WRITE_MULTIPLE_COILS = (0x0F),</li>
+<li>WRITE_MULTIPLE_REGISTERS = (0x10),</li>
+<li>REPORT_SLAVE_ID = (0x11),</li>
+<li>READ_FILE_RECORD = (0x14),</li>
+<li>WRITE_FILE_RECORD = (0x15),</li>
+<li>MASK_WRITE_REGISTER = (0x16),</li>
+<li>READWRITE_MULTIPLE_REGISTERS = (0x17),</li>
+<li>READ_FIFO_QUEUE = (0x18),</li>
+<li>ENCAPSULATED_INTERFACE_TRANSPORT = (0x2B),</li>
+</ul>
+<h4 id="lua-implementation">Lua implementation</h4>
+<p>This implementation is synchronous and thread safe.<br /> It requires the 'pack' to manipulate string buffers.</p>
+<h5 id="serial-ascii-and-rtu-mode">Serial ASCII and RTU mode</h5>
+<p>The stack can be initialized with default parametres:</p>
+<ul>
+<li>&quot;m,err=modbus.new()&quot; , partially</li>
+<li>&quot;m,err=modbus.new(nil, {baudrate=19200}) &quot;</li>
+</ul>
+<p>To start a GPIO to signal the transmission and reception phases use &quot;_,err = m:enable_hardware_switch(12,'high')&quot; and &quot;_,err = m:disable_hardware_switch()&quot;.</p>
+<p>Once initialized you have access to the 8 main MODBUS functions:</p>
+<ol style="list-style-type: decimal">
+<li><coilvalues\>,err=m:request('ReadCoils',<slaveid\>,<startingaddress\>,<numberofcoils\>)</li>
+<li><inputvalues\>,err=m:request('ReadDiscreteInputs',<slaveid\>,<startingaddress\>,<numberofinputs\>)</li>
+<li><registervalues\>,err=m:request('ReadHoldingRegisters',<slaveid\>,<startingaddress\>,<numberofregisters\>)</li>
+<li><registervalues\>,err=m:request('ReadInputRegisters',<slaveid\>,<startingaddress\>,<numberofregisters\>)</li>
+<li>_,err=m:request('WriteSingleCoil',<slaveid\>,<startingaddress\>,<coilstate\>)</li>
+<li>_,err=m:request('WriteSingleRegister',<slaveid\>,<startingaddress\>,<registervalue\>)</li>
+<li>_,err=m:request('WriteMultipleCoils',<slaveid\>,<startingaddress\>,<numberofcoils\>,<coilvalues\>)</li>
+<li>_,err=m:request('WriteMultipleRegisters',<slaveid\>,<startingaddress\>,<registervalues\>)</li>
+</ol>
+<p>coil and register values are specified as string buffers.</p>
+<p>The stack is explicitely closed by calling &quot;m:close()&quot;.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">require</span> <span class="st">&#39;modbus&#39;</span>
+<span class="kw">m</span>,<span class="kw">err</span><span class="ot">=</span><span class="kw">modbus</span><span class="ot">.</span>new<span class="ot">(</span><span class="st">&#39;/dev/ttyS0&#39;</span>,<span class="ot">{</span><span class="kw">baudrate</span><span class="ot">=</span><span class="dv">9600</span>,<span class="kw">parity</span><span class="ot">=</span><span class="st">&#39;even&#39;</span>,<span class="kw">timeout</span><span class="ot">=</span><span class="dv">3</span><span class="ot">}</span>,<span class="st">&#39;RTU&#39;</span><span class="ot">)</span>
+<span class="kw">data</span>,<span class="kw">err</span><span class="ot">=</span><span class="kw">m</span>:request<span class="ot">(</span><span class="st">&#39;ReadHoldingRegisters&#39;</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">40</span><span class="ot">)</span>
+<span class="kw">if</span> <span class="kw">err</span> <span class="kw">then</span> <span class="fu">print</span><span class="ot">(</span><span class="kw">err</span><span class="ot">)</span> <span class="kw">end</span>
+<span class="kw">if</span> <span class="kw">data</span> <span class="kw">then</span>
+  <span class="kw">res</span><span class="ot">={</span><span class="kw">string</span><span class="ot">.</span>unpack<span class="ot">(</span><span class="kw">data</span>,<span class="st">&quot;&lt;H40&quot;</span><span class="ot">)}</span>
+  <span class="fu">table.remove</span><span class="ot">(</span><span class="kw">res</span>,<span class="dv">1</span><span class="ot">)</span>
+  p<span class="ot">(</span><span class="kw">res</span><span class="ot">)</span>
+<span class="kw">end</span></code></pre>
+<h3 id="tcp-mode-or-ascii-and-rtu-over-tcp-mode">TCP mode or ASCII and RTU over TCP mode</h3>
+<p>The stack can be initialized with default parametres:</p>
+<ul>
+<li>&quot;m,err=modbus.new()&quot; , partially</li>
+<li>&quot;m,err=modbus.new(nil, 'TCP') &quot;</li>
+<li>or fully &quot;m,err=modbus.new({timeout=5,maxsocket=2},'RTU')&quot;.</li>
+</ul>
+<p>Once initialized you have access to the 8 main MODBUS functions:</p>
+<ol style="list-style-type: decimal">
+<li><coilvalues\>,err=m:request('ReadCoils',<host\>,<port\>,<slaveid\>,<startingaddress\>,<numberofcoils\>)</li>
+<li><inputvalues\>,err=m:request('ReadDiscreteInputs',<host\>,<port\>,<slaveid\>,<startingaddress\>,<numberofinputs\>)</li>
+<li><registervalues\>,err=m:request('ReadHoldingRegisters',<host\>,<port\>,<slaveid\>,<startingaddress\>,<numberofregisters\>)</li>
+<li><registervalues\>,err=m:request('ReadInputRegisters',<host\>,<port\>,<slaveid\>,<startingaddress\>,<numberofregisters\>)</li>
+<li>_,err=m:request('WriteSingleCoil',<host\>,<port\>,<slaveid\>,<startingaddress\>,<coilstate\>)</li>
+<li>_,err=m:request('WriteSingleRegister',<host\>,<port\>,<slaveid\>,<startingaddress\>,<registervalue\>)</li>
+<li>_,err=m:request('WriteMultipleCoils',<host\>,<port\>,<slaveid\>,<startingaddress\>,<numberofcoils\>,<coilvalues\>)</li>
+<li>_,err=m:request('WriteMultipleRegisters',<host\>,<port\>,<slaveid\>,<startingaddress\>,<registervalues\>)</li>
+</ol>
+<p><host\> is either an ip address or a resolvable hostname.<br /> <port\> can be set to nil, in this case the default value is 502.<br /> coil and register values are specified as string buffers.</p>
+<p>The stack is explicitely closed by calling &quot;m:close()&quot;.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">require</span> <span class="st">&#39;modbustcp&#39;</span>
+<span class="kw">m</span>,<span class="kw">err</span><span class="ot">=</span><span class="kw">modbustcp</span><span class="ot">.</span>new<span class="ot">(</span><span class="st">&#39;/dev/ttyS0&#39;</span>, <span class="ot">{</span><span class="kw">timeout</span><span class="ot">=</span><span class="dv">1</span>,<span class="kw">maxsocket</span><span class="ot">=</span><span class="dv">2</span><span class="ot">})</span>
+
+<span class="kw">data</span>,<span class="kw">err</span><span class="ot">=</span><span class="kw">m</span>:request<span class="ot">(</span><span class="st">&#39;ReadHoldingRegisters&#39;</span>,<span class="st">&#39;10.41.51.164&#39;</span>,<span class="dv">502</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">40</span><span class="ot">)</span>
+<span class="kw">if</span> <span class="kw">err</span> <span class="kw">then</span> <span class="fu">print</span><span class="ot">(</span><span class="kw">err</span><span class="ot">)</span> <span class="kw">end</span>
+<span class="kw">if</span> <span class="kw">data</span> <span class="kw">then</span>
+  <span class="kw">res</span><span class="ot">={</span><span class="kw">string</span><span class="ot">.</span>unpack<span class="ot">(</span><span class="kw">data</span>,<span class="st">&quot;&lt;H40&quot;</span><span class="ot">)}</span>
+  <span class="fu">table.remove</span><span class="ot">(</span><span class="kw">res</span>,<span class="dv">1</span><span class="ot">)</span>
+  p<span class="ot">(</span><span class="kw">res</span><span class="ot">)</span>
+<span class="kw">end</span></code></pre>
+</body>
+</html>

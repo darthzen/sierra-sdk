@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,core.so -o ../../runtime/lua/sched/exec/core.so CMakeFiles/sched_exec_core.dir/exec_core.c.o ../../static-libs/libluasignal.a -lpthread 

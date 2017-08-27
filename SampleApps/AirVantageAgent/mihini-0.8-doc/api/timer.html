@@ -1,0 +1,546 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li>timer</li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>timer</code></h1>
+   
+<p>Timer module that supports one-time timer, periodic timer and Cron-compatible syntax.</p>
+
+	<h2><a id="#(timer)" >Type <code>timer</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).cancel">timer.cancel(timer)</a></td>
+		<td class="summary">
+<p>Cancels a running timer.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).cron">timer.cron(cron, hook, varargs)</a></td>
+		<td class="summary">
+<p> Creates a new timer object, which will elapse at every date described by
+ the <code>cron</code> parameter.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).latencyExec">timer.latencyExec(func, latency)</a></td>
+		<td class="summary">
+<p>Calls a function within a maximum delay, while trying to avoid multiple calls.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).new">timer.new(expiry, hook, varargs)</a></td>
+		<td class="summary">
+<p>Setups and returns a new timer object.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).once">timer.once(delay, hook, varargs)</a></td>
+		<td class="summary">
+<p>Creates a new timer object, which will elapse after <code>delay</code> seconds.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).periodic">timer.periodic(period, hook, varargs)</a></td>
+		<td class="summary">
+<p>Creates a new timer object, which will elapse every <code>period</code> seconds.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(timer).rearm">timer.rearm(timer)</a></td>
+		<td class="summary">
+<p>Rearms a canceled or expired timer.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(timer)" >Type <code>timer</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(timer).cancel" >
+<strong>timer.cancel(timer)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Cancels a running timer.</p>
+
+	
+<p>No signal will be triggered with this timer object.
+A canceled timer can be rearmed using the <a href="rearm.html">rearm</a> function.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> timer </em></code>: 
+as returned by <a href="##(timer).new">timer.new</a> function.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).cron" >
+<strong>timer.cron(cron, hook, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p> Creates a new timer object, which will elapse at every date described by
+ the <code>cron</code> parameter.</p>
+
+	
+
+<p> If a hook function is provided, it is run whenever the timer elapses.
+ This is an alternative to <a href="##(timer).new">timer.new</a>.</p>
+
+<h2> CRON specification strings</h2>
+<p> Cron entries are strings of 5 elements, separated by single spaces.</p>
+
+<pre><code>      .---------------- minute (0 - 59)
+      |  .------------- hour (0 - 23)
+      |  |  .---------- day of month (1 - 31)
+      |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+      |  |  |  |  .---- day of week (0 - 7) (Sunday=0 or 7)  OR sun,mon,tue,wed,thu,fri,sat
+      |  |  |  |  |  .- optional random jitter
+      |  |  |  |  |  |
+      *  *  *  *  *  *
+</code></pre>
+
+<p> The corresponding event is triggered every minute at most, if and only if
+ every field matches the current date. Asterisks (<code>"*"</code>) can be used as
+ placeholderst in unused fields. For instance, <code>"30 8 1 * * *"</code> describes an
+ event which takes place at 8:30AM every first day of the month.</p>
+
+<p> Beside numbers, some operators are allowed in fields:</p>
+
+<ul>
+    <li><p>As mentionned, the asterisk (<code>'*'</code>) placeholder represents all possible
+    values for a field. For example, an asterisk in the hour time field
+    would be equivalent to 'every hour' (subject to matching other specified
+    fields).</p></li>
+    <li><p>The comma (<code>','</code>) is a binary operator which specifies a list of possible
+    values, e.g. <code>"1,3,4,7,8"</code> (there must be no space around commas)</p></li>
+    <li><p>The dash (<code>'-'</code>) is a binary operator which specifies a range of values.
+    For instance, <code>"1-6"</code> is equivalent to <code>"1,2,3,4,5,6"</code></p></li>
+    <li><p>The slash (<code>'/'</code>) is a binary operator, called "step", which allows to skip
+    a given number of values. For instance, <code>"*/3"</code> in the hour field is
+    equivalent to <code>"0,3,6,9,12,15,18,21"</code>.</p></li>
+</ul>
+
+<p> For instance, <code>"0 * * * *"</code> denotes an event at every hour (whenever the
+ number of minutes reaches 0), but <code>"0 */6 * * *"</code> denotes only the hours
+ divisible by 6 (i.e. 0:00, 6:00, 12:00 and 18:00). Beware that the formal
+ meaning of the <code>'/'</code> operator is "whenever the modulo is 0".
+ As a consequence, <code>"*/61"</code> in the minutes slot will be triggered when the
+ number of minutes reaches 0, because 0/61==0.</p>
+
+<p> Cron also accepts some aliases for common periodicities. <code>"@hourly"</code>,
+ "@daily"<code>, "@weekly"</code>, "@monthly"<code>and "@annually"</code> represent the
+ corresponding expected periodic events.</p>
+
+<h2> CRON jitter extension</h2>
+<p> <code>timer.cron()</code> supports an addition to the cron standard: if a sixth number
+ element is appended to the string, this number is taken as a random jitter,
+ in seconds. For instance, if a jitter of 120 is given, a random shifting
+ between 0 and 120 is chosen when the timer is created; every triggerring of
+ the event will be time-shifted by this amount of time.</p>
+
+<p> The jitter doesn't change during the lifetime of a given timer:
+ if a minutely test <code>"* * * * * 59"</code> is triggered at 12:03:28, it will be
+ triggered next at 12:04:28, 12:05:28 etc.: jitters don't modify the time
+ which elapses between the triggerings of a given timer.</p>
+
+<p> Jitter allows to spread the triggering dates of resource-intensive
+ operations. For instance, if a communication to the M2M operating portal is
+ scheduled at midnight with <code>"0 0 * * *"</code> on a large fleet of devices,
+ congestion might ensue on the communication networks and/or on the servers.
+ By adding a 60<em>60</em>4 = 14400 jitter, communications will be uniformly
+ spread between 0:00AM and 04:00AM: <code>"0 0 * * * 14400"</code>.</p>
+
+<h2> CRON specified with a table</h2>
+<p> Cron specifications can also be entered as tables, with keys `minute, hour,
+ dayofmonth, dayofweek, jitter` respectively; missing keys are treated as
+ <code>"*"</code> (except for <code>jitter</code>, which is treated as missing); lists of values
+ are passed as tables; steps and ranges are not supported in any special ways,
+ but they can be passed as strings, e.g. <code>{ hour='9-12,14-17', minute=0 }</code>.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> cron </em></code>: 
+specification of the cron dates, as a cron string or a table
+   (see <a href="##(timer).new">timer.new</a>)</p>
+
+				</li>
+				<li>
+				
+<p><code><em> hook </em></code>: 
+optional function, run everytime the timer elapses</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+optional parameters for <code>hook</code></p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>a timer object</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).latencyExec" >
+<strong>timer.latencyExec(func, latency)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Calls a function within a maximum delay, while trying to avoid multiple calls.</p>
+
+	
+
+<p>In some cases, a task must be performed within the next <code>n</code> seconds; if the task
+is performed by calling function <code>f</code>, then a call to <code>timer.latencyexec(f, n)</code>
+will guarantee that. If <code>f</code> hasn't been run after the <code>n</code> seconds delay expired
+(neither by this thread nor any other one), then the execution of <code>f</code> is triggered.
+However, if <code>f</code> has already been triggered by another call to <code>timer.latencyexec</code>
+before the delay expired, then it isn't triggered a second time.</p>
+
+<p>When a function can treat data by batches and is idempotent (think for instance
+flushing buffered data to a server), calling it with a delay through <code>latencyexec</code>
+leaves a chance to group multiple invocations into a single one, thus presumably
+saving resources.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> func </em></code>: 
+function to run.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> latency </em></code>: 
+optional number. Time to wait before running the function (in seconds),
+if set to O then the function is run asynchronously but as soon as possible.
+if set to nil, then the function is run synchronously.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+				</li>
+			</ol>
+			<h3>Usage:</h3>
+		<pre class="example"><code>
+timer.latencyExec examples
+
+-- t1: `f` must have run within the next 10s
+timer.latencyexec(f, 10)
+-- t2: `f` must have run within the next 5s. This supersedes t1
+timer.latencyexec(f, 5)
+-- after 3s elapsed, `f` must run within the next 5s-3s=2s
+sched.wait(3)
+-- t3: `f` must have run within the next 1s. This supersedes the 2s left in t2
+t3 = timer.latencyexec(f, 1)
+-- `f` will run in the middle of this 2s delay, due to t3
+sched.wait(2)
+-- This has been scheduled after t3 elapsed, so `f` will be run again in 1s at most.
+t4 = timer.latencyexec(f, 1)
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).new" >
+<strong>timer.new(expiry, hook, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Setups and returns a new timer object.</p>
+
+	
+<p>This function can be called directly instead of <a href="timer.once.html">timer.once</a>, <a href="timer.periodic.html">timer.periodic</a>
+and <a href="timer.cron.html">timer.cron</a>.</p>
+
+<p>The event will cause a <code>signal([returned timer], 'run')</code> whenever its due
+date(s) is/are reached. The date(s) is/are determined by the <code>expiry</code> argument:</p>
+
+<ul>
+    <li><p>If <code>expiry</code> is a positive number, causes a 1-shot event after that delay,
+    in seconds, has elapsed.</p></li>
+    <li><p>If <code>expiry</code> is a negative number, causes a periodic event whose period is
+    the (positive) opposite of <code>expiry</code>, in seconds.</p></li>
+    <li><p>If <code>expiry</code> is a string or a table, causes events at the dates described
+    under the POSIX CRON format. Cf. <a href="timer.cron.html">timer.cron</a> for a detailed description
+    of the CRON format.
+    assert</p></li>
+</ul>
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> expiry </em></code>: 
+string or number specifying the timer's due date(s).
+  See explanations above.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> hook </em></code>: 
+an optional function which will be called whenever the timer is due.
+  The hook is called in a new thread (thus blocking functions are allowed in it).</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+optional additional parameters, which will be passed to the <code>hook</code>
+  function when called.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>created timer on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).once" >
+<strong>timer.once(delay, hook, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates a new timer object, which will elapse after <code>delay</code> seconds.</p>
+
+	
+<p>If a hook function is provided, it is run when the timer elapses.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> delay </em></code>: 
+the duration before the timer elapses, in seconds</p>
+
+				</li>
+				<li>
+				
+<p><code><em> hook </em></code>: 
+optional function, run when the timer elapses</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+optional parameters for <code>hook</code></p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).periodic" >
+<strong>timer.periodic(period, hook, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates a new timer object, which will elapse every <code>period</code> seconds.</p>
+
+	
+<p>If a hook function is provided, it is run whenever the timer elapses.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> period </em></code>: 
+the duration between two timer triggerrings, in seconds</p>
+
+				</li>
+				<li>
+				
+<p><code><em> hook </em></code>: 
+optional function, run everytime the timer elapses</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+optional parameters for <code>hook</code></p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(timer).rearm" >
+<strong>timer.rearm(timer)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Rearms a canceled or expired timer.</p>
+
+	
+<p>Same as new function. A signal will be emitted on timer expiration.
+Rearming a timer that have not expired, reset it to its inital value.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> timer </em></code>: 
+as returned by <a href="##(timer).new">timer.new</a> function.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

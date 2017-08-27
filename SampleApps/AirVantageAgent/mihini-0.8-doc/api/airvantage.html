@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li>airvantage</li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>airvantage</code></h1>
+   
+
+<p>Provides interfaces with the Sierra Wireless AirVantage M2M Cloud Services
+Platform.</p>
+
+   
+
+<p>The AirVantage Application Services functionality (managing transfer and
+remote storage of application data and commands) is exposed in the
+<a href="airvantage.asset.html">airvantage.asset</a> module.</p>
+
+
+
+	<h2><a id="#(airvantage)" >Type <code>airvantage</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage).acknowledge">airvantage.acknowledge(ackid, status, errmsg, policy, persisted)</a></td>
+		<td class="summary">
+<p>Acknowledges a server message received with an acknowledgment ticket id.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage).connectToServer">airvantage.connectToServer(latency)</a></td>
+		<td class="summary">
+<p>Forces a connection to the server.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage).init">airvantage.init()</a></td>
+		<td class="summary">
+<p>Initializes the module.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage).newAsset">airvantage.newAsset(id)</a></td>
+		<td class="summary">
+<p>Creates and returns a new <a href="airvantage.asset.html##(asset)">airvantage.asset#asset</a> instance.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(airvantage).triggerPolicy">airvantage.triggerPolicy(policy)</a></td>
+		<td class="summary">
+<p>Forces the tables and unstructured data attached to a given policy to be sent
+or consolidated immediately.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(airvantage)" >Type <code>airvantage</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(airvantage).acknowledge" >
+<strong>airvantage.acknowledge(ackid, status, errmsg, policy, persisted)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Acknowledges a server message received with an acknowledgment ticket id.</p>
+
+	
+
+<p>In most realistic cases, the appropriate way to acknowledge a message is
+to have the handler function return a status code, <code>0</code> for success or a
+non-null number to signal failure. Most applications should therefore not
+call this function explicitly.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> ackid </em></code>: 
+the id to acknowledge</p>
+
+				</li>
+				<li>
+				
+<p><code><em> status </em></code>: 
+a boolean, true for success, false for failure</p>
+
+				</li>
+				<li>
+				
+<p><code><em> errmsg </em></code>: 
+an optional error message string</p>
+
+				</li>
+				<li>
+				
+<p><code><em> policy </em></code>: 
+optional triggering policy to send the acknowledgment,
+ defaults to <code>"now"</code>.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> persisted </em></code>: 
+if true, the ACK message will be persisted in flash
+ by the agent, and kept even if a reboot occurs before the policy
+ is triggered.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(airvantage).connectToServer" >
+<strong>airvantage.connectToServer(latency)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Forces a connection to the server.</p>
+
+	
+
+<p>This connection will not flush outgoing data handled through policies,
+but it will poll the server for new messages addressed to assets on this
+gateway device.</p>
+
+<p>If using nil as latency, the connection is synchronous, i.e. once this function returns, the requested connection to the server is closed.
+Otherwise the connection will happen after this call returns.</p>
+
+<p>Note:
+ - 0 value means the connection will be asynchronous, but will be done as soon as possible.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> latency </em></code>: 
+optional positive integer, latency in seconds before initiating the connection to the server,
+use nil value to specify synchronous connection.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>non-<code>nil</code> upon success;</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message upon failure.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(airvantage).init" >
+<strong>airvantage.init()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Initializes the module.</p>
+
+
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>non-<code>nil</code> upon success;</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message upon failure.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(airvantage).newAsset" >
+<strong>airvantage.newAsset(id)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates and returns a new <a href="airvantage.asset.html##(asset)">airvantage.asset#asset</a> instance.</p>
+
+	
+
+<p>The newly created <a href="airvantage.asset.html##(asset)">airvantage.asset#asset</a> is not started when returned, it can therefore
+neither send nor receive messages at this point.</p>
+
+<p>This intermediate, unstarted set allows to configure message handlers before
+any message is actually transferred to the #asset.</p>
+
+<p>See <a href="airvantage.asset.html##(asset).start">airvantage.asset#asset.start</a> to start the newly created instance.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> id </em></code>: 
+string defining the assetid identifying the instance of this new asset.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><a href="airvantage.asset.html##(asset)">airvantage.asset#asset</a> instance on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(airvantage).triggerPolicy" >
+<strong>airvantage.triggerPolicy(policy)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Forces the tables and unstructured data attached to a given policy to be sent
+or consolidated immediately.</p>
+
+	
+
+<p>A connection to the server is done only if data needs to be sent as the result
+to this trigger operation. Put another way, if no data is attached to the
+triggered policy(ies), then no connection to the server is done.
+See <a href="##(airvantage).connectToServer">airvantage.connectToServer</a> for complementary function.</p>
+
+<p>For a description of how policies allow to manage data reporting from the
+assets to the server, see the <em>AirVantage technical article</em>.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em>#string policy </em></code>: 
+name of the policy queue to be flushed.
+  Flush all policies if policy=='*';
+  only flush the <code>default</code> policy if policy is omitted.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code> on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

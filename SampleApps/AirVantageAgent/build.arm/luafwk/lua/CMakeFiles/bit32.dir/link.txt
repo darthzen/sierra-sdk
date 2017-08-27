@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,bit32.so -o ../../runtime/lua/bit32.so CMakeFiles/bit32.dir/lbitlib.c.o 

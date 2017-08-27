@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libkeystore.so -o ../../runtime/lib/libkeystore.so CMakeFiles/lib_keystore.dir/keystore.c.o 

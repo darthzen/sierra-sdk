@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,loader.so -o ../../runtime/lua/loader.so CMakeFiles/loader.dir/loader.c.o 

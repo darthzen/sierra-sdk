@@ -1,0 +1,480 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li>serial</li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>serial</code></h1>
+   
+<p>The serial library  enables communication over the serial port.</p>
+
+   
+
+<p>It provides the usual <code>open</code>, <code>read</code>, <code>write</code>, and <code>close</code> file handling
+methods, as well as serial port configuration features.</p>
+
+
+	<h2><a id="#(serial)" >Type <code>serial</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serial).open">serial.open(port, config)</a></td>
+		<td class="summary">
+<p>Creates and returns a new serial device instance: <a href="##(serialdev)">#serialdev</a>.</p>
+
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(config)">Type <code>config</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).baudRate">config.baudRate</a></td>
+		<td class="summary">
+<p>to set the baudrate of the serial port
+accepted values are: <code>1200, 9600, 19200, 38400, 57600</code> and <code>115200</code> (as an
+integer).</p>
+
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).flowControl">config.flowControl</a></td>
+		<td class="summary">
+<p>to configure flow control on the serial port
+accepted values are: <code>"none"</code>, <code>"rtscts"</code> or <code>"xon/xoff"</code> (as a string).</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).numDataBits">config.numDataBits</a></td>
+		<td class="summary">
+<p>to set the number of data bits in each character
+accepted values are: <code>5, 6, 7</code> and <code>8</code> (as an integer).</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).numStopBits">config.numStopBits</a></td>
+		<td class="summary">
+<p>to configure the serial port stop bit
+accepted values are: <code>1</code> to disable it, <code>2</code> to enable it (as an integer).</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).parity">config.parity</a></td>
+		<td class="summary">
+<p>  to set serial port parity
+  accepted values are (as a string): <code>"none"</code>, <code>"odd"</code>, <code>"even"</code></p>
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(serialdev)">Type <code>serialdev</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serialdev).close">serialdev:close()</a></td>
+		<td class="summary">
+<p>Closes the serial library instance.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serialdev).configure">serialdev:configure(config)</a></td>
+		<td class="summary">
+<p>Configures the serial port.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serialdev).flush">serialdev:flush()</a></td>
+		<td class="summary">
+<p>Flushes pending data.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serialdev).read">serialdev:read(pattern)</a></td>
+		<td class="summary">
+<p>Reads data from the serial port.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(serialdev).write">serialdev:write(buffer)</a></td>
+		<td class="summary">
+<p>Writes buffer to the serial port.</p>
+
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(serial)" >Type <code>serial</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(serial).open" >
+<strong>serial.open(port, config)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates and returns a new serial device instance: <a href="##(serialdev)">#serialdev</a>.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> port </em></code>: 
+the serial port to open. It can be given as a port number,
+ or as a POSIX device file path such as <code>"/dev/ttyS0"</code> on POSIX operating
+ systems.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> config </em></code>: 
+ an optional <a href="##(config)">#config</a> table.
+ Default values are
+ <code>{ parity = "none", flowControl = "none", numDataBits = 8, numStopBits = 1, baudRate = 115200 }</code></p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+<p><em><a href="##(serialdev)">#serialdev</a>:</em>
+a new instance of <a href="##(serialdev)">#serialdev</a> as a table when successful</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+			<h2><a id="#(config)" >Type <code>config</code></a></h2>
+				
+<p>Serial port configuration table.</p>
+
+	
+<p>Can be given to <a href="##(serialdev).configure">serialdev.configure</a> and <a href="##(serial).open">serial.open</a> functions:</p>
+
+
+	<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(config).baudRate" >
+<strong>config.baudRate</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to set the baudrate of the serial port
+accepted values are: <code>1200, 9600, 19200, 38400, 57600</code> and <code>115200</code> (as an
+integer).</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(config).flowControl" >
+<strong>config.flowControl</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to configure flow control on the serial port
+accepted values are: <code>"none"</code>, <code>"rtscts"</code> or <code>"xon/xoff"</code> (as a string).</p>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(config).numDataBits" >
+<strong>config.numDataBits</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to set the number of data bits in each character
+accepted values are: <code>5, 6, 7</code> and <code>8</code> (as an integer).</p>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(config).numStopBits" >
+<strong>config.numStopBits</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to configure the serial port stop bit
+accepted values are: <code>1</code> to disable it, <code>2</code> to enable it (as an integer).</p>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(config).parity" >
+<strong>config.parity</strong>
+</a>
+</dt>
+<dd>
+	
+<p>  to set serial port parity
+  accepted values are (as a string): <code>"none"</code>, <code>"odd"</code>, <code>"even"</code></p>
+
+</dd>
+</dl>
+
+			<h2><a id="#(serialdev)" >Type <code>serialdev</code></a></h2>
+				
+<p>Serial class.</p>
+
+	<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(serialdev).close" >
+<strong>serialdev:close()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Closes the serial library instance.</p>
+
+	
+
+<p>Once close has been successfully called, the <a href="serialdev.html">serialdev</a> instance becomes
+unusable. A new one may be created if needed.</p>
+
+
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code> on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(serialdev).configure" >
+<strong>serialdev:configure(config)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Configures the serial port.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em><a href="##(config)">#config</a> config </em></code>: 
+a <a href="##(config)">#config</a> table.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code> on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by error string otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(serialdev).flush" >
+<strong>serialdev:flush()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Flushes pending data.</p>
+
+
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code> on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(serialdev).read" >
+<strong>serialdev:read(pattern)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Reads data from the serial port.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> pattern </em></code>: 
+can be a pattern string conforming to the
+  <a href="http://www.lua.org/manual/5.1/manual.html#pdf-file:read">Lua File API</a>,
+  or a number of bytes to read.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the read data, as a string, on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by error string otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(serialdev).write" >
+<strong>serialdev:write(buffer)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Writes buffer to the serial port.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> buffer </em></code>: 
+string containing data to send over the serial port.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the number of bytes written on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> followed by an error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

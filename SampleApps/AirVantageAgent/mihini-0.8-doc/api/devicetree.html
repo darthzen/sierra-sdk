@@ -1,0 +1,382 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li>devicetree</li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>devicetree</code></h1>
+   
+
+<p>This module provides read/write access to system parameters and settings, as
+well as the ability to receive notifications when they change.</p>
+
+   
+
+<p>System parameters and settings are addressed based on a predefined tree
+(the "Device Tree") that organizes them based on functionality. This tree
+will continue to be developed and expanded as the Application Framework evolves.</p>
+
+<p>Description / documentation of the tree is available in the "Device Param
+Access" technical article.</p>
+
+
+	<h2><a id="#(devicetree)" >Type <code>devicetree</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(devicetree).get">devicetree.get(path)</a></td>
+		<td class="summary">
+<p>Retrieves a variable's value from the device tree.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(devicetree).init">devicetree.init()</a></td>
+		<td class="summary">
+<p>Initializes the module.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(devicetree).register">devicetree.register(regvars, callback, passivevars)</a></td>
+		<td class="summary">
+<p>Registers to receive a notification when one or several variables change.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(devicetree).set">devicetree.set(path, value)</a></td>
+		<td class="summary">
+<p>Sets a variable value into the variable tree.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(devicetree).unregister">devicetree.unregister(userid)</a></td>
+		<td class="summary">
+<p>Cancels registration to receive a notification when a variable changes.</p>
+
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(devicetree)" >Type <code>devicetree</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(devicetree).get" >
+<strong>devicetree.get(path)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Retrieves a variable's value from the device tree.</p>
+
+	
+
+<p>The retrieval is not recursive: asking for a path prefix will <em>not</em> return
+every key/value pairs sharing this prefix. Instead, it will return <code>nil</code>
+followed by a list of the absolute paths to the prefix's direct children.</p>
+
+<p>For instance, if the branch <code>foo.bar</code> contains <code>{ x=1, y={z1=2, z2=3}}</code>,
+a <code>get("foo.bar")</code> will return <code>nil, { "foo.bar.x", "foo.bar.y" }</code>. No value
+is returned, and the children of <code>y</code>, which are the grand-children of
+<code>foo.bar</code>, are not enumerated.</p>
+
+<p>Several variables can also be retrieved in a single request, by passing a
+list of paths rather than a single path string. In this case, a record
+of path/value pairs is returned. If some of the paths are non-leaf nodes,
+a second list, of all direct children of all non-leaf paths, is also
+returned.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em>#string path </em></code>: 
+is a string, or list of strings, defining the path of
+  the variable to retrieve.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the value associated with the <code>path</code> leaf node.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + list of direct children paths when <code>path</code> is a non-leaf node.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error string otherwise.</p>
+
+
+
+				</li>
+			</ol>
+			<h3>Usages:</h3>
+		<ul>
+			<li><pre class="example"><code>`devicetree.get("system.sw_info.fw_ver")` may return `"4.2.5"`.</code></pre></li>
+			<li><pre class="example"><code>`devicetree.get("system.sw_info")` may return
+  `nil, {"system.sw_info.fw_ver", "system.sw_info.boot_ver"}`.</code></pre></li>
+			<li><pre class="example"><code>`devicetree.get({"system.sw_info", "system.sw_info.boot_ver"})`
+may return `{["system.sw_info.boot_ver"]="4.2.5"}, {"system.sw_info.fw_ver", "system.sw_info.boot_ver"}`.
+</code></pre></li>
+		</ul>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(devicetree).init" >
+<strong>devicetree.init()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Initializes the module.</p>
+
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>non-<code>nil</code> upon success;</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message upon failure.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(devicetree).register" >
+<strong>devicetree.register(regvars, callback, passivevars)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Registers to receive a notification when one or several variables change.</p>
+
+	
+
+<p>The callback is triggered everytime one or some of the variables listed in
+<code>regvars</code> changes. It receives as parameter a table of
+variable-name / variable-value pairs; these variables are all the variables
+listed in <code>regvars</code> which have changed, plus every variables listed in
+<code>passivevars</code>, whether  their values changed or not.</p>
+
+<p>Please note that the callback can be called with table param
+containing <a href="niltoken.html##(niltoken)">niltoken#niltoken</a> value(s) to indicate variable(s) deletion.</p>
+
+<p>Variables listed in <code>regvars</code> can be either FQVN names,
+or a path which denotes every individual variable below this path.</p>
+
+<p>Variables listed in <code>passivevars</code> must be path to variables: non-leaf paths
+will be silently ignored.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> regvars </em></code>: 
+list of variables which must be monitored for change.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> callback </em></code>: 
+the function triggered everytime a <code>regvars</code> variable changes.
+  The callback is called with a table containing all the changes, paths as
+  keys and values as values.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> passivevars </em></code>: 
+optional variables to always pass to <code>callback</code>,
+  whether they changed or not.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>a registration id, to be passed to <a href="devicetree.unregister.html">devicetree.unregister</a>
+  in order to unsubscribe.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message in case of error.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(devicetree).set" >
+<strong>devicetree.set(path, value)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sets a variable value into the variable tree.</p>
+
+	
+<p><strong>Example</strong></p>
+
+<p>To activate the monitoring, you could send:</p>
+
+<pre><code>devicetree.set ("config.monitoring.activate", true).
+</code></pre>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em>#string path </em></code>: 
+defining the path of the variable to set.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> value </em></code>: 
+is the value of the variable. It can also be a table of key/value
+  pairs, allowing to set several variables in a single operation.
+  it will actually set a whole sub tree (several variables at once)).</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code> on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message otherwise.</p>
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(devicetree).unregister" >
+<strong>devicetree.unregister(userid)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Cancels registration to receive a notification when a variable changes.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> userid </em></code>: 
+is the id returned by previous <a href="devicetree.register.html">devicetree.register</a></p>
+<pre><code>   call to be cancelled.
+</code></pre>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>"ok" on success.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil + error string otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

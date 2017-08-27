@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libcdb_alloc.a  CMakeFiles/lib_cdb_alloc.dir/alloc.c.o
+/usr/bin/ranlib ../../static-libs/libcdb_alloc.a

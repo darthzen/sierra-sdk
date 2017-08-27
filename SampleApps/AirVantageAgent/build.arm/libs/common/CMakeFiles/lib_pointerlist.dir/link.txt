@@ -1,0 +1,2 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ar cr ../../static-libs/libpointerlist.a  CMakeFiles/lib_pointerlist.dir/pointer_list.c.o
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ranlib ../../static-libs/libpointerlist.a

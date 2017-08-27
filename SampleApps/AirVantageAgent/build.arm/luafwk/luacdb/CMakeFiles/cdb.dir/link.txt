@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,cdb.so -o ../../runtime/lua/cdb.so CMakeFiles/cdb.dir/lcdb.c.o ../../static-libs/libcdb_cdb.a ../../static-libs/libcdb_alloc.a ../../static-libs/libcdb_buffer.a ../../static-libs/libcdb_unix.a ../../static-libs/libcdb_byte.a 

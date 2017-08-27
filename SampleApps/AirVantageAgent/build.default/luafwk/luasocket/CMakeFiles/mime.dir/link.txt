@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,mime.so -o ../../runtime/lua/mime.so CMakeFiles/mime.dir/mime/mime.c.o 

@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/awt_std.h
+adl_global.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/adl_global.h
+swi_log.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/swi_log.h
+string.h
+-
+assert.h
+-
+stdlib.h
+-
+stdio.h
+-
+stdarg.h
+-
+swi_log.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/swi_log.h
+stdio.h
+-
+
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/swi_log.h
+
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/common/swi_status.h
+
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/luasignal/luasignal.h
+stdint.h
+-
+swi_status.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/libs/luasignal/swi_status.h
+
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/tools/luasignalcmd/luasignalcmd.c
+swi_log.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/tools/luasignalcmd/swi_log.h
+luasignal.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/tools/luasignalcmd/luasignal.h
+awt_std.h
+/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/avagent_r8m/tools/luasignalcmd/awt_std.h
+

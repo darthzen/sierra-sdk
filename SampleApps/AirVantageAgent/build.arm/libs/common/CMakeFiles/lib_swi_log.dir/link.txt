@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libSwi_log.so -o ../../runtime/lib/libSwi_log.so CMakeFiles/lib_swi_log.dir/swi_log.c.o 

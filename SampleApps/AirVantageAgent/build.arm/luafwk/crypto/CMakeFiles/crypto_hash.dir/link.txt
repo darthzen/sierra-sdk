@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,hash.so -o ../../runtime/lua/crypto/hash.so CMakeFiles/crypto_hash.dir/lhash.c.o ../../runtime/lib/libtomcrypt.so ../../runtime/lib/libtommath.so -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.arm/runtime/lib 

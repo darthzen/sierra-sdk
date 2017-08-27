@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,loader.so -o ../../runtime/lua/loader.so CMakeFiles/loader.dir/loader.c.o 

@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li>utils.loader</li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>utils.loader</code></h1>
+   
+<p> Code loading/unloading utils.</p>
+
+   
+
+<p> This module provides additional utility functions to handle the lifecycle
+ of Lua files.</p>
+
+
+	<h2><a id="#(utils.loader)" >Type <code>utils.loader</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.loader).loadBuffer">utils.loader.loadBuffer(buffer, name, destroy)</a></td>
+		<td class="summary">
+<p>Compiles a buffer (ie a list of strings) into an executable function.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.loader).unload">utils.loader.unload(name)</a></td>
+		<td class="summary">
+<p>Unloads a module by removing references to it.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(utils.loader)" >Type <code>utils.loader</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(utils.loader).loadBuffer" >
+<strong>utils.loader.loadBuffer(buffer, name, destroy)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Compiles a buffer (ie a list of strings) into an executable function.</p>
+
+	
+
+<p>This function is quite similar to Lua's <code>loadstring()</code> core function, except
+that it takes a list of strings as a parameter rather than a single string.
+Since it never concatenates the string internally, using this function
+instead of <code>loadstring()</code> limit fragmentation issues when loading large files
+on a device with very limited RAM resources.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> buffer </em></code>: 
+a list of strings.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> name </em></code>: 
+is an optional chunk name used for debug traces.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> destroy </em></code>: 
+is a boolean. When true, the buffer is read destructively (saves RAM when handling big sources).</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>function resulting of the buffer compilation</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.loader).unload" >
+<strong>utils.loader.unload(name)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Unloads a module by removing references to it.</p>
+
+	
+
+<p>When a module isn't used anymore, one can call this function with the module's
+name as a parameter. It will remove references to the module in <code>package</code>'s
+internal tables, thus allowing the module's resources to be reclaimed by the
+garbage collector if no deangling references remain in the application.</p>
+
+<ol>
+    <li>Call function <code>package.loaded[name].__unload()</code> if it exists</li>
+    <li>Clear <code>package.loaded[name]</code></li>
+    <li>Clear <code>_G[name]</code></li>
+</ol>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> name </em></code>: 
+the name of the module to unload.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

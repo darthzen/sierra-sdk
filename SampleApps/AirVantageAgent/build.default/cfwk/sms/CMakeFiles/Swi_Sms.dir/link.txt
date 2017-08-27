@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libSwi_Sms.so -o ../../runtime/lib/libSwi_Sms.so CMakeFiles/Swi_Sms.dir/swi_sms.c.o ../../runtime/lib/libEmp.so ../../runtime/lib/libyajl.so ../../runtime/lib/libSwi_DSet.so ../../static-libs/libpointerlist.a -lpthread -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.default/runtime/lib 

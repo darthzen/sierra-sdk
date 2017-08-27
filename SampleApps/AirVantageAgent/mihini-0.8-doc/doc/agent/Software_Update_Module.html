@@ -1,0 +1,638 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="software-update-module">Software Update Module</h1>
+<h1 id="definition">1. Definition</h1>
+<p>Update module is the service within the Agent responsible to deal with software update.</p>
+<h1 id="context---limitations">2. Context - Limitations</h1>
+<p>The Update module is only available on <strong>Linux</strong> devices.<br />Update module expects that Agent is run in working directory with <strong>no ' character</strong> in it.</p>
+<h1 id="functionalities">3. Functionalities</h1>
+<p>The Update module can:</p>
+<ul>
+<li>Maintain a software list</li>
+<li>Support several software components and versions on each device</li>
+<li>Deal with dependencies between components</li>
+<li>Process <a href="Software_Update_Package.html">Software Update Packages</a> with several components update within the same package, and dependencies between components</li>
+<li>Reports errors to server</li>
+<li>Support several protocols to retrieve update packages</li>
+<li>Send software list (and information about a possible current update ) to server using M3DA Command ReadNode.</li>
+<li>...</li>
+</ul>
+<h1 id="api">4. API</h1>
+<h4 id="functions">4.1. functions</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">init<span class="ot">()</span>
+
+<span class="kw">Init</span> <span class="kw">the</span> <span class="kw">Update</span> <span class="kw">module</span>
+<span class="kw">Mandatory</span> <span class="kw">to</span> <span class="kw">be</span> <span class="kw">called</span> <span class="kw">before</span> <span class="kw">doing</span> <span class="kw">any</span> <span class="kw">update</span>, <span class="kw">or</span> <span class="kw">calling</span> <span class="kw">any</span> <span class="kw">other</span>
+<span class="kw">API</span><span class="ot">.</span>
+
+<span class="kw">This</span> <span class="kw">function</span> <span class="kw">is</span> <span class="kw">called</span> <span class="kw">by</span> <span class="kw">the</span> <span class="kw">agent</span> <span class="kw">on</span> <span class="kw">boot</span> <span class="kw">when</span> <span class="kw">Update</span> <span class="kw">is</span> <span class="kw">activated</span> <span class="kw">in</span>
+<span class="kw">agent</span> <span class="kw">config</span><span class="ot">.</span></code></pre>
+<pre class="sourceCode lua"><code class="sourceCode lua">getstatus<span class="ot">(</span><span class="kw">sync</span><span class="ot">)</span>
+
+<span class="kw">Retrieves</span> <span class="kw">the</span> <span class="kw">status</span> <span class="kw">of</span> <span class="kw">the</span> <span class="kw">last</span> <span class="kw">update</span> <span class="kw">done</span> <span class="kw">or</span> <span class="kw">the</span> <span class="kw">status</span> <span class="kw">of</span> <span class="kw">current</span>
+<span class="kw">update</span> <span class="kw">is</span> <span class="kw">an</span> <span class="kw">update</span> <span class="kw">is</span> <span class="kw">in</span> <span class="kw">progress</span><span class="ot">.</span>
+ <span class="kw">Using</span> <span class="kw">the</span> <span class="kw">sync</span> <span class="kw">parameter</span>, <span class="kw">the</span> <span class="kw">function</span> <span class="kw">can</span> <span class="kw">be</span> <span class="kw">requested</span> <span class="kw">to</span> <span class="kw">be</span> <span class="kw">blocking</span>
+<span class="kw">to</span> <span class="kw">wait</span> <span class="kw">for</span> <span class="kw">the</span> <span class="kw">end</span> <span class="kw">of</span> <span class="kw">current</span> <span class="kw">update</span> <span class="kw">if</span> <span class="kw">any</span><span class="ot">.</span>
+
+<span class="kw">Returns</span>:
+
+<span class="ot">-</span>   <span class="st">&quot;in_progress&quot;</span> <span class="kw">if</span> <span class="kw">an</span> <span class="kw">update</span> <span class="kw">is</span> <span class="kw">in</span> <span class="kw">progress</span> <span class="kw">but</span> <span class="kw">blocking</span> <span class="kw">behavior</span> <span class="kw">was</span>
+    <span class="kw">not</span> <span class="kw">requested</span>
+<span class="ot">-</span>   <span class="st">&quot;ok&quot;</span> <span class="kw">in</span> <span class="kw">case</span> <span class="kw">of</span> <span class="kw">success</span> <span class="kw">of</span> <span class="kw">the</span> <span class="kw">last</span> <span class="kw">update</span> <span class="kw">process</span>
+<span class="ot">-</span>   <span class="kw">nil</span>, <span class="fu">error</span> <span class="kw">string</span> <span class="kw">describing</span> <span class="kw">the</span> <span class="fu">error</span> <span class="kw">that</span> <span class="kw">happened</span> <span class="kw">during</span>
+    <span class="kw">processing</span> <span class="kw">the</span> <span class="kw">last</span> <span class="kw">update</span><span class="ot">.</span></code></pre>
+<pre class="sourceCode lua"><code class="sourceCode lua">localupdate<span class="ot">(</span><span class="kw">path</span>, <span class="kw">sync</span><span class="ot">)</span>
+
+<span class="kw">Triggers</span> <span class="kw">an</span> <span class="kw">update</span> <span class="kw">using</span> <span class="kw">a</span> <span class="kw">local</span> <span class="kw">file</span> <span class="kw">as</span> <span class="kw">update</span> <span class="kw">package</span><span class="ot">.</span> <span class="kw">The</span> <span class="kw">local</span> <span class="kw">file</span>
+<span class="kw">to</span> <span class="kw">use</span> <span class="kw">can</span> <span class="kw">given</span> <span class="kw">as</span> <span class="kw">parameter</span> <span class="kw">or</span> <span class="kw">will</span> <span class="kw">be</span> <span class="kw">pick</span> <span class="kw">in</span> <span class="kw">drop</span> <span class="kw">folder</span><span class="ot">.</span>
+ <span class="kw">Using</span> <span class="kw">the</span> <span class="kw">sync</span> <span class="kw">parameter</span>, <span class="kw">the</span> <span class="kw">function</span> <span class="kw">can</span> <span class="kw">be</span> <span class="kw">requested</span> <span class="kw">to</span> <span class="kw">be</span> <span class="kw">blocking</span>
+<span class="kw">to</span> <span class="kw">wait</span> <span class="kw">for</span> <span class="kw">the</span> <span class="kw">end</span> <span class="kw">of</span> <span class="kw">the</span> <span class="kw">whole</span> <span class="kw">update</span> <span class="kw">process</span><span class="ot">.</span>
+ <span class="kw">Returns</span>:
+
+<span class="ot">-</span>   <span class="st">&quot;in_progress&quot;</span> <span class="kw">if</span> <span class="kw">the</span> <span class="kw">package</span> <span class="kw">was</span> accepted <span class="ot">(</span><span class="kw">package</span> <span class="kw">analysis</span>
+    <span class="kw">returned</span> <span class="kw">no</span> <span class="fu">error</span><span class="ot">)</span> <span class="kw">but</span> <span class="kw">blocking</span> <span class="kw">behavior</span> <span class="kw">was</span> <span class="kw">not</span> <span class="kw">requested</span>
+<span class="ot">-</span>   <span class="st">&quot;ok&quot;</span> <span class="kw">in</span> <span class="kw">case</span> <span class="kw">of</span> <span class="kw">success</span> <span class="kw">of</span> <span class="kw">the</span> <span class="kw">whole</span> <span class="kw">update</span> <span class="kw">process</span> <span class="kw">if</span> <span class="kw">blocking</span>
+    <span class="kw">behavior</span> <span class="kw">was</span> <span class="kw">requested</span>
+<span class="ot">-</span>   <span class="kw">nil</span>, <span class="fu">error</span> <span class="kw">string</span> <span class="kw">describing</span> <span class="kw">the</span> <span class="fu">error</span> <span class="kw">that</span> <span class="kw">happened</span> <span class="kw">while</span> <span class="kw">doing</span> <span class="kw">the</span>
+    update <span class="ot">(</span><span class="kw">an</span> <span class="fu">error</span> <span class="kw">can</span> <span class="kw">appear</span> <span class="kw">either</span> <span class="kw">before</span> <span class="kw">or</span> <span class="kw">during</span> <span class="kw">package</span> <span class="kw">analysis</span>
+    <span class="kw">or</span> <span class="kw">during</span> <span class="kw">package</span> <span class="kw">processing</span> <span class="kw">if</span> <span class="kw">blocking</span> <span class="kw">behavior</span> <span class="kw">was</span> <span class="kw">requested</span><span class="ot">)</span></code></pre>
+<h4 id="data-tables">4.2. data tables</h4>
+<p>Those data tables contain a great part of the state of the Update module.</p>
+<h5 id="data-tables-access">4.2.1. data tables access</h5>
+<p>There are ways to access them:</p>
+<ol style="list-style-type: decimal">
+<li>directly from module API:</li>
+</ol>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="kw">updatec</span> <span class="ot">=</span> <span class="fu">require</span><span class="st">&quot;agent.update.common&quot;</span>
+p<span class="ot">(</span><span class="kw">updatec</span><span class="ot">.</span><span class="kw">data</span><span class="ot">.</span><span class="kw">swlist</span><span class="ot">)</span>
+<span class="ot">...</span></code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>remotely using ReadNode command (see <a href="Device_Management.html">Device Management</a>)<br /> The target path of the command has to be:</li>
+</ol>
+<ul>
+<li>&quot;@sys.update&quot; to get all available data: sw_list and eventually currentupdate and failedupdate</li>
+<li>&quot;@sys.update.table_name&quot; where table_name is the name of the exact table to retrieve.</li>
+</ul>
+<h5 id="data-tables-content">4.2.2. data tables content</h5>
+<ul>
+<li><strong>swlist</strong><br /> This table contains the software inventory: there are 2 main part : global information, and components information.</li>
+</ul>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- data.swlist.lastupdatestatus= (integer) result code of last update job</span>
+<span class="co">-- data.swlist.lastupdateerrstr= (string) description of the error (if any) for last update</span>
+<span class="co">-- data.swlist.components: (table) contains &quot;installed&quot;/&quot;provisionned&quot; software components</span>
+<span class="co">-- data.swlist.components[uid] (table) contains the description of a component</span>
+<span class="co">-- data.swlist.components[uid].name: string</span>
+<span class="co">-- data.swlist.components[uid].uid: unique id of the component</span>
+<span class="co">-- data.swlist.components[uid].version (string) version of this component</span>
+<span class="co">-- data.swlist.components[uid].provides (table) with features provided by this components</span>
+<span class="co">-- data.swlist.components[uid].depends (table) with features/components needed by this components</span>
+<span class="co">-- data.swlist.components[uid].parameters: (table) with parameters given in update package at install time</span>
+<span class="co">-- data.swlist.components[uid].force (boolean) whether this component was installed using dependency checking</span></code></pre>
+<p>Here is a small sample:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">:</span><span class="kw">updatec</span><span class="ot">.</span><span class="kw">data</span><span class="ot">.</span><span class="kw">swlist</span>
+<span class="ot">{</span>
+   <span class="kw">lastupdatestatus</span> <span class="ot">=</span> <span class="dv">200</span>,
+   <span class="kw">appuid</span> <span class="ot">=</span> <span class="dv">7</span>,
+   <span class="kw">components</span> <span class="ot">=</span> <span class="ot">{</span>
+      <span class="ot">[</span><span class="dv">0</span><span class="ot">]</span> <span class="ot">=</span> <span class="ot">{</span>
+         <span class="kw">uid</span> <span class="ot">=</span> <span class="dv">0</span>,
+         <span class="kw">name</span> <span class="ot">=</span> <span class="st">&quot;platform&quot;</span>,
+         <span class="kw">force</span> <span class="ot">=</span> <span class="kw">true</span>,
+         <span class="kw">provides</span> <span class="ot">=</span> <span class="ot">{</span>
+            <span class="kw">RadioHardware</span> <span class="ot">=</span> <span class="st">&quot;MC8705&quot;</span>,
+            <span class="kw">Agent</span> <span class="ot">=</span> <span class="st">&quot;0.7 - Build: 7063&quot;</span>,
+            <span class="kw">AleosSoftware</span> <span class="ot">=</span> <span class="st">&quot;4.2.5.005&quot;</span>,
+            <span class="kw">AleosHardware</span> <span class="ot">=</span> <span class="st">&quot;12180306000700000000000000000000&quot;</span>,
+            <span class="kw">RadioSoftware</span> <span class="ot">=</span> <span class="st">&quot;T1_0_4_3CAP R460 CNSZXD00000128 2011/11/15 10:22:30&quot;</span> <span class="ot">}</span>,
+         <span class="kw">version</span> <span class="ot">=</span> <span class="st">&quot;N/A&quot;</span> <span class="ot">}</span>,
+      <span class="ot">[</span><span class="dv">7</span><span class="ot">]</span> <span class="ot">=</span> <span class="ot">{</span>
+         <span class="kw">version</span> <span class="ot">=</span> <span class="st">&quot;testversion&quot;</span>,
+         <span class="kw">uid</span> <span class="ot">=</span> <span class="dv">7</span>,
+         <span class="kw">name</span> <span class="ot">=</span> <span class="st">&quot;@sys.appcon.serial_modbus_test&quot;</span>,
+         <span class="kw">parameters</span> <span class="ot">=</span> <span class="ot">{</span>
+            <span class="kw">purge</span> <span class="ot">=</span> <span class="kw">false</span>,
+            <span class="kw">autostart</span> <span class="ot">=</span> <span class="kw">true</span> <span class="ot">}</span> <span class="ot">}</span> <span class="ot">}</span>,
+   <span class="kw">lastupdateerrstr</span> <span class="ot">=</span> <span class="st">&quot;All components successfuly updated&quot;</span> <span class="ot">}</span></code></pre>
+<ul>
+<li><strong>currentupdate</strong><br /> This table contains information about the current update job, if any.<br /> For instance, the manifest file received within the update package is stored in that table during each update job.<br /> This table is <strong>flushed</strong> (set to <strong>nil</strong>) when the current job is <strong>finished</strong>.</li>
+</ul>
+<h1 id="protocols">5. Protocols</h1>
+<p>The Update module can use several protocol to retrieve update package.</p>
+<h4 id="m3da-update-command">5.1. M3DA update command</h4>
+<p>See SoftwareUpdate command in <a href="Device_Management.html">Device Management commands</a></p>
+<h1 id="update-package-process">6. Update package Process</h1>
+<p>They must conform with <a href="Software_Update_Package.html">Software Update Package Format</a>.</p>
+<p>The workflow is quite simple, and can be illustrated like this:<br /> <img src="images/Software_Update_Module_update_process.png" /></p>
+<p>The following sections give more details about each step.</p>
+<h4 id="delivery-using-m3da-command">6.1. Delivery using M3DA Command</h4>
+<p>SoftwareUpdate command description in <a href="Device_Management.html">Device Management commands</a> gives some clues, but package hosting is still to be defined.</p>
+<h4 id="software-update-package-process-in-update-module">6.2. Software update package process in Update Module</h4>
+<p>When some Software Update Package has been downloaded, Update module will be alerted and then:</p>
+<ul>
+<li>Update module will uncompress the archive file</li>
+<li>Update module will parse the whole Manifest file</li>
+<li>Update module will check for Manifest information consistency:
+<ul>
+<li>Invalid field value</li>
+<li>Components dependencies checks</li>
+<li>Update package must contain all the files/folders listed in Manifest 'location' field(s).</li>
+</ul></li>
+</ul>
+<p>If the update package seems correctly built, the Update module can process with each update.<br /> This means that Update module will alert all the components responsible for processing each update.</p>
+<p>There is two types of update, the <strong>target path</strong> will be used to <strong>differentiate</strong> them:</p>
+<ol style="list-style-type: decimal">
+<li>Agent internal update feature<br /> Target path must be begin with : &quot;@sys.&quot;<br /> This will trigger internal update feature, see <a href="Software_Update_Package.html">Software Update Package</a> to get more details about it.<br /> For instance, this will be used to update application managed by ApplicationContainer module.</li>
+<li><strong>external module update</strong><br /> Target path is the path of some asset responsible to do the update.<br /> The application will be responsible to do the update job, this kind of update is targeted to application / asset that can either deal with it's own update, or update some third party software<br /> The update package will be forwarded to the application using <a href="../agent_connector_libraries/Embedded_Micro_Protocol_EMP.html">Embedded Micro Protocol (EMP)</a>, and Racon APIs provides corresponding functionalities.<br /> The application must report update execution status; so it has to either:
+<ul>
+<li>handle unsupported EMP message to alert synchronously that the feature is not supported by the application</li>
+<li>or handle EMP Update messages, and then report error(asynchronously or synchronously) or success(asynchronously) using EMP protocol specification.</li>
+</ul></li>
+</ol>
+<p>Rq. Choice of update type may be done on a case by case basis. For example, OSGI bundle update is likely to be done with type #2 because OSGI framework is responsible to update OSGI bundles.</p>
+<h4 id="update-of-each-component">6.3. Update of each component</h4>
+<p>As previously stated, Update module forward the update of each component to asset application or install script execution.</p>
+<p>Those information can be useful to develop the application or the install script</p>
+<ul>
+<li>the install script will remain at the exact location it is set in the update package, but it's running directory cannot be assumed to be the same.</li>
+<li>the location of extraction of the update package on the device cannot be known before the update is actually processed, but will be given dynamically:
+<ul>
+<li>to the asset, as parameter of the EMP command</li>
+<li>to the install script, as parameter of the script</li>
+</ul></li>
+<li>The data resulting of the extraction of the update package (including the install script itself; if any) will be erased once the install status is returned.<br /> -&gt; it is the responsibility of the install script or application to copy the files needed by the application to a different location.</li>
+</ul>
+<h5 id="retries-and-timeout">6.3.1. Retries and Timeout</h5>
+<p>The aims of those retries and timeout is:</p>
+<ul>
+<li>to enable the delivery of SoftwareUpdate messages to assets that start after the beginning of the update</li>
+<li>to deal with asset that provoke target/Agent reboot on SoftwareUpdate message reception
+<ul>
+<li>with predefined number of reboot during update process of a component</li>
+<li>systematic reboot on SoftwareUpdate message reception is managed</li>
+</ul></li>
+<li>to deal with asset that restarts regularly during update process, but without provoking restart of the Agent</li>
+<li>to deal with asset responsible for several components update</li>
+<li>to deal with asset that correctly receive SoftwareUpdate messages but never answer to it</li>
+</ul>
+<p>In order to achieve those goals, there are the mechanisms used for retries and timeout:</p>
+<ul>
+<li>after some retries without SoftwareUpdate message answer from the asset, the corresponding component update is set to failed</li>
+<li>after some time without SoftwareUpdate message answer from the asset, the SoftwareUpdate message is sent again. This is repeated until retry attempts are exhausted</li>
+<li>if an asset interested by the update of a component connects to Agent after the beginning of the update of this component, then the SoftwareUpdate message is sent immediately to this asset, and the timeout for this retry is reseted.</li>
+<li>at Agent boot, if the Agent detects that an update was running before the reboot, the update is resumed: the component that was being updated but has not send update result is notified again. This new notification on Agent reboot counts as a retry.</li>
+<li>last thing to know: retry attempts are kept over Agent reboots.</li>
+</ul>
+<p>The retry number and the timeout duration can be configured using update configuration table.</p>
+<h4 id="final-stage-and-error-management">6.4. Final stage and error management</h4>
+<p>The update will be successful only if all components are correctly updated; so if any of the component update failed, the whole update job is failed.</p>
+<p>If an component update fails before the end:</p>
+<ul>
+<li>Components that haven't been alerted of the update yet (i.e. components following the one that failed, using the components list order of the Manifest) will not be notified of any update.</li>
+<li>Version of components that have already reported success will be stored</li>
+</ul>
+<p>When an error occurs, the Update module will try to forward the error description the server, depending on the realm of possibilities of the protocol that provided the update.</p>
+<p>Finally, when Update module can compute the overall result of the update, it will report it to the server using the appropriate protocol.</p>
+<h1 id="install-script-within-software-update-package">7. Install script within Software Update Package</h1>
+<p>The install script functionality is triggered when an update package contains a component with package field beginning by &quot;@sys.update.&quot; like &quot;@sys.update.packagename&quot;.</p>
+<p>Note: This feature will define/reference a Component that <strong>like any other Component</strong>:</p>
+<ul>
+<li>will be <strong>referenced by the Package field</strong> (for instance &quot;@sys.update.packagename&quot;)</li>
+<li>will be updated with the <strong>same rules</strong> about location, VersionFrom and VersionTo fields</li>
+</ul>
+<h4 id="content-specifications">7.1. Content Specifications</h4>
+<p>Some constraints about install script with</p>
+<ul>
+<li><strong>must</strong> <strong>exist</strong> when @sys.update.package is targeted, otherwise Software Update will fail</li>
+<li><strong>must</strong> be in <strong>lua</strong>, in a file named <strong>install.lua</strong></li>
+<li><strong>must</strong> be in a folder, located and named by the component location field</li>
+<li><strong>must</strong> <strong>throw</strong> an error to report error, either the component update will be assumed as <strong>success</strong></li>
+</ul>
+<p>example of update package with embedded install script.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">$</span> <span class="kw">ls</span> <span class="ot">-</span><span class="kw">la</span> <span class="kw">package</span><span class="ot">/</span>
+<span class="ot">-</span><span class="kw">rw</span><span class="ot">-</span><span class="kw">r</span><span class="co">--r</span><span class="al">--</span><span class="co">  1 lbarthelemy lbarthelemy    0 2009-10-29 17:30 Manifest</span>
+<span class="kw">drwxr</span><span class="ot">-</span><span class="kw">xr</span><span class="ot">-</span><span class="kw">x</span>  <span class="dv">2</span> <span class="kw">lbarthelemy</span> <span class="kw">lbarthelemy</span> <span class="dv">4096</span> <span class="dv">2009</span><span class="ot">-</span><span class="dv">10</span><span class="ot">-</span><span class="dv">29</span> <span class="dv">17</span>:<span class="dv">28</span> <span class="kw">HouseApp</span>
+
+$ <span class="kw">cat</span> <span class="kw">Manifest</span>
+<span class="kw">local</span> <span class="kw">update</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">version</span> <span class="ot">=</span> <span class="st">&quot;1.2&quot;</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">components</span> <span class="ot">=</span> <span class="ot">{</span>
+ <span class="ot">{</span>
+  <span class="kw">name</span> <span class="ot">=</span> <span class="st">&quot;@sys.update.HouseApp&quot;</span>,
+  <span class="kw">location</span> <span class="ot">=</span> <span class="st">&quot;HouseApp&quot;</span>,
+  <span class="kw">version</span> <span class="ot">=</span> <span class="dv">1.2</span>
+ <span class="ot">}</span>
+<span class="ot">...</span>
+<span class="ot">}</span></code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">ls</span> -la HouseApp/
+-rwxr--r--  1 lbarthelemy lbarthelemy    0 2009-10-29 17:30 run
+-rw-r--r--  1 lbarthelemy lbarthelemy    0 2009-10-29 17:30 HouseApp
+-rw-r--r--  1 lbarthelemy lbarthelemy    0 2009-10-29 17:30 another_file
+-rw-r--r--  1 lbarthelemy lbarthelemy    0 2009-10-29 17:29 install.lua -<span class="kw">&gt;</span> THIS IS THE FILE that will used <span class="kw">as</span> <span class="kw">install</span> script
+drwxr-xr-x  2 lbarthelemy lbarthelemy 4096 2009-10-29 17:28 some_data</code></pre>
+<h4 id="running-environment">7.2. Running environment</h4>
+<p>The update script will be run in the Agent environment, with <strong>access to all functionalities</strong>.</p>
+<p>Furthermore, some info will be provided in a table as parameter of the script to ease the development of the script:</p>
+<ul>
+<li>param.cwd: running directory, likely to be the running directory of the Agent</li>
+<li>param.script_dir: directory where is actually stored (after package extraction) the install script</li>
+<li>param.name : name of component without @sys, ex : update.packagename</li>
+<li>param.version : version of component</li>
+<li>param.parameters : (optional) a table contains parameters given by component in package</li>
+</ul>
+<h4 id="example">7.3. Example</h4>
+<p>This Lua code can be put in an install.lua file in an update package.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- retrieve parameter giving access to some info</span>
+<span class="kw">local</span> <span class="kw">param</span> <span class="ot">=</span> <span class="ot">...</span>
+
+<span class="kw">local</span> <span class="kw">res</span>,<span class="kw">err</span> <span class="ot">=</span> some_custom_action_to_do<span class="ot">(</span><span class="kw">param</span><span class="ot">.</span><span class="kw">script_dir</span><span class="ot">)</span>
+
+<span class="co">-- check error and report it using error function</span>
+<span class="kw">if</span> <span class="kw">not</span> <span class="kw">res</span> <span class="kw">then</span> <span class="fu">error</span><span class="ot">(</span><span class="st">&quot;Error while running install scrip:&quot;</span><span class="ot">..(</span><span class="kw">err</span> <span class="kw">or</span> <span class="st">&quot;nil&quot;</span><span class="ot">))</span> <span class="kw">end</span>
+
+<span class="co">--else success</span></code></pre>
+<h1 id="local-update-package-installation">8. Local update package installation</h1>
+<p>Basic Idea: running an update job using an update package copied on the target by the user. No need to do M3DA Command implying Platform services server.<br /> Expected usage: Initial Agent configuration, ...</p>
+<ul>
+<li>Local update can be started at any time if no other update is currently running.</li>
+</ul>
+<pre class="sourceCode lua"><code class="sourceCode lua">localupdate<span class="ot">()</span></code></pre>
+<ul>
+<li>Automatic Local update checking are done:
+<ul>
+<li>at Agent boot</li>
+<li>at the end of any update, including at the end of local update.</li>
+</ul></li>
+<li>local package need be put as a <strong>tar archive</strong> in <strong>runtime/update/drop</strong>folder:
+<ul>
+<li>runtime/update/drop folder of your device can be identified by running the LUA command &quot;:require'agent.update.common'.dropdir&quot;</li>
+<li>the tar archive should have the same format as in <a href="Software_Update_Package.html">Software Update Package</a>, but no md5 involved</li>
+<li>Update module looks for a file named *<strong>updatepackage.tar</strong>* file. You can change this name by setting desired name in config, in update.localpkgname parameter.</li>
+<li>If more than one file match this pattern, Update try to use the first one, ASCII order is used.</li>
+</ul></li>
+<li>At the end of local update, the archive file and extract folder content are <strong>deleted</strong></li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Don't set config update.localpkgname parameter with a name that contains <strong>'</strong> character, if so the update will fail at update checking step.</p>
+</blockquote>
+<p>FAQ:</p>
+<ul>
+<li>If Update client receives an update job/package from server while being processing &quot;local&quot; package, the new update job is rejected. (Only one update job can occur at the same time)</li>
+<li>As Update module is not responsible for update package data transfer in the case of localupdate, it is not responsible for data correctness. So no md5 check is done in this case. tar format should be enough anyway.</li>
+<li>At the end of local update package installation, <strong>no notification</strong> is sent to any server.</li>
+</ul>
+<h4 id="example-simplest-local-update-to-do-agent-provisioning">8.1. Example: simplest local update to do Agent provisioning</h4>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>This Manifest file should work with out of the box (i.e. from git) Agent with correct <strong>defaulconfig.lua</strong> file</p>
+</blockquote>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Global information</span>
+<span class="ot">{</span>
+<span class="kw">version</span> <span class="ot">=</span> <span class="st">&quot;YourInitialVersionHere&quot;</span>,
+ 
+<span class="co">-- Components information</span>
+<span class="kw">components</span> <span class="ot">=</span> <span class="ot">{</span>
+  <span class="ot">{</span>
+  <span class="kw">name</span> <span class="ot">=</span> <span class="st">&quot;@sys.update.startupconfig&quot;</span>,
+  <span class="kw">location</span> <span class="ot">=</span> <span class="st">&quot;/scripts&quot;</span>,
+  <span class="kw">version</span> <span class="ot">=</span> <span class="st">&quot;componentInitialVersion&quot;</span>
+  <span class="ot">}</span>
+<span class="ot">}</span> <span class="co">-- end of Components information</span>
+
+<span class="ot">}</span> <span class="co">-- end of Manifest</span></code></pre>
+<h1 id="error-code">9. Error code</h1>
+<p>Those codes are the error code returned by the update module.<br />Those codes will also be used to acknowledge</p>
+<h4 id="package-checking-errors">Package checking errors</h4>
+<table>
+<col width="14%" />
+<col width="36%" />
+<col width="49%" />
+<thead>
+<tr class="header">
+<th align="left">error code</th>
+<th align="left">error cause</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">450</td>
+<td align="left">Invalid update file name</td>
+<td align="left">The absolute path of update file contains a bad character &quot; ' &quot;</td>
+</tr>
+<tr class="even">
+<td align="left">451</td>
+<td align="left">Cannot parse the update file name correctly</td>
+<td align="left">The absolute path of update file isn't in good format</td>
+</tr>
+<tr class="odd">
+<td align="left">452</td>
+<td align="left">Cannot create folder to extract update package</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">453</td>
+<td align="left">Cannot extract update package</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">454</td>
+<td align="left">Cannot open manifest file</td>
+<td align="left">Cannot open or find manifest file</td>
+</tr>
+<tr class="even">
+<td align="left">455</td>
+<td align="left">Cannot read manifest file</td>
+<td align="left">The manifest file cannot be read</td>
+</tr>
+<tr class="odd">
+<td align="left">456</td>
+<td align="left">Cannot load manifest chunk</td>
+<td align="left">Cannot load the manifest file as Lua a chunk</td>
+</tr>
+<tr class="even">
+<td align="left">457</td>
+<td align="left">Manifest file is not valid lua file</td>
+<td align="left">There are syntaxe lua error in the manifest file</td>
+</tr>
+<tr class="odd">
+<td align="left">458</td>
+<td align="left">Manifest file doesn't returns a table but</td>
+<td align="left">The loading and executing manifest file doesn't return a Lua table</td>
+</tr>
+<tr class="even">
+<td align="left">459</td>
+<td align="left">Dependency error for a component</td>
+<td align="left">This kind of error is detected by checking the dependency of the component in the manifest file: it has to match installed software</td>
+</tr>
+<tr class="odd">
+<td align="left">460</td>
+<td align="left">Package protect failed</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">479</td>
+<td align="left">Manifest error</td>
+<td align="left">This error is detected by checking the dependency, version, provide, format... of the components in the manifest file. It includes the error code number 459</td>
+</tr>
+</tbody>
+</table>
+<h4 id="update-process-errors">Update process errors</h4>
+<table>
+<col width="14%" />
+<col width="36%" />
+<col width="49%" />
+<thead>
+<tr class="header">
+<th align="left">error code</th>
+<th align="left">error cause</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">461</td>
+<td align="left">Too much retries for component</td>
+<td align="left">Cannot send EMP commands to component (unexisting component) or component doesn't return a response.</td>
+</tr>
+<tr class="even">
+<td align="left">462</td>
+<td align="left">SoftwareUpdate command was not correctly executed by asset</td>
+<td align="left">The EMP SoftwareUpdate cmd was not correctly accepted/executed by asset</td>
+</tr>
+<tr class="odd">
+<td align="left">463</td>
+<td align="left">Alertnextcomponent error</td>
+<td align="left">Error while alerting the asset: e.g. the asset is not connected</td>
+</tr>
+<tr class="even">
+<td align="left">464</td>
+<td align="left">Cannot find folder or manifest file of current update</td>
+<td align="left">Cannot find folder or manifest file while starting dispatch the components from current update</td>
+</tr>
+<tr class="odd">
+<td align="left">465</td>
+<td align="left">Update step is not successfully finished</td>
+<td align="left">Cannot find the result code error while doing update steps</td>
+</tr>
+<tr class="even">
+<td align="left">471</td>
+<td align="left">User update callback failed</td>
+<td align="left">Asset : The user callback function is failed, a non-integrer number is returned in the callback function</td>
+</tr>
+<tr class="odd">
+<td align="left">472</td>
+<td align="left">No User update callback set</td>
+<td align="left">Asset : No user update callback function is set</td>
+</tr>
+<tr class="even">
+<td align="left">600</td>
+<td align="left">Update aborted by user request</td>
+<td align="left">Asset application used update request API to abort the update</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ra-internal-updaters-errors">RA Internal updaters errors</h4>
+<table>
+<col width="14%" />
+<col width="36%" />
+<col width="49%" />
+<thead>
+<tr class="header">
+<th align="left">error code</th>
+<th align="left">error cause</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">473</td>
+<td align="left">Update path is not valid</td>
+<td align="left">dispatch updators : update path is not valid</td>
+</tr>
+<tr class="even">
+<td align="left">473</td>
+<td align="left">Sub path is not valid</td>
+<td align="left">dispatch updators : sub path update is not valid (no shortcut matching the path)</td>
+</tr>
+<tr class="odd">
+<td align="left">474</td>
+<td align="left">install.lua file does not exist</td>
+<td align="left">installscript updators : there is any install.lua file in given location</td>
+</tr>
+<tr class="even">
+<td align="left">475</td>
+<td align="left">Cannot load install.lua script</td>
+<td align="left">installscript updators : cannot load install.lua script</td>
+</tr>
+<tr class="odd">
+<td align="left">476</td>
+<td align="left">Script execution error</td>
+<td align="left">installscript updators : cannot execute install.lua script</td>
+</tr>
+<tr class="even">
+<td align="left">477</td>
+<td align="left">ApplicationContainer is not activated</td>
+<td align="left">appcon Updator: ApplicationContainer updater cannot be run because ApplicationContainer is not activated</td>
+</tr>
+<tr class="odd">
+<td align="left">478</td>
+<td align="left">ApplicationContainer updater result</td>
+<td align="left">appcon Updator: ApplicationContainer updater failed while installing/uninstalling applications</td>
+</tr>
+</tbody>
+</table>
+<h4 id="download-errors">Download errors</h4>
+<table>
+<col width="14%" />
+<col width="36%" />
+<col width="49%" />
+<thead>
+<tr class="header">
+<th align="left">error code</th>
+<th align="left">error cause</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">-1</td>
+<td align="left">Update module is not activated</td>
+<td align="left">Activation of update module can be done in RA configuration 'agent.config.update.activate' (true or false)</td>
+</tr>
+<tr class="even">
+<td align="left">551</td>
+<td align="left">Wrong params in SoftwareUpdate command</td>
+<td align="left">Need package url and package signature in SoftwareUpdate command</td>
+</tr>
+<tr class="odd">
+<td align="left">552</td>
+<td align="left">Error while doing http request</td>
+<td align="left">Error while doing http request to download update package</td>
+</tr>
+<tr class="even">
+<td align="left">553</td>
+<td align="left">Signature mismatch for update archive</td>
+<td align="left">The md5 signature of package is different before and after download</td>
+</tr>
+<tr class="odd">
+<td align="left">554</td>
+<td align="left">Bad update informations</td>
+<td align="left">The url of package or signature of package is not valid</td>
+</tr>
+<tr class="even">
+<td align="left">555</td>
+<td align="left">Not enough free space to download package</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">556</td>
+<td align="left">invalid current update</td>
+<td align="left">Current update or protocol setting is not valid</td>
+</tr>
+<tr class="even">
+<td align="left">557</td>
+<td align="left">unsupported protocol</td>
+<td align="left">The 'localupdate' or 'm3da' protocol is not found</td>
+</tr>
+<tr class="odd">
+<td align="left">558</td>
+<td align="left">Update rejected by update module</td>
+<td align="left">SoftwareUpdate command tries to notify a new available update to module update, but this command is rejected</td>
+</tr>
+</tbody>
+</table>
+<h4 id="internal-errors">Internal errors</h4>
+<table>
+<col width="14%" />
+<col width="36%" />
+<col width="49%" />
+<thead>
+<tr class="header">
+<th align="left">error code</th>
+<th align="left">error cause</th>
+<th align="left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">501</td>
+<td align="left">Cannot get free space on device</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">502</td>
+<td align="left">Not enough space to extract package</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">503</td>
+<td align="left">Cannot get the number of files in package</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">504</td>
+<td align="left">Cannot get the size of package without extracting it</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">505</td>
+<td align="left">Malformed update data</td>
+<td align="left">Malformed update data: unknown internal error</td>
+</tr>
+<tr class="even">
+<td align="left">506</td>
+<td align="left">Other update was already in progress</td>
+<td align="left">Other update was already in progress, only one update at the same time, new update is rejected</td>
+</tr>
+<tr class="odd">
+<td align="left">489 -&gt; 499</td>
+<td align="left">project dependent error</td>
+<td align="left">These numbers represent errors in according to projets of clients, they are defined by application clients</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

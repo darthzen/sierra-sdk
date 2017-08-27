@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libcdb_cdb.a  CMakeFiles/lib_cdb_cdb.dir/cdb.c.o CMakeFiles/lib_cdb_cdb.dir/cdb_hash.c.o CMakeFiles/lib_cdb_cdb.dir/cdb_make.c.o
+/usr/bin/ranlib ../../static-libs/libcdb_cdb.a

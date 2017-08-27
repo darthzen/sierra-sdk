@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="agent-userguide">Agent UserGuide</h1>
+<h4 id="introduction">1. Introduction</h4>
+<p>This document explains the usage of the Platform Embedded API (Application Programming Interface). The API is planned to be available in several programming languages and programming patterns: Lua, C and Java. The aim is to be generic, but whenever it is necessary, language specific notes can still be present in this document.</p>
+<p>In order to be more concrete, a code sample for every programming language/pattern is provided along with this document.</p>
+<h4 id="platform-overview">2. Platform Overview</h4>
+<h5 id="general-architecture">2.1. General Architecture</h5>
+<p>The platform enables applicative data management, device management, and an easy way to configure a set of devices according to costumer needs.<br /> The platform can be divided into two parts: the platform server and the device side. Here is a simple representation of those two sides.</p>
+<div class="figure">
+<img src="images/Agent_UserGuide_General_Arch.png" /><p class="caption"></p>
+</div>
+<p>The embedded application encodes the data and events and sends them to the embedded Agent through an IPC (e.g. a socket). The agent adds a message envelope (compression, authentication, etc.), and sends it to the platform server through HTTP or another transport protocol.</p>
+<p>The platform server front-end receives and decodes it, and sends it to the application data store where data and events will be stored.</p>
+<h5 id="embedded-architecture">2.2. Embedded Architecture</h5>
+<p>The next figure illustrates the typical embedded architecture on a Linux target.<br />This architecture is composed of the Agent, the Agent libraries, and one or more applications.</p>
+<p>The Agent may run in a different process (as a daemon) or be statically linked in a monolithic software.</p>
+<div class="figure">
+<img src="images/Agent_UserGuide_Device_Arch.png" /><p class="caption"></p>
+</div>
+<h5 id="embedded-agent">2.3. Embedded Agent</h5>
+<p>The embedded Agent is in charge of dispatching incoming messages to applications and sending user applicative data and events to the platform server. The exchange between applications and the Agent is done through an IPC. This guarantees a high separation between application code and system code.</p>
+<p>Before sending a message to the server, the agent adds a message envelope (compression, authentication, headers, etc.). All data received by the Agent has to be serialized according to the protocol specification described in <a href="http://wiki.eclipse.org/Mihini/M3DA_Specification">M3DA_Specification</a>. This serialization is done by the Agent Connector library described below.</p>
+<h5 id="user-libraries">2.4. User Libraries</h5>
+<p>The user libraries is named Agent Connector libraries and addresses several needs:</p>
+<ul>
+<li>It enables communication with the Agent. It is an abstraction of the IPC used to communicate with it</li>
+<li>It provides Device Management features like Agent tree access (including its configuration)</li>
+<li>It provides data sending/receiving APIs</li>
+<li>It automatically serializes the data to be sent to the Server through the Agent. It handles all the complexity of the protocol structure</li>
+<li>It abstracts system dependent features likes SMS, Reboot, etc.</li>
+</ul>
+<h4 id="racon-embedded-library">3. Racon embedded library</h4>
+<p>See <a href="Racon_Lua_library.html">Racon embedded library page</a>.</p>
+<h4 id="code-sample">4. Code Sample</h4>
+<p>The code samples show how to use the Racon Connector library in different programming languages. The implemented application simulates an asset called &quot;house&quot; with two rooms. Some data and events are sent for those two rooms.</p>
+<p>While starting, the asset sends an event, indicating status &quot;booting&quot;, and a timestamp to the server.</p>
+<p>The bedroom temperature is sent three times, with heating preset value (constant value here) and timestamp. An event &quot;Temperature too hot&quot; is sent when the room temperature crosses an alarm threshold.</p>
+<p>The livingroom temperature is sent five times with timestamps.<br /> The event &quot;Window opened&quot; is also sent five times. This event is not related to the room temperature.</p>
+<p>A specific Command listener waits for a Command reception named &quot;stopheating&quot; on the asset &quot;house&quot;, and a trace prints the data embedded within the received command.</p>
+<p>The given code samples use as few as possible system calls in order to simplify the understanding of the Racon Connector library. All actions thus happen synchronously. <br /> For the same reason, the time elapsing is basically simulated so that timestamps are not all identical. More practical applications will use periodic timers, event driven actions, etc.</p>
+<p>Application Data Model:</p>
+<table>
+<col width="17%" />
+<col width="20%" />
+<col width="17%" />
+<col width="37%" />
+<col width="6%" />
+<thead>
+<tr class="header">
+<th align="left">Path</th>
+<th align="left">Data structure</th>
+<th align="left">Period and/or number of occurrence</th>
+<th align="left">Values</th>
+<th align="left">Policy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">house.event</td>
+<td align="left">status, timestamp</td>
+<td align="left">on boot</td>
+<td align="left">{&quot;booting&quot;, timestamp}</td>
+<td align="left">&quot;now&quot;</td>
+</tr>
+<tr class="even">
+<td align="left">house.bedroom.data</td>
+<td align="left">temperature, preset, timestamp</td>
+<td align="left">1 sec, 3 times</td>
+<td align="left">{19,19, timestamp}, {12, 19, timestamp} , {17, 19, timestamp}</td>
+<td align="left">&quot;hourly&quot;</td>
+</tr>
+<tr class="odd">
+<td align="left">house.bedroom.event.temptoolow</td>
+<td align="left">temperature, alarm_temperature, timestamp</td>
+<td align="left">one time</td>
+<td align="left">{12, 19, timestamp}</td>
+<td align="left">&quot;now&quot;</td>
+</tr>
+<tr class="even">
+<td align="left">house.living-room.data</td>
+<td align="left">temperature, timestamp</td>
+<td align="left">1 sec, 5 times</td>
+<td align="left">{16, timestamp}, {17, timestamp}, {18, timestamp}, {17, timestamp}, {19, timestamp}</td>
+<td align="left">&quot;hourly&quot;</td>
+</tr>
+<tr class="odd">
+<td align="left">house.living-room.event.windowopened</td>
+<td align="left">status, timestamp</td>
+<td align="left">one time</td>
+<td align="left">{&quot;open&quot;, timestamp}</td>
+<td align="left">&quot;now&quot;</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>INFO</strong> <br />- Previous model use &quot;data&quot; and &quot;event&quot; sub paths to help in the differentiation of events; this is only to improve readability of the sample.<br />- A platform server model corresponding to the code sample is available, and is to be provided along with the code sample source code.</p>
+</blockquote>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="lua-rpc">Lua RPC</h1>
+<p>This Lua modules add Remote Procedure Calls facilities in the Lua VM.</p>
+<p>It is biderectionnal so it is possible to execute RPC on the local VM and on the remote VM.</p>
+<h1 id="lua-rpc-api">Lua RPC API</h1>
+<p>The Lua module is called <strong>rpc</strong>. To load it:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="fu">require</span> <span class="st">&#39;rpc&#39;</span> </code></pre>
+<h5 id="create-a-lua-rpc-bidirectional-listening-socket">Create a Lua RPC bidirectional listening socket</h5>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">client</span>, <span class="kw">err</span> <span class="ot">=</span> <span class="kw">rpc</span><span class="ot">.</span>newserver<span class="ot">(</span><span class="kw">address</span>, <span class="kw">port</span><span class="ot">)</span> </code></pre>
+<p><em>address</em> and <em>port</em> are optional, and default values are 'localhost', 1999.<br /> This function <strong>blocks</strong> until a client connect and return an instance of a the remote peer (can do RPC on)</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>The server socket is then closed and no other client will be able to reconnect</p>
+</blockquote>
+<h4 id="create-a-lua-rpc-listening-socket-server-only">Create a Lua RPC listening socket (server only)</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">status</span>, <span class="kw">err</span> <span class="ot">=</span> newserveronly<span class="ot">(</span><span class="kw">address</span>, <span class="kw">port</span><span class="ot">)</span> </code></pre>
+<p><em>address</em> and <em>port</em> are optional, and default values are 'localhost', 1999.<br /> Returns the server socket on success or nil followed by an error in case of failure.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>The server socket stays listening, and thus several clients can connect to that server (in parallel or successively)</p>
+</blockquote>
+<h4 id="create-a-lua-rpc-client">Create a Lua RPC client</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">client</span>, <span class="kw">err</span> <span class="ot">=</span> <span class="kw">rpc</span><span class="ot">.</span>newclient<span class="ot">(</span><span class="kw">address</span>, <span class="kw">port</span><span class="ot">)</span> </code></pre>
+<p><em>address</em> and <em>port</em> are optional, and default values are 'localhost', 1999.<br /> This function connects to a listening socket and return an instance of a remote peer (can do RPC on)</p>
+<h4 id="execute-an-rpc">Execute an RPC</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">results</span><span class="ot">...</span> <span class="ot">=</span> <span class="kw">client</span>:<span class="fu">call</span><span class="ot">(</span><span class="kw">procedureID</span>, <span class="kw">procedureParams</span><span class="ot">...)</span> </code></pre>
+<p>This function block until the remote procedure call is finished on the remote peers. It returns the results of the remote execution.<br /> In addition:</p>
+<ul>
+<li>this function raises an error if the remote call raised an error</li>
+<li>this function returns nil, &quot;function not existing&quot; if nothing exist with the given ID</li>
+<li>this function returns nil, &quot;not a func&quot; is the procedureID is not a function object</li>
+</ul>
+<h4 id="evaluate-a-variable">Evaluate a variable</h4>
+<p>A specific function is added into and rpc object in order to be able to evaluate variable.<br /> It is then easy to evaluate a variable remotely:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">value</span> <span class="ot">=</span> <span class="kw">client</span>:eval<span class="ot">(</span><span class="kw">somevariablename</span><span class="ot">)</span> </code></pre>
+<p>where <em>somevariablename</em> is a string representing the name of the variable</p>
+<h4 id="declare-and-execute-a-remote-function">Declare and execute a remote function</h4>
+<p>A very convenient method helps you to declare and seamlessly call a function on the remote peer.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"> <span class="kw">f</span> <span class="ot">=</span> <span class="kw">client</span>:newexec<span class="ot">(</span><span class="kw">script</span><span class="ot">)</span> </code></pre>
+<p>where <em>script</em> can be either</p>
+<ul>
+<li>a string representing Lua code</li>
+<li>a string buffer (i.e. Lua table containing string fragment as an array) representing Lua code</li>
+<li>an actual (local) function that is going to be exported remotely, provided that this function does not have upvalues</li>
+</ul>
+<p>Some examples:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="kw">f</span> <span class="ot">=</span> <span class="kw">client</span>:newexec<span class="ot">(</span><span class="st">&quot;print(...)&quot;</span><span class="ot">)</span>
+f<span class="ot">(</span><span class="st">&quot;toto&quot;</span><span class="ot">)</span> <span class="co">-- will call the remote function print giving &quot;toto&quot; as argument</span>
+
+<span class="kw">local</span> <span class="kw">f</span> <span class="ot">=</span> <span class="kw">client</span>:newexec<span class="ot">({</span><span class="st">&quot;return&quot;</span>, <span class="st">&quot; ... + 1&quot;</span><span class="ot">})</span>
+<span class="kw">return</span> f<span class="ot">(</span><span class="dv">1</span><span class="ot">)</span> <span class="co">-- will return the computation of 1+1 executed remotly</span>
+
+
+
+<span class="kw">local</span> <span class="kw">function</span> g<span class="ot">(</span><span class="kw">x</span><span class="ot">)</span>
+   <span class="fu">print</span><span class="ot">(</span><span class="kw">x</span><span class="ot">)</span>
+   <span class="kw">return</span> <span class="kw">x</span><span class="ot">+</span><span class="dv">1</span>
+<span class="kw">end</span>
+<span class="kw">local</span> <span class="kw">f</span> <span class="ot">=</span> <span class="kw">client</span>:newexec<span class="ot">(</span><span class="kw">g</span><span class="ot">)</span>
+<span class="kw">return</span> f<span class="ot">(</span><span class="dv">1</span><span class="ot">)</span> <span class="co">-- will return the computation equivalent to the function g but executed remotely</span></code></pre>
+<h1 id="rpc-protocol">RPC protocol</h1>
+<p>The RPC is done though serialization over a socket (TCP/IP) link. The two peers exchange messages in order to create a RPC and to retrieve the response. Multiple RPC can be executed on the same link asynchronously since the header of each message contains a sequence number. However the sequence number is coded on a single byte, it means that two RPC should be executed concurrently if they have the same sequence number.</p>
+<p>There are two types of messages: Call message and Response message. The two messages share the same header.<br /> Messages are bytes aligned in the stream.</p>
+<h4 id="common-header">Common Header</h4>
+<table>
+<col width="13%" />
+<col width="86%" />
+<tbody>
+<tr class="odd">
+<td align="left">1 byte</td>
+<td align="left">Message type: 0=Call, 1=Response</td>
+</tr>
+<tr class="even">
+<td align="left">1 byte</td>
+<td align="left">Sequence number. Should start at 0 and increase by one for each successive command. It wraps at 256</td>
+</tr>
+<tr class="odd">
+<td align="left">4 bytes</td>
+<td align="left">Message payload size coded as an unsigned integer</td>
+</tr>
+</tbody>
+</table>
+<h4 id="call-message">Call message</h4>
+<table>
+<col width="22%" />
+<col width="77%" />
+<tbody>
+<tr class="odd">
+<td align="left">6 bytes</td>
+<td align="left">Header (see above)</td>
+</tr>
+<tr class="even">
+<td align="left">x bytes</td>
+<td align="left">SerializedObject: Remote procedure ID (usually a string)</td>
+</tr>
+<tr class="odd">
+<td align="left">x bytes</td>
+<td align="left">SerializedObject x n: Remote procedure params</td>
+</tr>
+</tbody>
+</table>
+<h4 id="response-message">Response message</h4>
+<table>
+<col width="11%" />
+<col width="88%" />
+<tbody>
+<tr class="odd">
+<td align="left">6 bytes</td>
+<td align="left">Header (see above)</td>
+</tr>
+<tr class="even">
+<td align="left">1 byte</td>
+<td align="left">Procedure call status: 0=OK, 1=Exception occurred, 2=Procedure ID is nil(=does not exist), 3=Procedure ID is not a procdeure (callable function)</td>
+</tr>
+<tr class="odd">
+<td align="left">x bytes</td>
+<td align="left">SerializedObject x n: Remote procedure results (when an exception occurred it is the description of the exception)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="specific-rpc-names">Specific RPC names</h4>
+<p>Lua RPC defines specific function names that can be used to extend the RPC capabilities.</p>
+<ul>
+<li><strong>__rpceval</strong>: take one parameter that must be a string representing a global variable. This call will return the value of that variable</li>
+<li><strong>rpcbuildexec</strong>: take once parameter that can be either a string or string buffer representing some Lua code, or a luatobin serialized Lua function. This call return an <em>execid</em> that will be necessary to actually call this newly declared function</li>
+<li><strong>rpcrunexec</strong>: take one mandatory parameter: the <em>execid</em> of the remote function to call (see __rpcbuildexec), and some optional parameters that will be provided to the function remotly called. This call returns the returned values of the executed function.</li>
+</ul>
+</body>
+</html>

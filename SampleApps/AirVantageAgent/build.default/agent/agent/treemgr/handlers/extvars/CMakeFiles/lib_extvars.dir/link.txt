@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libextvars.so -o ../../../../../runtime/lib/libextvars.so CMakeFiles/lib_extvars.dir/extvars.c.o ../../../../../static-libs/libpointerlist.a ../../../../../static-libs/libluasignal.a -lpthread 

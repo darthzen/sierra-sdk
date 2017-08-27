@@ -1,0 +1,68 @@
+ - MC7xxx_GSM_GPRS_EDGE_WCDMA_LTE_DATA_EVDO_SMS.sqf
+ - Description - Has Data, LTE, eHRPD, SMS, WCDMA items enabled. 
+               - NOTE1: For capturing data packets on the MC73xx modems, 
+                       start dm logging before starting the data sessios.
+               - NOTE2: Only the first 80 bytes of the data packets are captured
+
+ - MC7xxx_LTE_QOS_filter.sqf
+ - Description - Filter to use while debugging QoS realted issues. 
+               - NOTE: This will generate a lot of logs
+
+ - MC7xxx_With-Low-Level-Debug.sqf
+ - Description - Filter that includes low level messages that can be used to 
+                 debug connectivity and RF realted issues. 
+               - NOTE: This will generate a lot of logs
+
+ - MC7xxx_filter_for_throughput-dataloss_issues.sqf
+ - Description - Filter to use when debugging throughout and data loss issues.
+               - NOTE1: This will generate a lot of logs
+               - NOTE2: For MC73xx modems, start logging BEFORE starting the 
+                        data session
+
+ - MC7xxx_GPS_Log.sqf
+ - Description - DM log filter to use for all GPS related issues
+
+ - MC9090_generic_filter_CDMA.sqf
+ - Description - To be used as the generic filter when raising any of the 
+                 following issues with the MC9090(CDMA)
+                 - Mobile registration issues
+                 - SMS issues
+                 - Data connection related issues
+                 - Technology selection related issues (1xRTT to EVDO for CDMA)
+                 - QMI call failures
+                 - OMADM for CDMA
+                 - RUIM
+
+ - MC9090_generic_filter_UMTS.sqf
+ - Description - To be used as the generic filter when raising any of the 
+                 following issues with  the MC9090(UMTS)
+                 - Mobile registration issues
+                 - SMS issues
+                 - Data connection related issues
+                 - Technology selection related issues (HSPA to EDGE for GSM etc)
+                 - QMI call failures
+                 - UIM
+
+ - v11026_Generic_GSM_WCDMA_LTE_IP.sqf
+ - Description - use it as a default filter for 73xx and 74xx modems.
+
+ - v11026_Generic_GSM_WCDMA_LTE_IP.sqf
+ - Description - use it for CDMA issue debugging
+
+ - v11026_Generic_GPS.sqf
+ - Description - use it for GPS issue debugging
+
+ - v11026_GSM_WCDMA_LTE_EHRPD_L1_IP.sqf
+ - Description - use it for lower layers debugging.
+ - Besides the default, CDMA and GPS filters there is a filter to capture lower layers like L1,
+ - Management, MAC (v11026_GSM_WCDMA_LTE_EHRPD_L1_IP.sqf) This captures about 5 times more DM
+ - that the default filter but sometimes we need to debug lower layers.
+
+ - Filter throughput test:
+ - 0-20secs start the SDK, bringup data
+ - 20 secs -1:20 secs (1min) DL 10Mbps iperf
+
+ - DM log reference sizes with different filters and throughput
+ - 25M - v11026_Generic_GSM_WCDMA_LTE_IP.sqf  
+ - 126M - v11026_GSM_WCDMA_LTE_EHRPD_L1_IP.sqf
+

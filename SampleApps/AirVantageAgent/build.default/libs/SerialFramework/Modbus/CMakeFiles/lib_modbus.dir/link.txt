@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../../static-libs/libmodbus.a  CMakeFiles/lib_modbus.dir/modbus_serializer.c.o
+/usr/bin/ranlib ../../../static-libs/libmodbus.a

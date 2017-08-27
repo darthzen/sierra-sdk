@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,checks.so -o ../../runtime/lua/checks.so CMakeFiles/checks.dir/checks.c.o 

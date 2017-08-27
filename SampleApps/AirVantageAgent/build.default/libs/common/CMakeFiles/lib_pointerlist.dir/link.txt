@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libpointerlist.a  CMakeFiles/lib_pointerlist.dir/pointer_list.c.o
+/usr/bin/ranlib ../../static-libs/libpointerlist.a

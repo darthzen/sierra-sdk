@@ -1,0 +1,59 @@
+treemgr agent.devman.extvars.devtree2
+
+# Symbolic mapping, each Device Management Tree variable mapped to its logical name.
+# See the VarList array in the file devtree2_adapter.c for identifier meaning.
+
+# below are accesed from portal
+system.advanced.radio_temp = 900
+system.advanced.datetime = 902
+system.cellular.apn.current=1001
+system.cellular.cdma.link.ecio=1002
+system.cellular.cdma.link.operator=1010
+system.cellular.cdma.link.pn_offset=1011
+system.cellular.cdma.link.sid=1012
+system.cellular.cdma.link.nid=1013
+system.cellular.gsm.link.cell_id=1020
+system.cellular.gsm.link.ecio=1021
+system.cellular.gsm.link.operator=1022
+system.cellular.link.bytes_rcvd=1040
+system.cellular.link.bytes_sent=1041
+system.cellular.link.ip=1042
+system.cellular.link.pkts_rcvd=1043
+system.cellular.link.pkts_sent=1044
+system.cellular.link.roam_status=1045
+system.cellular.link.service=1046
+system.cellular.link.rssi=1050
+system.cellular.lte.link.rsrp=1060
+system.cellular.lte.link.rsrq=1061
+system.gps.altitude=2000
+system.gps.latitude=2001
+system.gps.longitude=2002
+
+# these two params are query during system acativation
+
+system.cellular.hw_info.imei=1030
+
+#SIM Parameters
+system.cellular.sim.iccid=1031
+system.cellular.sim.imsi=1032
+
+#Subscriber Parameters
+system.cellular.subscriber.phone_num=1025
+system.sw_info.fw_ver=1026
+system.sw_info.fw_name=1027
+
+#Aleos Cellular subscriber Parameters
+#system.aleos.cellular.state=3000
+
+# Cellular Parameters
+system.cellular.apn.apn=1000
+
+# GPS Parameters
+
+
+# Internal
+system.cellular.sn=4000
+
+# defined just to avoid handler not found error print
+system.advanced.board_temp = 899
+system.advanced.reset_nb = 901

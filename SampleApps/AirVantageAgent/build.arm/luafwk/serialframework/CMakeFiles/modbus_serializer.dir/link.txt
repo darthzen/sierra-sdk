@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,serializer.so -o ../../runtime/lua/modbus/serializer.so CMakeFiles/modbus_serializer.dir/modbus/lua_modbus_serializer.c.o CMakeFiles/modbus_serializer.dir/common/lua_serial_fwk.c.o ../../static-libs/libmodbus.a 

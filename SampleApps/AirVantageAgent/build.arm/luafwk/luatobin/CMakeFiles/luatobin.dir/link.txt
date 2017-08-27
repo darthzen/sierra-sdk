@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,luatobin.so -o ../../runtime/lua/luatobin.so CMakeFiles/luatobin.dir/__/__/libs/common/awt_endian.c.o CMakeFiles/luatobin.dir/luatobin.c.o 

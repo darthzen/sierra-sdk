@@ -1,0 +1,2 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ar cr ../../../static-libs/libmodbus.a  CMakeFiles/lib_modbus.dir/modbus_serializer.c.o
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ranlib ../../../static-libs/libmodbus.a

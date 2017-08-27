@@ -1,0 +1,1 @@
+/usr/bin/cc  -O3 -DNDEBUG    CMakeFiles/appmon_daemon.dir/appmon_daemon.c.o  -o ../../runtime/bin/appmon_daemon -rdynamic ../../static-libs/libpointerlist.a ../../runtime/lib/libSwi_log.so -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.default/runtime/lib 

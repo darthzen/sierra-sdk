@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="using-treemgr-handlers-for-asset-management">Using treemgr handlers for asset management</h1>
+<p><strong>[WORK IN PROGRESS]</strong></p>
+<p>This is a proposal to reuse treemgr as a means for asset to be monitored by the server.</p>
+<p>Rationale</p>
+<p>The current system as shown some serious shortcoming in real-life use:</p>
+<ul>
+<li>it's primarily optimized to let servers write data into nested Lua tables, but that's not such a frequent use case. At least, most applications want to be notified about the writing, maybe in addition to storing the values in a table</li>
+<li>it proved trickier than anticipated to store server-sent data in persisted tables</li>
+<li>it's confusing to have two distinct tree APIs, with slitghtly different concepts underneath</li>
+<li>it's purely passive, there's no way to notify the server except through a completely distinct mechanism based on :pushdata().</li>
+</ul>
+<p>So we consider the possibility to let users manage server exchanges through treemgr handlers, which they can either write themselves or derive from handler factories provided by us. These handlers would be mounted in a standard place in the logical tree, but would execute through Racon RPC, so that the user code runs in a user process. We would also like to extend the registration process, so that it supports typical monitoring filters (on deadband, threshold etc.), and can be configured to report to the server.</p>
+<h4 id="general-design">General design</h4>
+<p>the Agent has a data tree; its variables can be get/set/monitored by 3rd party applications, and get/set by the server. We want to let 3rd party applications extend the tree with custom variables, which will thus also become accessible to the server. 3rd party applications interact with the server through assets, which can either reflect an actual physical object (a thermometer, a compressor...) or be a software abstraction. Applications can create assets with &quot;racon.newAsset(assetId)&quot;, then use them to push data to the server, and configure them to react properly to server requests.</p>
+<p>To the existing asset API, we add:</p>
+<p>asset:mount([path,] handler)</p>
+<ul>
+<li>path: optional path relative to the asset's root node, defaults to the root path &quot;&quot;.</li>
+<li>handler: object which provides method :get(), and optionally methods :set(), :register() and :unregister()</li>
+<li>returns &quot;ok&quot; or nil + error msg<br /> the asset tree is accessible in treemgr under node &quot;assets.<assetid\>&quot;. This means that a node of path &quot;x.y&quot;, which in principle belongs to the device asset, should also be accessible as &quot;assets.@sys.x.y&quot;. Whether this is important and worth implementing remains to be seen.</li>
+</ul>
+<p>Whenever a ReadNode command or a data write is received from the server, it is translated into a :get() or :set() operation on path &quot;assets.<asset_id>.<path>&quot;.</p>
+<p>asset:register(active_vars, callback, [passive_vars], [sampling_period], [filter_name], [filter_args...])</p>
+<ul>
+<li>active_vars: variable or list of variables whose value changes must be monitored</li>
+<li>callback: function to be run every time a value change is detected and accepted. The function receives as parameter a table of path/value pairs, where every active var whose value changed, plus every passive var whether its value changed or not, is stored.</li>
+<li>passive_vars: variables whose value must be passed to the callback every time it's called, even if the passive var's value didn't change.</li>
+<li>sampling_period: if present, the variable's value is sampled at this period (in seconds). This allows to monitor variables who can't notify changes by themselves. If absent, the system relies on the handlers' ability to notify changes. If a sampling period is given, the variables are monitored by sampling only, even if they would have been able to notify their changes by themselves.</li>
+<li>filter_name: if present, filter out some irrelevant changes, according to policies such as &quot;min_threshold&quot;, &quot;max_threshold&quot;, &quot;deadband&quot; etc. Most filters take additional parameters, passed after the filter name.&lt;</li>
+<li>returns &quot;ok&quot; or nil + error msg<br /> It can be useful to register a variable for report to the server. This can be done by passing the appropriate callback:</li>
+</ul>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">function</span> report_to_server<span class="ot">(</span><span class="kw">policy</span><span class="ot">)</span>
+    <span class="kw">return</span> <span class="kw">function</span><span class="ot">(</span><span class="kw">asset</span>, <span class="kw">map</span><span class="ot">)</span>
+               <span class="kw">asset</span>:pushdata<span class="ot">(</span><span class="kw">map</span>, <span class="kw">policy</span><span class="ot">)</span>
+               <span class="kw">return</span> <span class="st">&#39;ok&#39;</span>
+           <span class="kw">end</span>
+<span class="kw">end</span></code></pre>
+<p>It is also desirable to subscribe to such data monitoring from the server. A standard function inpired by ReadNode should do the trick: MonitorNode(active_vars, [passive_vars], policy, [sampling_period], [filter], [filter_args...])</p>
+<p>TODO: how to unregister? We have to define a primary key, or to send some token to the server.</p>
+<p>Note that get/set operations on asset nodes must not be performed directly: user code must run on the user-side of the Racon connector, so these operations must happen through Racon's RPC system. Similarly, notification by the user must go through Racon. This might mean that a function distinct from treemgr.notify() will have to be used, which goes through Racon; an asset:notify() API would probably make sense.</p>
+<h4 id="mounting-multiple-handlers">Mounting multiple handlers</h4>
+<p>Users can mount several handlers on several nodes. It allows to reuse handler factories provided with the agent, for common needs (e.g. storing values in RAM or flash, handling commands...); they can still create their own handlers for more specialized needs. In effect, instead of providing one kind (__default) of handling functions inside a nested tables structure, user associate get/set/register handling functions with paths were they are used. Writing in a nested tables structure remains possible, but given that it is much less frequently needed than we anticipated, the system isn't optimized for this use case anymore.</p>
+<p>TODO: Examples.</p>
+</body>
+</html>

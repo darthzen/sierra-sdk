@@ -1,0 +1,877 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li>modbustcp</li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>modbustcp</code></h1>
+   
+<p>Implementation of modbus TCP, TCP/RTU and TCP/ASCII.</p>
+
+   
+
+<p>This module relies on the <a href="socket.html##(socket)">socket#socket</a> module to handle socket configuration and
+actual data exchanges.</p>
+
+<p>Data read and written by this module are exchanged as <em>buffers</em>, i.e. either
+strings or lists of strings. String(s) contain data as 8-bits bytes;
+endianness depends on what is expected/returned by the slave device.
+To encode such strings, it is suggested to rely on <a href="pack.html##(pack)">pack#pack</a>, the binary
+string packing library.</p>
+
+
+			<h2><a id="#(config)">Type <code>config</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).maxsocket">config.maxsocket</a></td>
+		<td class="summary">
+<p>to set the maximum number of socket in use.
+accepted value is a stricly positive integer.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(config).timeout">config.timeout</a></td>
+		<td class="summary">
+<p>to configure the socket timeout, in seconds.
+accepted value is a stricly positive integer.</p>
+
+
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(modbus)">Type <code>modbus</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbus).new">modbus.new(cfg, mode)</a></td>
+		<td class="summary">
+<p>Creates a new <a href="##(modbusdev)">#modbusdev</a>.</p>
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(modbusdev)">Type <code>modbusdev</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).close">modbusdev:close()</a></td>
+		<td class="summary">
+<p>Closes a modbus instance.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).customRequest">modbusdev:customRequest(req, host, port, sid, payload)</a></td>
+		<td class="summary">
+<p>Send a custom MODBUS request, not directly supported by the API.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).readCoils">modbusdev:readCoils(host, port, sid, address, length)</a></td>
+		<td class="summary">
+<p>Read a sequence of consecutive coils' content.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).readDiscreteInputs">modbusdev:readDiscreteInputs(host, port, sid, address, length)</a></td>
+		<td class="summary">
+<p>Read a sequence of consecutive discrete inputs' content.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).readHoldingRegisters">modbusdev:readHoldingRegisters(host, port, sid, address, length)</a></td>
+		<td class="summary">
+<p>Read a sequence of consecutive holding registers' content.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).readInputRegisters">modbusdev:readInputRegisters(host, port, sid, address, length)</a></td>
+		<td class="summary">
+<p>Read a sequence of consecutive input registers' content.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).writeMultipleCoils">modbusdev:writeMultipleCoils(host, port, sid, address, nbvalues, values)</a></td>
+		<td class="summary">
+<p>Write a sequence of consecutive coils.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).writeMultipleRegisters">modbusdev:writeMultipleRegisters(host, port, sid, address, values)</a></td>
+		<td class="summary">
+<p>Write a sequence of consecutive registers.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).writeSingleCoil">modbusdev:writeSingleCoil(host, port, sid, address, value)</a></td>
+		<td class="summary">
+<p>Write a value in a coil.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(modbusdev).writeSingleRegister">modbusdev:writeSingleRegister(host, port, sid, address, value)</a></td>
+		<td class="summary">
+<p>Write a value in a register.</p>
+
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(modbustcp)" >Type <code>modbustcp</code></a></h2>
+	
+			<h2><a id="#(config)" >Type <code>config</code></a></h2>
+				
+<p>Modbus configuration table.</p>
+
+
+	<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(config).maxsocket" >
+<strong>config.maxsocket</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to set the maximum number of socket in use.
+accepted value is a stricly positive integer.</p>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(config).timeout" >
+<strong>config.timeout</strong>
+</a>
+</dt>
+<dd>
+	
+<p>to configure the socket timeout, in seconds.
+accepted value is a stricly positive integer.</p>
+
+
+
+</dd>
+</dl>
+
+			<h2><a id="#(modbus)" >Type <code>modbus</code></a></h2>
+				<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(modbus).new" >
+<strong>modbus.new(cfg, mode)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates a new <a href="##(modbusdev)">#modbusdev</a>.</p>
+
+	
+<p>Default initialization is <code>TCP</code></p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> cfg </em></code>: 
+ an optional <a href="##(config)">#config</a> table.
+ Default values are
+ <code>{ maxsocket = 1, timeout = 1 }</code></p>
+
+				</li>
+				<li>
+				
+<p><code><em> mode </em></code>: 
+tcp mode as a string: <code>"TCP", "ASCII"</code> or <code>"RTU"</code>. <br />
+Defaults to <code>"TCP"</code>.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+<p><em><a href="##(modbusdev)">#modbusdev</a>:</em>
+the new <a href="##(modbusdev)">#modbusdev</a> on success</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+			<h2><a id="#(modbusdev)" >Type <code>modbusdev</code></a></h2>
+				<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).close" >
+<strong>modbusdev:close()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Closes a modbus instance.</p>
+
+
+		<h3>Return value</h3>
+				
+
+<p>"ok"</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).customRequest" >
+<strong>modbusdev:customRequest(req, host, port, sid, payload)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Send a custom MODBUS request, not directly supported by the API.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> req </em></code>: 
+number identifying the custom function</p>
+
+				</li>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+slave id</p>
+
+				</li>
+				<li>
+				
+<p><code><em> payload </em></code>: 
+optional data bytes to send, as a string</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the response as a buffer.
+  Beware, it contains some error-checking bytes as a suffix.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).readCoils" >
+<strong>modbusdev:readCoils(host, port, sid, address, length)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Read a sequence of consecutive coils' content.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> length </em></code>: 
+number of coils</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>read coil values in a buffer</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).readDiscreteInputs" >
+<strong>modbusdev:readDiscreteInputs(host, port, sid, address, length)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Read a sequence of consecutive discrete inputs' content.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> length </em></code>: 
+number of inputs</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>read discrete inputs contant in a buffer</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).readHoldingRegisters" >
+<strong>modbusdev:readHoldingRegisters(host, port, sid, address, length)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Read a sequence of consecutive holding registers' content.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> length </em></code>: 
+number of registers</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>read holding registers content in a buffer</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).readInputRegisters" >
+<strong>modbusdev:readInputRegisters(host, port, sid, address, length)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Read a sequence of consecutive input registers' content.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> length </em></code>: 
+number of inputs</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>read input registers content in a buffer</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).writeMultipleCoils" >
+<strong>modbusdev:writeMultipleCoils(host, port, sid, address, nbvalues, values)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Write a sequence of consecutive coils.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> nbvalues </em></code>: 
+number of coils to write</p>
+
+				</li>
+				<li>
+				
+<p><code><em> values </em></code>: 
+values to write, as a bytes buffer (8 coil per byte)</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code></p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+				</li>
+			</ol>
+			<h3>Usage:</h3>
+		<pre class="example"><code> m = modbustcp.new()
+ res,err=m:writeMultipleCoils('10.41.51.50', 502, 1, 0, 8, string.pack('x8',
+ true,false,false,true,false,true,false,true)
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).writeMultipleRegisters" >
+<strong>modbusdev:writeMultipleRegisters(host, port, sid, address, values)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Write a sequence of consecutive registers.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+starting address</p>
+
+				</li>
+				<li>
+				
+<p><code><em> values </em></code>: 
+values to write, as a word buffer (each register is a 16bits word)</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code></p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+				</li>
+			</ol>
+			<h3>Usage:</h3>
+		<pre class="example"><code> m = modbustcp.new()
+ res,err=m:writeMultipleRegisters('10.41.51.50', 502, 1, 0, string.pack("&lt;H8",21,159,357,654,852,
+ 357,654,852))
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).writeSingleCoil" >
+<strong>modbusdev:writeSingleCoil(host, port, sid, address, value)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Write a value in a coil.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+address of the coil</p>
+
+				</li>
+				<li>
+				
+<p><code><em> value </em></code>: 
+Boolean to write in the coil</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code></p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(modbusdev).writeSingleRegister" >
+<strong>modbusdev:writeSingleRegister(host, port, sid, address, value)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Write a value in a register.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+ip address or resolvable hostname of server</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+port number of server, defaults to port 502</p>
+
+				</li>
+				<li>
+				
+<p><code><em> sid </em></code>: 
+number defining the slave id to send the request to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> address </em></code>: 
+address of the coil</p>
+
+				</li>
+				<li>
+				
+<p><code><em> value </em></code>: 
+Short integer (<code>[0..0xFFFF]</code>) to write in the register</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>"ok"</code></p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

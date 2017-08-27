@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libcdb_unix.a  CMakeFiles/lib_cdb_unix.dir/error.c.o CMakeFiles/lib_cdb_unix.dir/open_read.c.o CMakeFiles/lib_cdb_unix.dir/open_trunc.c.o CMakeFiles/lib_cdb_unix.dir/error_str.c.o CMakeFiles/lib_cdb_unix.dir/seek_set.c.o CMakeFiles/lib_cdb_unix.dir/seek_cur.c.o
+/usr/bin/ranlib ../../static-libs/libcdb_unix.a

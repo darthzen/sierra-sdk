@@ -1,0 +1,2 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ar cr ../../static-libs/libcdb_cdb.a  CMakeFiles/lib_cdb_cdb.dir/cdb.c.o CMakeFiles/lib_cdb_cdb.dir/cdb_hash.c.o CMakeFiles/lib_cdb_cdb.dir/cdb_make.c.o
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ranlib ../../static-libs/libcdb_cdb.a

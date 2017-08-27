@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="logging-framework">Logging framework</h1>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Logging framework is only available within Lua VM</p>
+</blockquote>
+<h4 id="log-display">Log display</h4>
+<p>How to use log framework to print a log trace:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="fu">log</span> <span class="ot">=</span> <span class="fu">require</span><span class="st">&quot;log&quot;</span>
+
+<span class="fu">log</span><span class="ot">(</span><span class="kw">module</span>, <span class="kw">severity</span>, <span class="kw">fmt</span>, <span class="ot">...)</span></code></pre>
+<p>fmt parameter (and next ones) is to be used to format text like in print function.</p>
+<h5 id="example">Example</h5>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">log</span><span class="ot">(</span><span class="st">&quot;GENERAL&quot;</span>, <span class="st">&quot;INFO&quot;</span>, <span class="st">&quot;Starting %s&quot;</span>, <span class="st">&quot;some module&quot;</span><span class="ot">)</span></code></pre>
+<p>produces following output:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">2011-01-26 11:31:59 GENERAL-INFO: Starting some module</code></pre>
+<h5 id="format-configuration">Format configuration</h5>
+<p>Those parameters can be modified using Agent Config (see Config section), or directly by modifying module values:</p>
+<ul>
+<li>log.format<br /> string used to apply specific formating before the log is outputted <br /> within a format, the following token are available (in addition of standard text)
+<ul>
+<li>%l =&gt; the actual log (given in 3rd argument when calling log() function)</li>
+<li>%t =&gt; the current date</li>
+<li>%m =&gt; module name</li>
+<li>%s =&gt; log level (severity)<br /> if format is set to false/nil then default format is used: &quot;%t %m-%s: %l&quot;</li>
+</ul></li>
+<li>log.timestampformat<br /> string to define the format of the timestamp, same format as what os.date takes<br /> It applies only if %t is in log.format parameter.</li>
+</ul>
+<h6 id="fallback-printing">Fallback printing</h6>
+<p>Log module can fail to format log because of :</p>
+<ul>
+<li>bad configuration of previous parameters</li>
+<li>bad usage, like string formating with nil parameter (e.g log(&quot;Something&quot;, &quot;INFO&quot;, &quot;%s&quot;, nil) )</li>
+</ul>
+<p>When such an error is detected, the log uses fallback printing and produces something like:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">Error</span> <span class="kw">in</span> <span class="kw">the</span> <span class="fu">log</span> <span class="kw">formating</span>! <span class="ot">(</span><span class="kw">bad</span> <span class="kw">argument</span> <span class="ot">#</span><span class="dv">2</span> to <span class="st">&#39;?&#39;</span> <span class="ot">(</span><span class="kw">string</span> <span class="kw">expected</span>, <span class="kw">got</span> <span class="kw">no</span> <span class="kw">value</span><span class="ot">))</span> <span class="ot">-</span> <span class="kw">Fallback</span> <span class="kw">to</span> <span class="kw">raw</span> <span class="kw">printing</span>:
+<span class="kw">module</span><span class="ot">=(</span><span class="kw">something</span><span class="ot">)</span>, <span class="kw">severity</span><span class="ot">=(</span><span class="kw">INFO</span><span class="ot">)</span>, <span class="fu">format</span><span class="ot">=(</span><span class="st">&quot;%s&quot;</span><span class="ot">)</span>, <span class="kw">args</span><span class="ot">=()</span></code></pre>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>Fallback printing output is stored like any other log when using log storing policies</p>
+</blockquote>
+<h4 id="log-filtering">Log filtering</h4>
+<p>Before being printed or stored, log are filtered depending on the severity (i.e. ordered levels) chosen for the log.<br /> The filtering is done by module:</p>
+<ul>
+<li>you can define a minimum level for each module, log with level strictly below minimum level are not displayed.</li>
+<li>however, if a module has no specific level configured, a defautlevel is used.</li>
+</ul>
+<p>Log level per module can be configured either by using Agent config, or using log.setlevel function</p>
+<p>Here is the order of the levels configuration, from the most restrictive to the most verbose level:<br /> 'NONE', 'ERROR', 'WARNING', 'INFO', 'DETAIL', 'DEBUG', 'ALL'</p>
+<p>Filtering examples:<br /> if &quot;TEST&quot; module minimum level is set to &quot;WARNING&quot;, then a call to log(&quot;TEST&quot;, &quot;INFO&quot;, &quot;something&quot;) will not be discarded.</p>
+<p>If the log severity is not in previous level list, the log is not filtered.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>Log filtering applies for both printing and storing logs, i.e. if a log is filtered/discarded, log storing policies don't apply for this log</p>
+</blockquote>
+<h4 id="log-colors">Log colors</h4>
+<p>Only, ERROR, WARNING, DEBUG, INFO, DETAIL have custom colors that can be changed for now.<br /> Log colors are added in Agent, standalone log module doesn't produce color.<br /> To be activated, config.log.enablecolors has to be set.</p>
+<p>Once activated, the <strong>terminal emulator</strong> has to <strong>support the ASCII control characters</strong> used to produce the colors.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>Log colors are not stored when using log storing policies</p>
+</blockquote>
+<h4 id="log-policies">Log policies</h4>
+<p>A log policy is to determine how/when to store logs in flash/persistent storage, eventually using a RAM buffer to store them temporarily.</p>
+<h5 id="main-features-overview">Main features / Overview</h5>
+<ul>
+<li>Only available from Lua</li>
+<li>Storing logs in flash and ram buffers</li>
+<li>Retrieve logs stored flash and ram using AWT-DA command</li>
+<li>Log size (in flash and ram) configurable</li>
+<li>Log storing does not depend on Agent</li>
+<li>Lua Log API is common between Open AT and Linux devices</li>
+</ul>
+<p>Existing Policies:<br /> Note: Each policy needs to have parameters to be initialized.</p>
+<ul>
+<li><strong>context</strong>:<br /> Store in flash logs that reach the configured level plus the preceding cached log entries coming from ram buffer:<br /> i.e. store all logs entries in ram, except the logs with a higher severity level than the level config parameter.<br /> When a log with an higher severity level is outputted (log level severity &gt;= level config paramater severity), <br /> the ram buffer is copied in flash, followed by the current log.<br /> parameters:
+<ul>
+<li>level: optional, minimum severity level that triggers the copy of RAM log buffer to flash storage. Default value is set to ERROR.<br /> E.g.:if level is set to &quot;WARNING&quot;, logs with ERROR or WARNING levels will trigger copy of RAM log buffer to flash storage, and then be copied to flash too.</li>
+<li>ramlogger: mandatory, table with parameters to init RAM buffer (size) , see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+<li>flashlogger: mandatory, table with parameters to init flash buffer (size, path (optional), ...), see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+</ul></li>
+<li><strong>sole</strong>:<br /> Store in flash all logs entries with higher severity than the configured level. No context is stored, only the sole log entry.<br /> If ram buffer is activated, store all logs in RAM.<br /> parameters:
+<ul>
+<li>level: optional, minimum severity level to trigger log entry writing to flash. Default value is set to WARNING.<br /> E.g.: if level is set to &quot;WARNING&quot;, each log with ERROR or WARNING levels will be written to flash storage.</li>
+<li>ramlogger: optionnal, table with parameters to init RAM buffer (size) , see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+<li>flashlogger: mandatory, table with parameters to init flash buffer (size, path (optional), ...), see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+</ul></li>
+<li><strong>buffered_all</strong>:<br /> Each log entry is stored in ram, then when the ram buffer is full, the buffer is stored in flash.<br /> parameters:
+<ul>
+<li>ramlogger: mandatory, table with parameters to init RAM buffer (size) , see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+<li>flashlogger: mandatory, table with parameters to init flash buffer (size, path (optional), ...), see <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a> for details.</li>
+</ul></li>
+</ul>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>For now, those limitations apply to log policies:</p>
+<ul>
+<li>Log policy can be configured only on boot.</li>
+<li>A log policy can be added only by modifying logtools.lua in trunk/luafwk</li>
+<li>Existing log policies cannot be stopped dynamically once configured.</li>
+<li>Only one log policy can be active at the time.</li>
+</ul>
+</blockquote>
+<p>More details about implementation and low level API can be found in <a href="Log_storing_internal_API_and_implemetation_details.html">Log storing internal API and implemetation details</a></p>
+<h4 id="log-upload-m3da-command">Log upload M3DA Command</h4>
+<p>Note: feature for Agent only</p>
+<ul>
+<li>FTP or HTTP Post (Not supported yet)</li>
+<li>upload of logs stored in flash or in ram</li>
+</ul>
+<p>In order to identify the uploaded logs, the file is uploaded with this name</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>Agent_deviceid_type_ts.log</p>
+</blockquote>
+<p>where some fields are dynamic:</p>
+<ul>
+<li>deviceid is the device unique id</li>
+<li>type is ram or flash, to indicate if uploaded logs come from ram or flash space.</li>
+<li>ts is the timestamp of log upload action.</li>
+</ul>
+<p>For LogUpload command description, please see : <a href="Device_Management.html">Device Management</a> page.</p>
+<h5 id="ftp-upload-security">FTP upload security</h5>
+<p>For FTP upload, the Agent can used user/pwd parameters to upload to a FTP server which requires to login.<br /> Those parameters are to be set in Agent Configuration. Please refer to Agent Configuration log subsection to correctly set FTP user and password parameters.</p>
+</body>
+</html>

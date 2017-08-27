@@ -1,0 +1,1112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li>sched</li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>sched</code></h1>
+   
+
+<p>Sched is a Lua collaborative scheduler: it allows several Lua tasks to
+run in parallel, and to communicate together when they need to
+interact.</p>
+
+   
+
+<p>It offers a convinient way to write programs which address multiple
+I/O driven issues simultaneously, with much less hassle than with
+preemptive multithreading frameworks; it also doesn't require
+developers to adopt unusual programming styles, as expected by Erlang,
+map-reduce variants, or callback-driven frameworks such as node.js.
+Among other appropriate usages, it allows to easily write and deploy
+the applications typically powering machine-to-machine
+infrastructures.</p>
+
+
+<h1>General principles</h1>
+
+<h2>Vocabulary</h2>
+
+<ul>
+    <li><p><strong>processes</strong>: concurrent fragments of programs, each having
+    exclusive access to its own memory space.</p></li>
+    <li><p><strong>threads</strong>: concurrent fragments of programs, sharing the same
+    memory space, and which therefore need to synchronize their
+    memory operations.</p></li>
+    <li><p><strong>tasks</strong>: concurrent fragments of programs of any
+    sort. Processes and threads are particular kinds of tasks.</p></li>
+</ul>
+
+
+<h2>Collaborative multi-tasking</h2>
+
+<p>"Collaborative" implies that the currently running task only changes
+when it calls a blocking function, i.e. a function which has to wait
+for an external event. For instance, an attempt to read on an empty
+socket will block until more data arrives from the network. If the
+current task tries to read from an empty socket, it will be
+unscheduled, and will let other tasks run, until more network data
+arrive. Most collaborative multi-tasking systems, including sched,
+cannot leverage multi-core architectures.</p>
+
+<p>Collaborative multi-tasking has one big advantage: it considerably
+reduces the concurrency issues. Since there are few places where the
+running task can change, there are much fewer occasions for race
+conditions, deadlocks, and other concurrency-specific problems.
+Programmers used to develop preemptively multithreaded applications
+will be delighted to see how uneventful to debug collaborative
+concurrent systems are.</p>
+
+<p>To quote the authors of Lua, "<em>we did not (and still do not) believe
+in the standard multithreading model, which is preemptive concurrency
+with shared memory: we still think that no one can write correct
+programs in a language where a=a+1 is not deterministic</em>"
+[<a href="http://www.lua.org/doc/hopl.pdf">pdf</a>]. Hence, Lua coroutines share
+their memory, but give up non-deterministic preemptive scheduling.</p>
+
+
+<h2>Alternatives</h2>
+
+<p>Other languages make the complementary choice: for instance, Erlang
+retains preemptive concurrency, but forbids shared memory; although
+such languages allow to reach unmatched levels of reliability
+[<a href="http://www.sics.se/~joe/thesis/armstrong_thesis_2003.pdf">pdf</a>],
+they deeply change the way programmers have to model their
+programs. They are therefore less suitable to a generalist audience.</p>
+
+<p>It should be noted that Unix' original design philosophy (many small
+and short-lived specialized processes, with separated memories,
+which communicate through file descriptors and IPC), also restrains
+memory sharing to keep maintainable preemptive scheduling.</p>
+
+<p>Finally, some process oriented (separate memory and message-passing)
+multi-tasking systems are available in Lua, most notably Luaproc
+[<a href="http://www.inf.puc-rio.br/~roberto/docs/ry08-05.pdf">pdf</a>]. Although
+such systems make more sense for computation-intensive jobs on
+multi-core and distributed architectures, it is possible to make it
+cohabit with sched's multitasking (having several Luaproc
+processes, each running several sched threads).</p>
+
+
+<h2>Collaborative limitation</h2>
+
+<p>Collaborative multi-tasking comes with a limitation, compared to the
+preemptive variant. Greedy tasks, which never pause nor perform any
+blocking API call, might monopolize the CPU indefinitely. Although it
+rarely happen unless on purpose, it means that collaborative
+schedulers are unsuitable for real-time systems. If such real-time
+needs occur in a sched-based application, they must be addressed in
+C in a separate process, and the underlying OS must offer the suitable
+real-time performances.</p>
+
+<p>Another perceived issue is that a rogue task can crash all other tasks
+in the scheduler, but that's true of any pool of tasks sharing their
+memory, including systems like pthreads.</p>
+
+
+<h1>Sched principles</h1>
+
+<h2>Communication between tasks</h2>
+
+<p>Sched offers a fundamental communication mechanism, called the signal,
+over which other mechanisms (mutexes, fifos, synchronized program
+sections etc.) can be built. You will often find that signals are the
+simplest and most suitable way to coordinate tasks together, although
+the classic POSIX-like IPC systems are always available when needed or
+preferred.</p>
+
+<p>A signal is composed of:</p>
+
+<ul>
+    <li>an arbitrary emitter object;</li>
+    <li>an event: a string describing what noteworthy event happened to the
+    emitter;</li>
+    <li>optional arguments, which complete the description of the event's
+    circumstances.</li>
+</ul>
+
+<p>So every object in Lua can emit signals, and emitted signals can
+trigger reactions:</p>
+
+<ul>
+    <li>a signal can wake up a task which was waiting for it;</li>
+    <li>a signal can trigger the execution of a hook, i.e. a function which
+    is run every time a registered signal is detected.</li>
+</ul>
+
+<p>Objects are encouraged to emit signals every time an event of interest
+happens to them, so that other tasks can react to these events. For
+instance, the modem module emits a signal every time a SMS arrives; the
+NTP time synchronizer advertises clock changes through signals; IP
+interfaces signal important events such as going up or going down;
+every task emits a <code>'die'</code> signal when it exits, allowing other tasks
+to monitor their termination; etc. Many complex systems, such as the
+telnet shell, the ReadyAgent initialization procedure, or TCP data
+handling, are internally synchronized through signals.</p>
+
+
+<h2>Blocking tasks on signals with <code>sched.wait</code></h2>
+
+<p>A wait or a hook can be registered to many signals simultaneously, and
+conversely, a single signal can trigger many hooks and task wake-ups.</p>
+
+<p>Most waits and hooks wait for signals from only one emitter. Consider
+the following example:</p>
+
+<pre><code> local event, status, result = sched.wait(some_task, 'die')
+</code></pre>
+
+<p>It will block the current task until the task <code>some_task</code> terminates.
+<a href="##(sched).wait">sched.wait</a> returns the triggering event (here always <code>'die'</code>),
+and extra signal arguments. In the case of task <code>'die'</code> events, those are
+the status (whether the task exited successfully or because of an
+error), and any result returned by the function (or an error message
+if <code>status</code> is <code>false</code>).</p>
+
+<p>A task can wait for several events from a single emitter. For
+instance, the following statement will wait until the the network
+manager either succeeds or fails at mounting an IP interface:</p>
+
+<pre><code> sched.wait('NETMAN', {'MOUNTED', 'MOUNT_FAILED'})
+</code></pre>
+
+<p>If a number is added in the events list, it's a timeout in seconds: if
+none of the subscribed events occur before the timeout elapses, then
+<a href="##(sched).wait">sched.wait</a> returns with the event <code>'timeout'</code>:</p>
+
+<pre><code> local event = sched.wait('NETMAN', {'MOUNTED', 'MOUNT_FAILED', 30})
+ if     event == 'MOUNTED' then print "Success!"
+ elseif event == 'MOUNT_FAILED' then print "Failure!"
+ elseif event == 'timeout' then print "Took more than 30s to mount!"
+ else assert(false, "This cannot happen") end
+</code></pre>
+
+<p>One can also subscribe to every events sent by a given emitter, by
+subscribing to the special <code>'*'</code> string:</p>
+
+<pre><code> local event = sched.wait('NETMAN', '*')
+ if     event == 'MOUNTED' then print "Success!"
+ elseif event == 'MOUNT_FAILED' then print "Failure!"
+ else   print("Ignore event "..event) end
+</code></pre>
+
+<p>Special <code>'*'</code> event can be combined with a timeout, as in
+<code>sched.wait(X, {'*', 30})</code>.</p>
+
+<p>A task might need to wait on signals sent by several potential
+emitters. This need is addressed by the <a href="sched.multiWait.html">sched.multiWait</a> API,
+which works as <a href="sched.wait.html">sched.wait</a> except that it takes a list of
+emitters rather than a single one.</p>
+
+<p>Finally, a task can reschedule itself without blocking. It gives
+other tasks an opportunity to run; once every other task had a
+chance to run, the rescheduled task can restart. Task rescheduling
+is performed by calling <a href="sched.wait.html">sched.wait</a> without argument.</p>
+
+<pre><code>for i=1, BIG_NUMBER do
+    perform_long_computation_chunk(i)
+    sched.wait()
+end
+</code></pre>
+
+<h2>Attaching hooks to signals</h2>
+
+<p>Hooks can be registered the same way tasks can be blocked: they are
+attached to a signal emitter, and to one, several or all (<code>'*'</code>)
+events. A hook has a function, which is executed when one of the
+registered signal is registered. The variants of hook attachment
+are:</p>
+
+<ul>
+    <li><p><a href="##(sched).sigHook">sched.sigHook</a><code>(emitter, events, func, hook_args...)</code>: the function
+    <code>func(event, hook_args..., signal_args...)</code> will be run every time
+    <code>sched.signal(emitter, event, signal_args...)</code> is triggered. It is
+    run synchronously, i.e. before <code>sched.signal()</code> returns, so it can't
+    contain any blocking API call. It will keep being triggered
+    every time one of the registered signal occurs, until the reference
+    returned by <a href="##(sched).sigHook">sched.sigHook</a> is passed to <a href="##(sched).kill">sched.kill</a>.</p></li>
+    <li><p><a href="##(sched).sigOnce">sched.sigOnce</a><code>(emitter, events, func, hook_args...)</code>: behaves as
+    <a href="##(sched).sigHook">sched.sigHook</a>, except that it's only run once. The hook
+    function is also forbidden from performing blocking calls.</p></li>
+    <li><p><a href="##(sched).sigRun">sched.sigRun</a><code>(emitter, events, func, hook_args...)</code>: works as
+    <a href="##(sched).sigHook">sched.sigHook</a>, except that the function is run as a scheduled
+    task. As a result, there is no guarantee that it will be executed as
+    soon as the signal has been sent (there might be a delay), but it is
+    allowed to call blocking APIs. For most usages, this form is to be
+    preferred as simpler.</p></li>
+    <li><p><a href="##(sched).sigRunOnce">sched.sigRunOnce</a><code>(emitter, events, func, hook_args...)</code>: behaves
+    as <a href="##(sched).sigRun">sched.sigRun</a>, except that it's only run once. The hook
+    function is also allowed to perform blocking calls.</p></li>
+</ul>
+
+<p>There is a guarantee that hooks won't miss an signal. Blocking a task
+might lose some signals, if they are not "consumed" fast enough.</p>
+
+<p>For instance, if one task A produces a signal every 2 seconds,
+and a task B waits for them, but takes 3 seconds to process each
+of them, some of them will be lost: they will occur when B processes
+the previous one, and doesn't wait for any signal.</p>
+
+<p>Therefore, if it is important not to lose any occurrence of a signal, a
+waiting task is not an adequate solution: either handle them in a
+hook, or pass them through a pipe.</p>
+
+
+<h2>Example</h2>
+
+<pre><code>sched.sigRun('FOO', 'BAR', function(event, arg)
+    print("&gt;&gt;&gt; sigRun FOO.BAR received event " .. event .. ", arg " .. arg)
+end
+
+sched.sigRunOnce('FOO', 'BAR', function(event, arg)
+    print("&gt;&gt;&gt; sigRunOnce FOO.BAR received event " .. event .. ", arg " .. arg)
+end
+
+sched.sigRun('FOO', '*', function(event, arg)
+    print("&gt;&gt;&gt; sigRun FOO.* received event " .. event .. ", arg " .. arg)
+end
+
+sched.sigRunOnce('FOO', '*', function(event, arg)
+    print("&gt;&gt;&gt; sigRunOnce FOO.* received event " .. event .. ", arg " .. arg)
+end
+
+sched.signal('FOO', 'GNAT', 1)
+&gt;&gt;&gt; sigRun FOO.* received event GNAT, arg 1
+&gt;&gt;&gt; sigRunOnce FOO.* received event GNAT, arg 1
+
+sched.signal('FOO', 'BAR', 2) -- sigRunOnce FOO.* now detached
+&gt;&gt;&gt; sigRun FOO.BAR received event FOO, arg 2
+&gt;&gt;&gt; sigRunOnce FOO.BAR received event FOO, arg 2
+&gt;&gt;&gt; sigRun FOO.* received event FOO, arg 2
+
+sched.signal('FOO', 'BAR', 3) -- sigRunOnce FOO.BAR now detached
+&gt;&gt;&gt; sigRun FOO.BAR received event FOO, arg 3
+&gt;&gt;&gt; sigRun FOO.* received event FOO, arg 2
+
+sched.signal('GNAT', 'BAR', 2) -- wrong emitter, no hook triggered
+</code></pre>
+
+
+<h2>Tasks life cycle</h2>
+
+<p>Tasks are created by <a href="##(sched).run">sched.run</a>: it takes a function, and
+optionally arguments to this function, and runs it as a separate,
+parallel task. It also returns the created task, as a regular
+coroutine. The main use for this is to either cancel it
+with <a href="##(sched).kill">sched.kill</a>, or wait for its termination with
+<code>sched.wait(task,'die')</code>.</p>
+
+<p>Tasks are sorted in an internal table:</p>
+
+<ul>
+    <li><p>blocked tasks are indexed, in <code>__tasks.waiting</code>, by the emitters and
+    events which might unblock them;</p></li>
+    <li><p>tasks which are ready to run are stacked in a <code>__tasks.ready</code> list.</p></li>
+</ul>
+
+<p>A task created with <a href="##(sched).run">sched.run</a> doesn't start immediately, it is
+merely stacked in <code>__tasks.ready</code>. When the current task dies or
+blocks, the next one in <code>__tasks.ready</code> takes over; it can be the last
+created one, or another one which went ready before it.</p>
+
+<p>The termination of a task is advertised by a <code>'die'</code> signal. By
+waiting for this signal, one can synchornize on a task's completion.
+The <code>'die'</code> signal has additional arguments: a status (<code>true</code> if the
+task returned successfully, <code>false</code> if it has been aborted by an
+error, <code>"killed"</code> if the task has been cancelled by <a href="##(sched).kill">sched.kill</a>),
+followed by either the returned value(s) or the error message. Here
+are some examples:</p>
+
+<pre><code>-- Common case, the task terminates successfully:
+task = sched.run(function()
+    for i=1,3 do
+       print "&gt;&gt;&gt; plop"
+       wait (2)
+    end
+    return "I'm done plopping."
+end)
+sched.sigHook(task, 'die', function(event, ...)
+    print("&gt;&gt;&gt; He's dead, Jim. His last words were: "..sprint{...})
+end)
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; He's dead, Jim. His last words were: { true, "I'm done plopping" }
+
+-- If the task is interrupted with sched.kill(task):
+&gt;&gt;&gt; plop
+sched.kill(task)
+&gt;&gt;&gt; He's dead, Jim. His last words were: { "killed" }
+
+-- If task dies with an error:
+task = sched.run(function()
+    for i=1,3 do
+       print "&gt;&gt;&gt; plop"
+       wait (2)
+    end
+    error "Aaargh!"
+end)
+sched.sigHook(task, 'die', function(event, ...)
+    print("&gt;&gt;&gt; He's dead, Jim. His last words were: "..sprint{...})
+end)
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; plop
+&gt;&gt;&gt; He's dead, Jim. His last words were: { false, "Aaargh!" }
+</code></pre>
+
+
+<p>Finally, there is the issue of launching the scheduler at the
+top-level. This issue is OS-dependent, but on POSIX-like systems, this
+is done by calling <code>sched.loop</code>: this function will run every task in
+a loop, and perform timer management in order to avoid busy waits. It
+never returns, unless you call <code>os.exit</code>. Therefore, before starting
+the loop, it is important to have prepared some tasks to launch, with
+<a href="##(sched).run">sched.run</a>.</p>
+
+<p>As an example, here is a complete program which starts a telnet server
+and writes the time in parallel, in a file, every 10 seconds.</p>
+
+<p>Notice that <code>shell.telnet.init</code> creates a listening socket, which will
+launch a new telnet client for each connection request, and each of
+these clients will run concurrently with other tasks.</p>
+
+<pre><code>require 'sched'
+require 'shell.telnet'
+
+sched.run (function()
+    shell.telnet.init{
+        address     = '0.0.0.0',
+        port        = 2000,
+        editmode    = "edit",
+        historysize = 100 }
+end)
+
+sched.run(function()
+    local f = io.open('/tmp/time.txt', 'w')
+    while true do
+        f :write(os.date(), '\n')
+        f :flush()
+        wait(10)
+    end
+end)
+
+sched.loop()
+</code></pre>
+
+
+	<h2><a id="#(sched)" >Type <code>sched</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).gc">sched.gc()</a></td>
+		<td class="summary">
+<p>Does a full Garbage Collect and removes dead tasks from waiting lists.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).kill">sched.kill(x)</a></td>
+		<td class="summary">
+<p>Kills a task.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).killSelf">sched.killSelf()</a></td>
+		<td class="summary">
+<p>Kills the current task.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).multiWait">sched.multiWait(emitters, events)</a></td>
+		<td class="summary">
+<p>Waits on several emitters.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).run">sched.run(f, ...)</a></td>
+		<td class="summary">
+<p>Runs a function as a new thread.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).sigHook">sched.sigHook(emitter, events, f, varargs)</a></td>
+		<td class="summary">
+<p>Hooks a callback function to a set of signals.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).sigOnce">sched.sigOnce(emitter, events, f, varargs)</a></td>
+		<td class="summary">
+<p>Hooks a callback function to a set of signals, to be triggered only once.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).sigRun">sched.sigRun(emitter, events, f, varargs)</a></td>
+		<td class="summary">
+<p>Hooks a callback function to a set of signals.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).sigRunOnce">sched.sigRunOnce(emitters, events, f, varargs)</a></td>
+		<td class="summary">
+<p>Hooks a callback function to a set of signals.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).signal">sched.signal(emitter, event, ...)</a></td>
+		<td class="summary">
+<p>Sends a signal from <code>emitter</code> with message <code>event</code>, plus optional extra args.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).step">sched.step()</a></td>
+		<td class="summary">
+<p>Runs all the tasks which are ready to run, until every task is blocked,
+waiting for an event (i.e.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(sched).wait">sched.wait(emitter, varargs)</a></td>
+		<td class="summary">
+<p> Forces the currently running task out of scheduling until a certain
+ signal is received.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(sched)" >Type <code>sched</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(sched).gc" >
+<strong>sched.gc()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Does a full Garbage Collect and removes dead tasks from waiting lists.</p>
+
+	
+
+<p>Dead tasks are removed when the expected event happens or when the expected
+event emitter dies. If that never occurs, and you still want to claim
+the memory associated with these dead tasks, you can always call this
+function and it will remove them.</p>
+
+<p>There's usually no need to call this function explicitly, it will be triggered
+automatically when it's needed and the scheduler is about to go idle.</p>
+
+		<h3>Return value</h3>
+				
+
+<p>memory available (in number of bytes) after gc.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).kill" >
+<strong>sched.kill(x)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Kills a task.</p>
+
+	
+
+<p>Implementation principle: the task is killed by either</p>
+
+<ul>
+    <li>making it send a <code>KILL_TOKEN</code> error if it is currently running</li>
+    <li>waking it up from a <a href="##(sched).wait">sched.wait</a> yielding with <code>KILL_TOKEN</code> as an argument,
+    which in turn makes <a href="##(sched).wait">sched.wait</a> send a <code>KILL_TOKEN</code> error.</li>
+</ul>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> x </em></code>: 
+task to kill, as returned by <a href="##(sched).sigHook">sched.sigHook</a> for example.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p><code>nil</code> if it killed another task,</p>
+
+				</li>
+				<li>
+				
+
+<p>never returns if it killed the calling task.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).killSelf" >
+<strong>sched.killSelf()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Kills the current task.</p>
+
+		<h3>Return value</h3>
+				
+
+<p>never returns, since the task is killed.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).multiWait" >
+<strong>sched.multiWait(emitters, events)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Waits on several emitters.</p>
+
+	
+<p>Same as <a href="##(sched).wait">sched.wait</a>, except that:</p>
+
+<ul>
+    <li>the first argument is a list of emitters rather than a single emitter;</li>
+    <li>it returns <code>emitter, event, args...</code> instead of just <code>event, args...</code>;
+    indeed, the caller might want to know which emitter rescheduled it;</li>
+    <li>it's illegal not to enclose events in a list.</li>
+</ul>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitters </em></code>: 
+table containing a list of the emitters to wait on</p>
+
+				</li>
+				<li>
+				
+<p><code><em> events </em></code>: 
+table containing a list of the events to wait on, or a string
+ describing an event's kind, or a number defining timeout for this call.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>emitter, event, args that caused this call to end.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).run" >
+<strong>sched.run(f, ...)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Runs a function as a new thread.</p>
+
+	
+
+<p><code>sched.run(f[, args...])</code> schedules <code>f(args...)</code> as a new task, which will
+run in parallel with the current one, after the current one yields.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> f </em></code>: 
+function or task to run</p>
+
+				</li>
+				<li>
+				
+<p><code><em> ... </em></code>: 
+optional arguments to pass to param <code>f</code></p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>new thread created to run the function</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).sigHook" >
+<strong>sched.sigHook(emitter, events, f, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Hooks a callback function to a set of signals.</p>
+
+	
+
+<p>Signals are described as for <a href="##(sched).wait">sched.wait</a>. See this function for more
+details.</p>
+
+<p>The callback is called synchronously as soon as the corresponding
+signal is emitted, and every time it is emittes. That is, the function
+<code>f</code> will have returned before the call to <a href="##(sched).signal">sched.signal</a> which triggered
+it returns.</p>
+
+<p>This puts a constraint on <code>f</code>: it must not block and try to reschedule itself.
+If a hook function calls a blocking API, it will trigger an error.</p>
+
+<p> The hook will receive as arguments the triggering event, and any extra params
+ passed along with the signal.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitter </em></code>: 
+list of signal emitters to watch or a string describing
+ single emitter to watch</p>
+
+				</li>
+				<li>
+				
+<p><code><em> events </em></code>: 
+events to watch from the emitters: a table containing a list
+ of the events to wait on, a string discribing an event's kind,
+ or a number defining timeout for this call.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> f </em></code>: 
+function to be used as hook</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+extra optional params to be given to hook when called</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>registered hook, which can be passed to <a href="##(sched).kill">sched.kill</a> to cancel
+ the registration.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).sigOnce" >
+<strong>sched.sigOnce(emitter, events, f, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Hooks a callback function to a set of signals, to be triggered only once.</p>
+
+	
+
+<p>This function has the same API and behavior as <a href="##(sched).sigHook">sched.sigHook</a>,
+except that the hook will only be run once: it detaches itself from
+all of its registrations when it's first triggered.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitter </em></code>: 
+a list of signal emitters to watch or a string describing
+ a single emitter to watch</p>
+
+				</li>
+				<li>
+				
+<p><code><em> events </em></code>: 
+events to watch from the emitters: a table containing a list
+ of the events to wait on, a string describing an event's kind,
+ or a number defining timeout for this call.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> f </em></code>: 
+function to be used as hook</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+extra optional params to be given to hook when called</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>registred hook</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).sigRun" >
+<strong>sched.sigRun(emitter, events, f, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Hooks a callback function to a set of signals.</p>
+
+	
+
+<p>This function has the same API as <a href="##(sched).sigHook">sched.sigHook</a>, except that <code>f</code> runs
+in a separate thread. The consequences are:</p>
+
+<ul>
+    <li><code>f</code> is not run immediately, but after the task which called the triggering
+    signal rescheduled;</li>
+    <li><code>f</code> is allowed to call blocking APIs.</li>
+</ul>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitter </em></code>: 
+a signal emitter to watch</p>
+
+				</li>
+				<li>
+				
+<p><code><em> events </em></code>: 
+events to watch from the emitters: a table containing a list
+ of the events to wait on, a string describing an event's kind,
+ or a number defining timeout for this call.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> f </em></code>: 
+function to be used as hook</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+extra optional params to be given to hook when called</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>registered hook, which can be passed to <a href="##(sched).kill">sched.kill</a> to cancel
+ the registration.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).sigRunOnce" >
+<strong>sched.sigRunOnce(emitters, events, f, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Hooks a callback function to a set of signals.</p>
+
+	
+<p>The hook will be called
+in a new thread (allowing the hook to block), and only one time.</p>
+
+<p>This function has the same API and behavior as <a href="##(sched).sigRun">sched.sigRun</a>,
+except that the hook will only be run once: it detaches itself from
+all of its registrations when it's first triggered.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitters </em></code>: 
+a signal emitter to watch</p>
+
+				</li>
+				<li>
+				
+<p><code><em> events </em></code>: 
+events to watch from the emitters: a table containing a list
+ of the events to wait on, a string describing an event's kind,
+ or a number defining timeout for this call.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> f </em></code>: 
+function to be used as hook</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+extra optional params to be given to hook when called</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>registered hook, which can be passed to <a href="##(sched).kill">sched.kill</a> to cancel
+ the registration.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).signal" >
+<strong>sched.signal(emitter, event, ...)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sends a signal from <code>emitter</code> with message <code>event</code>, plus optional extra args.</p>
+
+	
+
+<p>This means:</p>
+
+<ul>
+    <li>rescheduling every task waiting for this <code>emitter.event</code> signal;</li>
+    <li>immediately running the hooks listening to this signal;</li>
+    <li>reattaching the hook cells which don't have a <code>once</code> field.</li>
+</ul>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitter </em></code>: 
+arbitrary Lua object which sends the signal.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> event </em></code>: 
+a string representing the event's kind.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> ... </em></code>: 
+extra args passed to the woken up tasks and triggered hooks.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>nothing.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).step" >
+<strong>sched.step()</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Runs all the tasks which are ready to run, until every task is blocked,
+waiting for an event (i.e.</p>
+
+	
+<p>until <code>__tasks.ready</code> is empty).</p>
+
+<p>This function is used by the scheduler's top-level loop, but shouldn't
+be called explicitly by users.</p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(sched).wait" >
+<strong>sched.wait(emitter, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p> Forces the currently running task out of scheduling until a certain
+ signal is received.</p>
+
+	
+
+<p> Take a list of emitters, and a list of events. The task will be
+ rescheduled the next time one of the listed events happens to one of the
+ listed emitters. If there is a single emitter (resp. a single event),
+ it can be passed outside of a table, i.e.</p>
+<pre><code> wait(x, "open")
+</code></pre>
+<p> is the same as</p>
+<pre><code> wait({x}, {"open"})
+</code></pre>
+
+<p> If no emitter or no event is listed, the task waits for nothing in
+ particular, i.e. it puts itself back at the end of the scheduling
+ queue, thus giving other threads a chance to run.</p>
+
+<p> There must be a task currently running, i.e.
+ <a href="__tasks.running.html">__tasks.running</a> ~= nil.</p>
+
+<p> Cf. description of <a href="__tasks.waiting.html">__tasks.waiting</a> for a description of how tasks
+ are put to wait on signals.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> emitter </em></code>: 
+table listing emitters to wait on. Can also be string to define
+ single emitter, or a number to specify a timeout in seconds (wait used as sleep function)</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+optional varargs: can be events list in a table, or several events in
+ several arguments. Last event can be a number to specify a timeout call.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the event and extra parameters of the signal which unlocked the task.</p>
+
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>
+    --reschedules current task, giving other tasks a chance to run:
+    sched.wait()
+
+    -- blocks the current task for `timeout` seconds:
+    sched.wait(timeout)
+
+    -- waits until `emitter` signals this `event`:
+    sched.wait(emitter, event)
+
+    -- waits until `emitter` signals any event:
+    sched.wait(emitter, "*")
+
+    -- waits until `emitter` signals any one of the `eventN` in the list:
+    sched.wait(emitter, {event1, event2, ...})
+
+    -- waits until `emitter` signals any one of the `eventN` in the list,
+    -- or `timeout` seconds have elapsed, whichever occurs first:
+    sched.wait(emitter, {event1, event2, ...timeout})
+
+    -- admissible shorcut for `sched.wait(emitter, {event1, event2...}):
+    sched.wait(emitter, event1, event2, ...)
+
+</code></pre>
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

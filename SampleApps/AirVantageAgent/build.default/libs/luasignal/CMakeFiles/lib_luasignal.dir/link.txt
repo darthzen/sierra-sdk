@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libluasignal.a  CMakeFiles/lib_luasignal.dir/luasignal.c.o
+/usr/bin/ranlib ../../static-libs/libluasignal.a

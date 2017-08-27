@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li>socket</li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>socket</code></h1>
+   
+<p>This module provides TCP and UDP sockets as well as HTTP, FTP protocol stacks and more.</p>
+
+   
+<p><br />
+Refer to the official online documentation: <a href="http://w3.impa.br/~diego/software/luasocket/reference.html">LuaSocket Reference</a>. <br />
+Only modified API appears on this page.</p>
+
+
+	<h2><a id="#(socket)" >Type <code>socket</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(socket).bind">socket.bind(host, port, backlog_or_hook)</a></td>
+		<td class="summary">
+<p>This function is a shortcut that creates and returns a TCP server object bound to a local address and port,
+ready to accept client connections.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(socket)" >Type <code>socket</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(socket).bind" >
+<strong>socket.bind(host, port, backlog_or_hook)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>This function is a shortcut that creates and returns a TCP server object bound to a local address and port,
+ready to accept client connections.</p>
+
+	
+<p>Modified from the original Luasocket function to support an optional hook argument.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> host </em></code>: 
+local address to bind to</p>
+
+				</li>
+				<li>
+				
+<p><code><em> port </em></code>: 
+local port to bind</p>
+
+				</li>
+				<li>
+				
+<p><code><em> backlog<em>or</em>hook </em></code>: 
+ Optionally, user can also specify the backlog argument to the listen method (defaults to 32).
+ This third parameter can also be the hook if no backlog parameter  is given.
+-@param hook is an additional parameter (not compatible with luasocket original socket.bind()</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>TCP server object</p>
+
+			<h3>Usages:</h3>
+		<ul>
+			<li><pre class="example"><code>socket.bind("someaddress", 4242, function hook(...) end)</code></pre></li>
+			<li><pre class="example"><code>socket.bind("someaddress", 4242, 32,function hook(...) end)
+
+</code></pre></li>
+		</ul>
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

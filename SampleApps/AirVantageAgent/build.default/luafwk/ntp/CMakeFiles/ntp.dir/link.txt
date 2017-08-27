@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,ntp.so -o ../../runtime/lua/ntp.so CMakeFiles/ntp.dir/ntp.c.o CMakeFiles/ntp.dir/ntp_time.c.o 

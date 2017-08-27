@@ -1,0 +1,2 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ar cr ../../static-libs/libcdb_alloc.a  CMakeFiles/lib_cdb_alloc.dir/alloc.c.o
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-ranlib ../../static-libs/libcdb_alloc.a

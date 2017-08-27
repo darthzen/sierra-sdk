@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li>log</li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>log</code></h1>
+   
+<p>Log library provides logging facilities.</p>
+
+   
+<p>The module exposes extension points. It is possible to provide both the
+custom printing function and the custom log saving function.
+<br />
+The module is callable. Thus:</p>
+
+<p>   local log = require 'log'
+   log("MODULE", "INFO", "message")</p>
+
+<p>calls the <a href="##(log).trace">log.trace</a> function.</p>
+
+	<h2><a id="#(log)" >Type <code>log</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).displaylogger">log.displaylogger(severity, msg)</a></td>
+		<td class="summary">
+<p>Default logger for instant display.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).format">log.format</a></td>
+		<td class="summary">
+<p> Format is a string used to apply specific formating before the log is outputted.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).musttrace">log.musttrace(modulename, severity)</a></td>
+		<td class="summary">
+<p>Determines whether a log must be traced depending on its severity and the
+module issuing the log.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).setlevel">log.setlevel(slevel, varargs)</a></td>
+		<td class="summary">
+<p>Sets the log level for a list of module names.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).storelogger">log.storelogger(severity, msg)</a></td>
+		<td class="summary">
+<p>Logger function for log storage.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(log).trace">log.trace(modulename, severity, fmt, varargs)</a></td>
+		<td class="summary">
+<p>Prints out a log entry according to the module and the severity of the log entry.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(log)" >Type <code>log</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(log).displaylogger" >
+<strong>log.displaylogger(severity, msg)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Default logger for instant display.</p>
+
+	
+<p>This logger can be replaced by a custom function.
+It is called only if the log needs to be traced.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> severity </em></code>: 
+string representing the log level, see <a href="log.html##(levels)">log#levels</a>.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> msg </em></code>: 
+string containing the message to log.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+		<em>#string</em>
+<a id="#(log).format" >
+<strong>log.format</strong>
+</a>
+</dt>
+<dd>
+	
+<p> Format is a string used to apply specific formating before the log is outputted.</p>
+
+	
+<p> Within a format, the following tokens are available (in addition to standard text)</p>
+
+<ul>
+    <li>%l => the actual log (given in 3rd argument when calling log() function)</li>
+    <li>%t => the current date</li>
+    <li>%m => module name</li>
+    <li>%s => log level (severity), see <a href="log.html##(levels)">log#levels</a></li>
+</ul>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(log).musttrace" >
+<strong>log.musttrace(modulename, severity)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Determines whether a log must be traced depending on its severity and the
+module issuing the log.</p>
+
+	
+<p>This function is mostly useful to protect <code>log()</code>
+calls which involve costly computations</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> modulename </em></code>: 
+string identifying the module that issues the log.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> severity </em></code>: 
+string representing the log level, see <a href="log.html##(levels)">log#levels</a>.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>`nil' if the message of the given severity by the given module should
+not be printed.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>true</code> if the message should be printed.</p>
+
+
+
+				</li>
+			</ol>
+			<h3>Usage:</h3>
+		<pre class="example"><code>
+   if log.musttrace('SAMPLE', 'DEBUG') then
+       log('SAMPLE', 'DEBUG', "Here are some hard-to-compute info: %s",
+           computeAndReturnExpensiveDebugString())
+   end
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(log).setlevel" >
+<strong>log.setlevel(slevel, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sets the log level for a list of module names.</p>
+
+	
+<p>If no module name is given, the default log level is affected</p>
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> slevel </em></code>: 
+level as in <a href="log.html##(levels)">log#levels</a></p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+Optional list of modules names (string) to apply the level to.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>nothing.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(log).storelogger" >
+<strong>log.storelogger(severity, msg)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Logger function for log storage.</p>
+
+	
+<p>This logger can be replaced by a custom function.
+There is no default store logger.
+It is called only if the log needs to be traced (see <a href="##(log).musttrace">log.musttrace</a>) and after the log has been displayed using {displaylogger}.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> severity </em></code>: 
+string representing the log level, see <a href="log.html##(levels)">log#levels</a>.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> msg </em></code>: 
+string containing the message to log.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(log).trace" >
+<strong>log.trace(modulename, severity, fmt, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Prints out a log entry according to the module and the severity of the log entry.</p>
+
+	
+
+<p>This function uses <a href="##(log).format">log.format</a> and <a href="##(log).timestampformat">log.timestampformat</a> to create the
+final message string. It calls <a href="##(log).displaylogger">log.displaylogger</a> and <a href="##(log).storelogger">log.storelogger</a>.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> modulename </em></code>: 
+string identifying the module that issues the log.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> severity </em></code>: 
+string representing the level in <a href="log.html##(levels)">log#levels</a>.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> fmt </em></code>: 
+string format that holds the log text the same way as string.format does.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+additional arguments can be provided (as with string.format).</p>
+
+				</li>
+		</ul>
+			<h3>Usage:</h3>
+		<pre class="example"><code>trace("MODULE", "INFO", "message=%s", "sometext").
+
+</code></pre>
+
+</dd>
+</dl>
+
+			<h2><a id="#(levels)" >Type <code>levels</code></a></h2>
+				
+<p>Log levels are strings used to filter logs.</p>
+
+	
+<p>Levels are to be used both in log filtering configuration (see <a href="##(log).setlevel">log.setlevel</a>) and each time
+<a href="##(log).trace">log.trace</a> function is used to issue a new log.</p>
+
+<p>Levels are ordered by verbosity/severity level.</p>
+
+<p>While configuring log filtering, if you set a module log level to 'INFO' level for exemple, you
+enable all logs <em>up to</em> 'INFO', that is to say that logs with 'WARNING' and 'ERROR' severities will
+be displayed too.</p>
+
+<p>Built-in values (in order from the least verbose to the most):
+   - 'NONE':    filtering only: when no log is wanted
+   - 'ERROR':   filtering or tracing level
+   - 'WARNING': filtering or tracing level
+   - 'INFO':    filtering or tracing level
+   - 'DETAIL':  filtering or tracing level
+   - 'DEBUG':   filtering or tracing level
+   - 'ALL':     filtering only: when all logs are to be displayed</p>
+
+
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libEmp.so -o ../../runtime/lib/libEmp.so CMakeFiles/Emp.dir/emp.c.o ../../runtime/lib/libSwi_DSet.so -lpthread ../../static-libs/libpointerlist.a -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.arm/runtime/lib 

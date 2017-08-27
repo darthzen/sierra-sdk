@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,core.so -o ../../runtime/lua/m3da/bysant/core.so CMakeFiles/bysant_core.dir/bysant/bysant_core.c.o ../../runtime/lib/libbysant_lua.so ../../runtime/lib/libbysant.so -lm -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.arm/runtime/lib 

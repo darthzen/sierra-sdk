@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,lfs.so -o ../../runtime/lua/lfs.so CMakeFiles/lfs.dir/lfs.c.o 

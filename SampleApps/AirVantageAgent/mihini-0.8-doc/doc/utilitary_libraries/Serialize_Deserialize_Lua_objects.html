@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="serialize-deserialize-lua-objects">Serialize, Deserialize Lua objects</h1>
+<h1 id="serializable-lua-objects">Serializable Lua objects</h1>
+<ul>
+<li>nil</li>
+<li>boolean</li>
+<li>numbers</li>
+<li>string</li>
+<li>function</li>
+<li>table of serializable keys and values. Cycles and shared subtrees allowed.</li>
+</ul>
+<h1 id="api-and-usage">API and usage</h1>
+<p>The serializer, deserializer is written purely in C. The serializer returns a string or a string buffer (list of strings); the deserializer builds objects back from a string or a string buffer.</p>
+<p><em>Serializes</em><br /> serobj = luatobin.serialize(obj, totable)</p>
+<p><strong>arguments</strong></p>
+<ul>
+<li>obj: must be of an elligible lua object</li>
+<li>totable: a boolean indicating (if true) that serobj must be returned as a string buffer (table)</li>
+</ul>
+<p><strong>return</strong></p>
+<ul>
+<li>serobj: either a buffer or a string buffer depending of the boolean value of totable. serobj strings/buffers can be concatenated together.</li>
+</ul>
+<p><em>Deserializes</em><br /> index, obj1, ..., = luatobin.deserialize(serobj, nobjs, offset)</p>
+<p><strong>arguments</strong></p>
+<ul>
+<li>serobj: either a buffer or a string buffer</li>
+<li>nobjs: number of objects to deserialize in serobj</li>
+<li>offset: index of the first object to deserialize</li>
+</ul>
+<p><strong>return</strong></p>
+<ul>
+<li>newoffset: offset of the next object to deserialize in serobj. if newoffset == #serobj+1, all objects have been deserialized.</li>
+<li>obj1, ...: objects deserialized</li>
+</ul>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">require</span> <span class="st">&quot;luatobin&quot;</span>
+<span class="kw">obj</span> <span class="ot">=</span> <span class="ot">{</span><span class="st">&quot;is a test string&quot;</span>, <span class="kw">nil</span>, <span class="dv">565482</span>, <span class="kw">false</span>, <span class="kw">function</span><span class="ot">()</span> <span class="fu">print</span><span class="ot">(</span><span class="st">&quot;dummyfunction&quot;</span><span class="ot">)</span> <span class="kw">end</span><span class="ot">}</span>
+<span class="kw">obj</span> <span class="ot">=</span> <span class="ot">{</span><span class="kw">content</span><span class="ot">=</span><span class="kw">obj</span>, <span class="kw">true</span><span class="ot">}</span>
+
+<span class="co">-- ser1 is a table contening the serialized version of obj</span>
+<span class="kw">ser1</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>serialize<span class="ot">(</span><span class="kw">obj</span><span class="ot">)</span>
+
+
+<span class="co">-- ser2 is a string contening the serialized version of obj</span>
+<span class="kw">ser2</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>serialize<span class="ot">(</span><span class="kw">obj</span>, <span class="kw">true</span><span class="ot">)</span>
+<span class="fu">print</span><span class="ot">(</span><span class="kw">ser1</span><span class="ot">)</span>
+<span class="fu">print</span><span class="ot">(</span><span class="kw">ser2</span><span class="ot">)</span>
+<span class="kw">_</span>, <span class="kw">deser1</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>deserialize<span class="ot">(</span><span class="kw">ser1</span><span class="ot">)</span>
+<span class="kw">_</span>, <span class="kw">deser2</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>deserialize<span class="ot">(</span><span class="kw">ser2</span><span class="ot">)</span>
+
+
+<span class="co">-- deserialize multiple values</span>
+<span class="kw">ser2</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>serialize<span class="ot">(</span><span class="kw">obj</span><span class="ot">)</span>
+<span class="kw">_</span>, <span class="kw">deser1</span>, <span class="kw">deser2</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>deserialize<span class="ot">(</span><span class="kw">ser1</span><span class="ot">..</span><span class="kw">ser2</span><span class="ot">)</span>
+p<span class="ot">(</span><span class="kw">deser1</span><span class="ot">)</span>
+p<span class="ot">(</span><span class="kw">deser2</span><span class="ot">)</span>
+<span class="co">-- deserialize a specified number of valuesidx, deser1 = luatobin.deserialize(ser1..ser2, 1)</span>
+p<span class="ot">(</span><span class="kw">deser1</span><span class="ot">)</span>
+
+
+
+<span class="co">-- reuse idx to deserialize in the middle of the serialized string</span>
+<span class="kw">_</span>, <span class="kw">deser2</span> <span class="ot">=</span> <span class="kw">luatobin</span><span class="ot">.</span>deserialize<span class="ot">(</span><span class="kw">ser1</span><span class="ot">..</span><span class="kw">ser2</span>, <span class="kw">idx</span><span class="ot">)</span>
+p<span class="ot">(</span><span class="kw">deser2</span><span class="ot">)</span></code></pre>
+<h1 id="performance-comparison-with-older-flash-module">Performance comparison with older flash module</h1>
+<p>The new flash object lua API si built on this new serializer</p>
+<p>Timing performances (in ms)</p>
+<table>
+<col width="36%" />
+<col width="18%" />
+<col width="19%" />
+<thead>
+<tr class="header">
+<th align="left">operation</th>
+<th align="left">old flash</th>
+<th align="left">luatobin flash</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">create + load (256)</td>
+<td align="left">40</td>
+<td align="left">260</td>
+</tr>
+<tr class="even">
+<td align="left">set</td>
+<td align="left">570</td>
+<td align="left">10</td>
+</tr>
+<tr class="odd">
+<td align="left">get</td>
+<td align="left">40</td>
+<td align="left">30</td>
+</tr>
+<tr class="even">
+<td align="left">reset</td>
+<td align="left">720</td>
+<td align="left">1</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

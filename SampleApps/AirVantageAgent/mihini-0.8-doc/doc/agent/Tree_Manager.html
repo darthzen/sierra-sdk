@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="tree-manager">Tree Manager</h1>
+<h4 id="purpose">Purpose</h4>
+<p>Offer a generic mechanism to present a device's data as a set of variables, organized in a hierarchical tree, which can be read, written, and monitored for changes by user applications.</p>
+<p>The architecture consists of 3 parts:</p>
+<ul>
+<li><p>A logical tree, whose hierarchical organization is user-friendly and portable, is presented to user applications.</p></li>
+<li><p>Actual data manipulation is performed by device-specific handlers, which work on handler trees. The handler trees' layout is organized in a way which eases implementation, and doesn't have to match the logical tree's layout. Handler API is exposed to developers who want to contribute new variables to the tree manager, but not to normal applications.</p></li>
+<li><p>a mapping definition, allowing the core tree engine to translate logical paths into handler paths and the other way around. This mapping is compiled into CDB databases, so that large mappings don't have to fit entirely in RAM.</p></li>
+</ul>
+<h4 id="sub-modules">Sub-modules</h4>
+<p>The tree manager is organized in several sub-modules:</p>
+<ul>
+<li><p><code>treemgr</code> is the core engine, which coordinates handlers with the logical view of the tree.</p></li>
+<li><p><code>treemgr.db</code> interfaces with the CDB databases which describe the mapping.</p></li>
+<li><p><code>treemgr.build</code> compiles <code>&quot;.map&quot;</code><strong>files into a set of <code>&quot;</code></strong><code>.cdb&quot;</code> database files, organized for quick access to translation info.</p></li>
+<li><p><code>treemgr.handlers.*</code> are handler implementations.</p></li>
+</ul>
+<h4 id="conceptz">Conceptz</h4>
+<p>The API works with paths (sequences of identifiers separated by dots), which denote nodes in trees. The node can be leaf nodes or non-leaf nodes. The non-leaf nodes have children, but carry no data to read or write. Leaf nodes carry some data to read/write/monitor, but have no children nodes.</p>
+<p>In the example below, <code>a</code> and <code>a.b</code> are non-leaf nodes, with children {<code>&quot;a.b&quot;, &quot;a.d&quot;</code>} and {<code>&quot;a.b.c&quot;</code>} respectively. Leaf nodes <code>&quot;a.b.c&quot;</code> and <code>&quot;a.d&quot;</code> have no children, but carry a value each.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">-a
+  +-b
+  <span class="kw">|</span> +-c = 123
+  +-d = 234</code></pre>
+<p>There are two kinds of trees involved in the tree manager : the logical tree, which is the one visible to users and servers, and the handler trees. There are many handlers, with different implementations of the get/set/notify services, and these handler trees can be mounted on the logical tree to actually implement it. For instance, if a handler's root is mounted on logical node &quot;a.b&quot;, then the logical path &quot;a.b.c.d&quot; is associated with the handler path &quot;c.d&quot;. One can also mount non-root nodes of a handler, for instance mount handler node &quot;x.y&quot; on logical node &quot;a.b&quot;. In that case, logical path &quot;a.b.c.d&quot; is mapped with handler path &quot;x.y.c.d&quot;. Leaf nodes can be mounted as well as non-leaf nodes. It is the tree manager's job to maintain all mappings between the handler trees and the logical tree: when implementing a handler, one never has to ever think of logical paths.</p>
+<p>Here is an example of mapping between a logical tree and two handlers:</p>
+<p>Logical tree:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">+system
+<span class="kw">|</span> +-position
+<span class="kw">|</span> <span class="kw">|</span> +-latitude
+<span class="kw">|</span> <span class="kw">|</span> +-longitude
+<span class="kw">|</span> <span class="kw">|</span> +-elevation
+<span class="kw">|</span> +-time
++-config
+       +-server
+       +-agent
+       +-modem
+       +-...</code></pre>
+<p>Handler trees:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">aleos
+  +-GPS_LATITUDE
+  +-GPS_LONGITUDE
+  +-GPS_ELEVATION
+  +-TIME
+
+config
+  +-server
+  +-agent
+  +-modem
+  +-...</code></pre>
+<p>In the example above, we want to map:</p>
+<ul>
+<li><p><code>system.position.latitude</code> with <code>aleos:GPS_LATITUDE</code>;</p></li>
+<li><p><code>system.position.longitude</code> with <code>aleos:GPS_LONGITUDE</code>;</p></li>
+<li><p><code>system.position.elevation</code> with <code>aleos:GPS_ELEVATION</code>;</p></li>
+<li><p><code>system.time</code> with <code>aleos:TIME</code>.</p></li>
+<li><p><code>config</code> with <code>config:&lt;root&gt;</code></p></li>
+</ul>
+<p>Each aleos variable above is mapped individually, but the whole <code>config</code> tree is mapped recursively: by mapping <code>config:&lt;root&gt;=config</code>, one gets for instance <code>config:server.url=config.server.url</code>, <code>config:mediation.pollingperiod.GPRS=config.mediation.pollingperiod.GPRS</code>, etc.</p>
+<h4 id="naming-conventions">Naming conventions</h4>
+<p>In this module, the following variable naming conventions are chosen:</p>
+<ul>
+<li><p><code>hpath</code> stands for a path relative to a handler, which might denote a leaf node as well as a non-leaf node</p></li>
+<li><p><code>hlpath</code> stands for a handler's leaf node.</p></li>
+<li><p><code>lpath</code> is an absolute path in the logical tree (leaf or non-leaf).</p></li>
+<li><p><code>llpath</code> is an absolute path to a leaf node in the logical tree.</p></li>
+<li><p><code>nlnpath</code> is a non-leaf logical path.</p></li>
+<li><p><code>hmap</code> is an <code>hpath-&gt;value</code> table.</p></li>
+<li><p><code>lmap</code> is an <code>lpath-&gt;value</code> table.</p></li>
+</ul>
+<h4 id="handlers">Handlers</h4>
+<p>Handlers work with paths relative to themselves; handler paths are not shown directly to user applications, they need to be mapped into the logical tree first.</p>
+<p>The features needed from handlers are provided through methods; that is, every Lua object providing the get/set/register/unregister methods below is considered as a valid handler:</p>
+<ul>
+<li><code>handler:get(hpath)</code> allows to retrieve the value associated with a leaf-node path, or the set of children under a non-leaf node path. Get can return:
+<ul>
+<li>a value, followed by nil</li>
+<li>nil, followed by a string error message</li>
+<li>nil, followed by a children table. The children must be in the table's keys, not in its values, e.g. {{ { x=true, y=true } }} is correct, but {{ { 'x', 'y' } }} is not. The path toward the children must be relative to the <code>hpath</code> argument.</li>
+</ul></li>
+<li><p><code>handler:set(hmap)</code> allows to write a map of <code>hlpath-&gt;value</code> pairs in the handler. It is not expected to return anything meaningful. Notice that a whole map is passed, which can contain several path/value pairs.</p></li>
+<li><p><code>handler:register(hpath)</code> signals that any change of a variable's value, or a value change of any variable under a non-leaf node, must be notified to the tree management system. Notification must be performed by the handler, by calling <code>treemgr.notify()</code> everytime it modifies a registered variable.</p></li>
+<li><p><code>handler:unregister(hpath)</code> signals that the logical tree doesn't need to be notified about changes to the <code>hpath</code> variable anymore.</p></li>
+<li><p><code>treemgr.notify(handler_name, hmap)</code> must be called by handlers to signal that a set of variables has changed. The engine will take care of converting hpaths into lpaths, retrieving the hooks to notify, sort out the variables (remove the irrelevant ones, add the missing associated ones) for each hook.</p></li>
+</ul>
+<h4 id="logical-tree">Logical tree</h4>
+<p>This is the API accessible to user applications. It offers get / set / notification services, on variables organized according to a map which is independent from the organization by handlers or within handlers.</p>
+<p>Applications can read values with <code>get()</code>, write values with <code>set()</code>, register hook functions to be triggered everytime a variable changes with <code>register()</code>:</p>
+<ul>
+<li><p><code>treemgr.get(lpath)</code> returns a value or a list of children node names, depending on whether the path denotes a leaf node or a non-leaf node.</p></li>
+<li><p><code>treemgr.get(lpath_list)</code> performs a batch reading, returns an lmap of values and/or a list of children node lpaths.</p></li>
+<li><p><code>treemgr.set(llpath, value)</code> sets the value of a leaf node.</p></li>
+<li><p><code>treemgr.set(lpath, map)</code> where map keys <code>k_n</code> are strings such that <code>lpath .. &quot;.&quot; .. k_n</code> are logical leaf paths sets a set of leaf node values in a single operation.</p></li>
+<li><p><code>treemgr.set(lmap)</code>, where map keys are logical leaf paths, sets a set of leaf node values in a single operation.</p></li>
+<li><p><code>treemgr.register(lpath_list, hook, associated_lpath_list)</code> registers a hook to be triggered everytime one of the variables denoted by lpath_list changes. The hook receives an <code>llpath-&gt;value</code> map argument, which lists the union of every variable in <code>lpath_list</code> which changed, plus every vaiable in <code>associated_lpath_list</code>. If a variable must be monitored, and its value is needed by the hook even if it didn't change, then it needs to be listed both in <code>lpath_list</code> and in <code>associated_lpath_list</code>.</p></li>
+</ul>
+<h4 id="mapping-and-handler-loading">Mapping and handler loading</h4>
+<p>A treemgr configuration consists of handlers and a mapping. Handlers are Lua objects which implement the <code>handler:get()</code>, <code>handler:set()</code>, <code>handler:register()</code> and <code>handler:unregister()</code> methods. The mapping is a set of bidirectional correspondances between logical tree nodes and handler nodes.</p>
+<p>The mapping is stored in a CDB (Constant DataBase): it ensures conversions between the user view (logical paths) and the implementation view (handler path) in constant memory and time. It is built from <code>&quot;*.map&quot;</code> files, but once the DB is built, map files are not needed anymore.</p>
+<p>The handlers are loaded lazily, when they are needed to fulfill a user request. They are identified by the name of the Lua module which implements them: if a handler is called <code>'agent.treemgr.handlers.ramstore'</code>, then a call to require <code>'agent.treemgr.handlers.ramstore'</code> must return the handler object. By sitting directly above Lua's module management system, the handler loading system benefits from its flexibility and its various predefined loaders.</p>
+<p>To facilitate build and deployment, treemgr is able to recompile its CDB from map files on target, if they are present and more recent than the DB. By convention, all the map files in <code>persist/treemgr</code> are compiled into the DB. Each map file describes the mappings of one handler.</p>
+<p>A given treemgr configuration is described through a set of <code>&quot;*.map&quot;</code> files: each map file lists one handler, and a list of mappings, between nodes in this handler and nodes on the global, logical tree. The link between the handler's map and its code is maintained through Lua's <code>require</code> module system: the handler's name must be a valid Lua module name, and the result of loading this module must be the handler object, ready to run.</p>
+<p>Map files are precompiled into CDB databases, for faster access in constant memory. CDB results could be cached in RAM if necessary, although it is not currently implemented.</p>
+<p>Each architecture might have different ways to provide the same service, and might not provide the exact same set of services as others, depending e.g. on available hardware. By assembling the correct set of specific handlers, together with the map files which put variables at a standard place in the logical tree, one builds the target-specific implementation of the portable treemgr interface.</p>
+<h1 id="implementation">Implementation</h1>
+<p>One strong implementation constraint is that the logical tree can be big, and must not be required to fit entirely in RAM. It is therefore built as a read-only database, based on <a href="http://cr.yp.to/cdb.html">cdb</a>.</p>
+<p>There are four dictionaries to be kept in the database:</p>
+<ul>
+<li><p><code>lpath -&gt; handler_name:hpath</code> allows <code>get</code> and <code>set</code> to translate logical paths into handler paths, to which the actual read / write operations are delegated.</p></li>
+<li><p><code>handler_name:hpath -&gt; lpath</code> allows <code>notify</code> to translate handler notifications into logical ones, which will be presented to the relevant apllicative hook. A given handler + path can be mounted in more than one place, and therefore have several values associated with it in the database.</p></li>
+<li><p><code>lpath -&gt; direct_children_lpaths_list</code> is used by <code>get</code> to retrieve the children of non-leaf nodes. Parent and children lpaths are both absolute.</p></li>
+<li><p><code>lpath -&gt; mounted_handlers_below_node</code> is used by <code>register</code>: when a hook is registered on a non-leaf node, it must register every handler mounted below it. This database lists these, indexed by ancestor nodes (this means that handlers mounted below the root node are indexed more than once).</p></li>
+</ul>
+<h4 id="get">get</h4>
+<p>The get operation on leaf node is straightforward: <code>llpath</code> is translated to <code>handler_id, hlpath</code>, then the handler is retrieved and its get method is called with the proper argument.</p>
+<p>A get on a non-leaf node must return the list of every direct child of the node. If the node is under a handler, then this handler's <code>get</code> method is in charge of providing this list. Hence, the <code>get</code> of a non-leaf node depends on the handlers mounted above it (&quot;above&quot; being understood inclusively, i.e. a node is considered to be above itself. For instance, if there's a non-leaf mountpoint on lpath <code>&quot;a.b&quot;</code>, then a get request on <code>&quot;a.b&quot;</code> depends on this mountpoint, not on any mountpoint on <code>&quot;a&quot;</code> nor on the root node).</p>
+<p>However, it also depends on handlers mounted below it. For instance, if there's a handler mounted on path <code>&quot;a.b.c&quot;</code>, and the application gets the list of <code>&quot;a&quot;</code>'s children, then <code>&quot;b&quot;</code> must be included in this list, whether there's also a handler mounted on <code>&quot;a&quot;</code> or not.</p>
+<p>If a get operation covers several paths mapping several handlers, a logical get can trigger several handler get operations. However, it makes sure to perform at most one get operation per handler, thus giving the handler an opportunity to optimize retrieval operations.</p>
+<h4 id="set">set</h4>
+<p>Set operations are mostly the same as leaf-node get requests. The differing part (writing hpaths rather than reading them) is specific to each handler.</p>
+<h4 id="register">register</h4>
+<p>Hook registrations call the <code>register</code> method(s) of the corresponding handler(s), so that they will know they must provide notifications. Those notifications are produced by calling <code>notify</code>, which will:</p>
+<ul>
+<li><p>convert <code>hlpath</code> s into <code>llpaths</code>;</p></li>
+<li><p>request and add the variables in <code>associated_lpath_list</code>;</p></li>
+<li><p>call the appropriate hook with the resulting map.</p></li>
+</ul>
+<p>The logical registration on a non-leaf node must translate into registrations:</p>
+<ul>
+<li><p>on the first mountpoint node above it;</p></li>
+<li><p>on the root of every mountpoint below it.</p></li>
+</ul>
+<h4 id="unregister">unregister</h4>
+<p>The application can unregister from logical paths it's not interested in anymore. Before unregistering from the corresponding <code>hpath</code> s, though, one must first ensure that no other hook needs this <code>hpath</code>. This requires to check whether the hpath is mapped to other <code>lpaths</code>, as it can be mapped more than once, either directly or through an ancestor node.</p>
+</body>
+</html>

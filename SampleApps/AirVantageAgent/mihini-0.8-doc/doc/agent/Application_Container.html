@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="application-container">Application Container</h1>
+<p>The Application Container is a module of the Agent responsible for:</p>
+<ul>
+<li>installing, uninstalling, starting, stopping applications;</li>
+<li>automatically starting applications at Agent boot;</li>
+<li>managing the execution cycle of installed applications.</li>
+</ul>
+<h1 id="requirements">1. Requirements</h1>
+<ul>
+<li>Linux only</li>
+<li>Need <a href="Appmon_Daemon.html">Appmon Daemon</a> tool.</li>
+<li>ApplicationContainer will create (if needed) a install directory in runtime/apps/application_id<br /> Then it will copy the application data (the content of the folder given as parameter) to that install directory.</li>
+</ul>
+<h1 id="appmon-daemon-usage">2. AppMon Daemon usage</h1>
+<p>Application Container role : AppCon manages a list of applications. The list is persisted. The Application Container needs to communicate with AppMon by socket in order to send commands to it (ex : start, stop...). <br />The Application Container is not directly monitoring application life circle, it uses Appmon so that application is monitored as needed.</p>
+<p>Appmon Daemon role : AppMon is a tool which enables to monitor application whose id name is sended by AppCon. This daemon does'nt persist any application list, managed application have to be setup after each boot (Application Container takes care of that).</p>
+<p>Functional cases:</p>
+<p>As Application Container receives a request to install an application, the<strong>install()</strong> method will be called, it will check in the list if this application is existing. If yes, Application Container will send &quot;remove&quot; command to demand Appmon Daemon to delete the existing application. Then it will save the new application in the list and call <strong>start()</strong> function. The latter will send a &quot;start&quot; command with the id name of application to Appmon Daemon which is in charge of starting the application by creating a child process.</p>
+<p>The child process is created by fork() operation, it will execute the application. If the child process dies during its execution, it returns a error code to its father process Appmon Daemon. Subsequently Appmon Daemon will restart this child process again.</p>
+<p>Sequence diagrams:</p>
+<p>As the application container is starting, the &quot;boot&quot; sequences are following :</p>
+<div class="figure">
+<img src="images/Application_Container_boot_init.svg" /><p class="caption"></p>
+</div>
+<p>As the application container receives a request to install an application, the &quot;install&quot; sequences are following :</p>
+<div class="figure">
+<img src="images/Application_Container_install.svg" /><p class="caption"></p>
+</div>
+<p>As the application container receives a request to start an application, the &quot;start&quot; sequences are following :</p>
+<div class="figure">
+<img src="images/Application_Container_start.svg" /><p class="caption"></p>
+</div>
+<p><br /> As the application container receives a request to stop an application, the &quot;stop&quot; sequences are following :</p>
+<div class="figure">
+<img src="images/Application_Container_stop.svg" /><p class="caption"></p>
+</div>
+<br />
+<h1 id="api">3. API</h1>
+<p>How to use the Application container:</p>
+<h4 id="install">3.1. Install</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">install<span class="ot">(</span><span class="kw">application_id</span>, <span class="kw">application_data</span>, <span class="kw">autostart</span>, <span class="kw">purge</span><span class="ot">)</span></code></pre>
+<ul>
+<li>application_id: string identifying the application, if the id already exists, the previous application is <strong>overwritten</strong> by the new one.</li>
+<li>application_data: string, <strong>must</strong> be a <strong>folder</strong> located by its <strong>absolute</strong> path<br /> This folder <strong>may</strong> contain an executable file named &quot;<strong>run</strong>&quot;, this is the file that will be executed to start the application if you want it to be monitored.</li>
+<li>autostart: boolean, used only if the application can be run.<br /> When set to true, the Application Container will start the application automatically after installation and after Agent start up. nil or false value disable it.<br /> Default value is no autostart.</li>
+<li>purge: boolean, used only for application reinstall / overwrite. Default value is no purge.<br /> When set to true, the application folder will be purged before reinstall, otherwise the folder is left unmodified. No purge means:
+<ul>
+<li>new files coming from application_data folder are copied into application runtime folder.</li>
+<li>existing files in application runtime folder are overwritten by the ones coming from application_data folder:<br /> the new file will always replace the existing one: whether the new one is a file or a folder, whether the old one is a file or a folder.<br /> (e.g. a folder created by an application will be deleted if a new file has the same name/path as this folder during re-installation without purge).</li>
+</ul></li>
+</ul>
+<blockquote>
+<p><strong>INFO</strong></p>
+<ul>
+<li>The installation directory and installed files are created/copied with 755 access rights.</li>
+<li>Only files, directories and links are supported for application content. &quot;Special&quot; files like socket, named pipe, ... are not supported.</li>
+</ul>
+</blockquote>
+<p><em>Application return code Vs application restart</em>:<br /> Note: When the application has to be restarted, a delay will be applied before actually restarting it.<br /> Return code means system exit code:</p>
+<ul>
+<li>0 to report success, then Application Container will <strong>not</strong> restart automatically the application</li>
+<li>!= 0 to report error, then Application Container will <strong>restart</strong> automatically the application</li>
+</ul>
+<h4 id="uninstall">3.2. Uninstall</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">uninstall<span class="ot">(</span><span class="kw">application_id</span><span class="ot">)</span></code></pre>
+<p>This will remove all the application and all data that have been installed in the running directory of the application</p>
+<h4 id="start">3.3. Start</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">start<span class="ot">(</span><span class="kw">application_id</span><span class="ot">)</span></code></pre>
+<p>Start an application that have already been added to the Application list<br /> If the application is not runnable, or the application is already started, it has no effect.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>The application is started with a specific Unix user. See <a href="Appmon_Daemon.html">Appmon Daemon</a> documentation for more infos</p>
+</blockquote>
+<h4 id="stop">3.4. Stop</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">stop<span class="ot">(</span><span class="kw">application_id</span><span class="ot">)</span></code></pre>
+<p>To stop an application: this will send system signals to the application:</p>
+<ul>
+<li>TERM signal first, so that the application can clean its own stuff</li>
+<li>KILL signal to stop it after X sec<br /> If the application is not runnable, or the application is already stopped, it has no effect.</li>
+</ul>
+<h4 id="status">3.5. Status</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">status<span class="ot">(</span><span class="kw">application_id</span><span class="ot">)</span></code></pre>
+<p>If the application is runnable, then it returns the status sent by status command of appmon_daemon (see appmon_daemon doc) else only returns &quot;Not runnable&quot;</p>
+<h4 id="configure">3.6. Configure</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">configure<span class="ot">(</span><span class="kw">application_id</span>, <span class="kw">autostart</span><span class="ot">)</span></code></pre>
+<p>Parameters:</p>
+<ul>
+<li>application_id: string, unique id of the application to configure</li>
+<li>autostart: boolean, replace the autostart parameter given at install.<br /> if the application is not runnable, or the application is already stopped, it has no effect.</li>
+</ul>
+<h4 id="list">3.7. List</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">list<span class="ot">()</span></code></pre>
+<p>Return a table with all the applications added to the ApplicationContainer.<br /> The table is like: { application_id={autostart=boolean, runnable=boolean}, application_id={autostart=boolean, runnable=boolean}, ...}.</p>
+<h4 id="init">3.8. Init</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua">init<span class="ot">()</span></code></pre>
+<p>To be called at Agent start up to start all registered applications with autostart set to true.</p>
+<h1 id="application-runnable-status">4. Application Runnable status</h1>
+<p>An application is runnable if the installation folder contains an executable file named &quot;<strong>run</strong>&quot;.</p>
+<p>The Runnable status of the application is computed when it is used:</p>
+<ul>
+<li>at installation, to check if the application needs to be set up in Appmon_Daemon, and started</li>
+<li>at boot, to check if the application needs to be set up in Appmon_Daemon, and started</li>
+<li>when ApplicationContainer API is called (start, stop, configure, ...).</li>
+</ul>
+<h1 id="examples">5. Examples</h1>
+<p>See below an example of the executable file &quot;<strong>run</strong>&quot;. Assuming your application is named &quot;<strong>sample_app_appcon</strong>&quot;, <br />you need to put this file into a folder of the same name and compress it to the zip format.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/bin/sh</span>
+
+<span class="ot">APPNAME=</span><span class="st">&quot;SampleApp&quot;</span>
+
+<span class="fu">on_term()</span>
+<span class="kw">{</span>
+  <span class="kw">echo</span> <span class="ot">$APPNAME</span> <span class="st">&quot;Dying...&quot;</span>
+
+  <span class="co">#you can remove the exit call to term that sigkill is send to kill app after some time</span>
+  <span class="co"># you can change the exit code to test the app is restarted</span>
+  <span class="kw">exit</span> 0
+<span class="kw">}</span>
+
+
+<span class="co"># Execute function on_term() receiving TERM signal</span>
+<span class="co"># The trap function seems not to be executed during a sleep</span>
+
+<span class="co">#trap &#39;on_term&#39; TERM</span>
+
+
+<span class="kw">while</span> <span class="kw">true</span>
+<span class="kw">do</span>  
+  <span class="kw">echo</span> <span class="ot">$APPNAME</span> <span class="st">&quot;pid:&quot;</span> <span class="ot">$$</span> <span class="st">&quot;date:&quot;</span> <span class="kw">`date`</span>
+  <span class="kw">sleep</span> 5
+<span class="kw">done</span>
+
+<span class="co"># We never get here.</span>
+<span class="kw">exit</span> 1</code></pre>
+<p>Once your application has been compressed, the archive should get a file tree like this one :</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">sample_app_appcon/
+sample_app_appcon/run</code></pre>
+</body>
+</html>

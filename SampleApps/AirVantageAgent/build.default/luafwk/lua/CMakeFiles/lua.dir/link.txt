@@ -1,0 +1,1 @@
+/usr/bin/cc  -O3 -DNDEBUG    CMakeFiles/lua.dir/lua.c.o  -o ../../runtime/bin/lua -rdynamic ../../runtime/lib/liblualib.so -lpthread -ldl -lm -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.default/runtime/lib 

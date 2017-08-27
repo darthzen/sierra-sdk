@@ -1,0 +1,18 @@
+#Sprint Image
+SP=1579
+#Verizon Image
+VE=1576
+#Vodafone Image
+VO=1575
+AT&T Image
+AT=1575
+#T-Mobile Image
+TM=1575
+#Generic UMTS Image
+GE=1580
+#Telefonica Image
+TE=1575
+#Telecom Italia Image
+TI=1580
+#Orange Image
+OR=1575

@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li>utils.ltn12.source</li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>utils.ltn12.source</code></h1>
+   
+<p>LTN12 source utils.</p>
+
+   
+
+<p>LNT12 stands for Lua Technical Note #12. It deals with sources, sinks, filters, etc.</p>
+
+<p>You can read the official technical note at <a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">Filters Sources And Sinks</a> article page.</p>
+
+<p>LTN12 official module is shipped with LuaSocket. Official LTN12 API documentation can be found at <a href="http://w3.impa.br/~diego/software/luasocket/ltn12.html">LTN12 Official module</a> page.</p>
+
+<p>This module provides extra LTN12 sources.</p>
+
+
+	<h2><a id="#(utils.ltn12.source)" >Type <code>utils.ltn12.source</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.ltn12.source).table">utils.ltn12.source.table(t, empty)</a></td>
+		<td class="summary">
+<p>Returns a LTN12 source on table.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.ltn12.source).toString">utils.ltn12.source.toString(src)</a></td>
+		<td class="summary">
+<p>Transforms a LTN12 source into a string.</p>
+
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(utils.ltn12.source)" >Type <code>utils.ltn12.source</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(utils.ltn12.source).table" >
+<strong>utils.ltn12.source.table(t, empty)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Returns a LTN12 source on table.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+the table, must be a list (indexed by integer).</p>
+
+				</li>
+				<li>
+				
+<p><code><em> empty </em></code>: 
+optional boolean, true to remove the table's values.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>LTN12 source function on the table.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.ltn12.source).toString" >
+<strong>utils.ltn12.source.toString(src)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Transforms a LTN12 source into a string.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> src </em></code>: 
+LTN12 source.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>string.</p>
+
+
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

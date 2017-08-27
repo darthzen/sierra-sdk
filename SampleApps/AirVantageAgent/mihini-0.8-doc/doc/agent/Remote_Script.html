@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="remote-script">Remote Script</h1>
+<p>This agent feature enables to run <strong>Lua scripts</strong> automatically on the device.</p>
+<h4 id="script-delivery">1. Script Delivery</h4>
+<p>The script is sent by the server using :</p>
+<ul>
+<li>Dedicated M3DA '<strong>ExecuteScript</strong>' command that provides access to Lua bytecode using url.</li>
+</ul>
+<p>So it takes advantage of:</p>
+<ul>
+<li>Task automation on server</li>
+<li>Task scheduling on server</li>
+<li>Task acknowledgment</li>
+<li>...</li>
+</ul>
+<h4 id="security">2. Security</h4>
+<p>The script will be executed with <strong>no restriction</strong>, so the content of the script is very <strong>delicate</strong>.<br /> We need to check integrity and authenticate the sender of the script (i.e. the server).</p>
+<p>The script will have to be signed and the signature will have to be sent with the script.<br /> The choice in the security technique and how the signature will be sent is highly related to M3DA security usage.</p>
+<h4 id="script-api">3. Script API</h4>
+<p>The only constraint about a remote script is that it must <strong>throw</strong> an error to report an failure during the execution.<br /> The error will be caught and reported to the server.<br /> The error can be thrown:</p>
+<ul>
+<li>using an API that throw errors like assert()</li>
+<li>manually call error() function</li>
+</ul>
+<h4 id="m3da-command-description">4. M3DA Command Description</h4>
+<p>See <strong>ExecuteScript</strong> command description in <a href="Device_Management.html">Device Management</a></p>
+<h4 id="some-interesting-purposes">5. Some interesting purposes</h4>
+<h5 id="light-update">5.1 Light Update</h5>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD This Remote Script can be used to update small software parts. It is <strong>not</strong> intended to perform <strong>big software updates</strong>, but rather to allow remote command execution, small code update...</p>
+<p>This feature can make patching of Lua parts very easy for remote debug/hack, but it is not meant to create a new whole update mechanism framework. To update large amount of code and take advantage of software version management, please use <a href="Software_Update_Module.html">Software Update Module</a></p>
+<h5 id="monitoring-script-update">5.2 Monitoring Script Update</h5>
+<p>One interesting use of Remote Script is to remotely install a new script in agent <a href="Monitoring.html">Monitoring</a> engine.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="kw">m</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&quot;agent.monitoring&quot;</span>
+<span class="kw">local</span> <span class="kw">script</span> <span class="ot">=</span> <span class="st">&quot;local function action() local data = {var1 = { timestamps = {time()}, data = {system.var1} }}; sendtimestampeddata(&#39;system&#39;, data); end; connect(onchange(&#39;system.var1&#39;),action)&quot;</span>
+<span class="kw">local</span> <span class="kw">res</span>, <span class="kw">err</span> <span class="ot">=</span> <span class="kw">m</span><span class="ot">.</span>install<span class="ot">(</span><span class="st">&quot;script1&quot;</span>,<span class="kw">script</span><span class="ot">)</span>
+<span class="kw">if</span> <span class="kw">not</span> <span class="kw">res</span> <span class="kw">then</span> <span class="fu">error</span><span class="ot">(</span><span class="kw">err</span><span class="ot">)</span> <span class="kw">end</span></code></pre>
+</body>
+</html>

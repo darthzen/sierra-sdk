@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="tcp-remote-connection">TCP Remote Connection</h1>
+<h1 id="presentation">Presentation</h1>
+<h4 id="purpose-and-principle">1.1.Purpose and Principle</h4>
+<p>This document defines the TCP remote connection feature of the Agent. <br />This feature allows a client to connect seamlessly to a service through a device running Agent even if the device's IP address is private.<br /> Figure 1 shows the principle scheme of a client (host) accessing a service.<br /><br /> <img src="images/TCP_Remote_Connection_principle.png" /><br /> Figure 1: TCP Remote Connection principle</p>
+<h4 id="implementation">1.2.Implementation</h4>
+<p>Figure 2 illustrates the reality the connection of a client to a service through a device running the Agent.<br /> <img src="images/TCP_Remote_Connection_remote_connection_scheme.png" alt="image" /><br /> Figure 2: Remote connection scheme</p>
+<p>Here after is described the classical connection use case.<br /> <strong>Client</strong> (host side) wants to connect seamlessly on <strong>Service</strong> of the device (device side).<br /><br />1. CommandParser receives, extracts and executes the TCPRemoteConnect command with valid parameters <strong>ServerAddress</strong>, <strong>ServerPort</strong>,<strong>LocalAddress</strong>, <strong>LocalPort</strong>.<br /> ServerAddress:ServerPort, is the server socket on the <strong>ServerSideApp</strong>. LocalAddress:LocalPort is the server socket on the <strong>Service</strong>.<br />2. <strong>DeviceSideApp</strong> connects at ServerAddress:ServerPort.<br />3. <strong>DeviceSideApp</strong> sends LISTEN command to <strong>ServerSideApp</strong>.<br />4. Upon reception of the LISTEN command, <strong>ServerSideApp</strong> creates server socket HostAddress:HostPort and wait for client connections.<br />5. As soon as a Client connects, <strong>ServerSideApp</strong> sends a CONNECT command to make <strong>DeviceSideApp</strong> connect at LocalAddress:LocalPort.<br />6. As soon as socket LocalAddress:LocalPort is closed, <strong>DeviceSideApp</strong> sends CLOSE command to make <strong>ServerSideApp</strong> close all its client sockets HostAddress:HostPort.<br />7.Inversely if the client socket HostAddress:HostPort is closed, <strong>ServerAppSide</strong> sends CLOSE command to make <strong>DeviceSideApp</strong> closes its client sockets LocalAddress:LocalPort.</p>
+<p>If the <strong>ServerAddress:ServerPort</strong> socket is down (whatever the reason). <strong>ServerAppSide</strong> closes all its <strong>HostAddress:HostPort</strong> client sockets and <strong>DeviceAppSide</strong> closes all its <strong>LocalAddress:LocalPort</strong> client sockets*.*<br /> Obviously we need a specific protocol to channel data and commands through the <strong>ServerAddress:ServerPort</strong> socket.</p>
+<h4 id="specific-protocol">1.3.Specific protocol</h4>
+<p>Data and commands are channeled through the server device link using a big endian binary protocol:</p>
+<ul>
+<li>[Payload size (2b)|CommandId (1b)|ClientId(1b)][Payload (Payload sizeb)]<br /> CommandId:<br /></li>
+<li>CONNECT = 1, connect command sent by ServerAppSide with parameters local address and local port<br /></li>
+<li>CLOSE = 2, close command sent by the DeviceAppSide without parameters<br /></li>
+<li>DATA = 3, this command indicates a data exchange<br /></li>
+<li>LISTEN = 4, listen command sent by DeviceAppSide without parameters</li>
+</ul>
+<h4 id="interactions">1.4.Interactions</h4>
+<p>This figure describes the server device interactions when the TCP remote connection is established.<br /> <img src="images/TCP_Remote_Connection_remote_connection.png" /><br /> Figure 3: TCP remote connection<br /><br />This one emphases on the data exchanges.<br /> <img src="images/TCP_Remote_Connection_data_exchanges.png" /><br /> Figure 4: Data exchanges<br /><br /> This one shows the three closing cases:</p>
+<ul>
+<li>At client request</li>
+<li>At service request</li>
+<li>When the server device link is severed</li>
+</ul>
+<p><img src="images/TCP_Remote_Connection_connection_closing.png" /><br /> Figure 5: Connection closing</p>
+<h1 id="examples-lua-implementation">Examples: lua implementation</h1>
+<p>See <a href="Device_Management.html">TCPRemoteConnect command definition</a><br /> To start the device side of the TCP remote connection:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">CMD_TCPRemoteConnect</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&#39;DeviceManagement.TCPRemoteConnect&#39;</span>
+<span class="kw">local</span> <span class="kw">local_address</span> <span class="ot">=</span> <span class="st">&#39;10.41.51.152&#39;</span>
+<span class="kw">local</span> <span class="kw">local_port</span> <span class="ot">=</span> <span class="dv">23</span>
+<span class="co">-- server address and port are stored in the Agent configuration</span>
+<span class="kw">_</span>,<span class="kw">err</span> <span class="ot">=</span> CMD_TCPRemoteConnect<span class="ot">(</span><span class="st">&quot;&quot;</span><span class="ot">);</span> p<span class="ot">(</span><span class="kw">err</span><span class="ot">)</span></code></pre>
+</body>
+</html>

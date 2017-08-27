@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,libSwi_DSet.so -o ../../runtime/lib/libSwi_DSet.so CMakeFiles/Swi_DSet.dir/swi_dset.c.o ../../static-libs/libpointerlist.a 

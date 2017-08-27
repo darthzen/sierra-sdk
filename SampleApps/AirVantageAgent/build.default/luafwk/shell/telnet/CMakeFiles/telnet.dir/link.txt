@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,telnet.so -o ../../../runtime/lua/telnet.so CMakeFiles/telnet.dir/history.c.o CMakeFiles/telnet.dir/actions.c.o CMakeFiles/telnet.dir/buffers.c.o CMakeFiles/telnet.dir/editor.c.o CMakeFiles/telnet.dir/teel.c.o CMakeFiles/telnet.dir/telnet.c.o 

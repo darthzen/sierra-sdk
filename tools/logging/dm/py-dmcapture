@@ -1,0 +1,49 @@
+#!/usr/bin/python
+import sys
+import serial
+import datetime
+
+VERSION_LEN = 3
+ASYNC_HDLC_FLAG = '\x7e'
+DM ='/dev/ttyUSB0'
+FILTER = '/tmp/SwiLogPlus_generic_filter_6.3.sqf'
+
+if len(sys.argv) == 3:
+    DM = sys.argv[1]
+    FILTER = sys.argv[2]
+
+ser = serial.Serial(DM, timeout=0.1)
+f = open(FILTER, 'rb')
+
+buf = f.read()
+
+for cmd in buf[VERSION_LEN:].split( ASYNC_HDLC_FLAG )[:-1]:
+    cmd = cmd + ASYNC_HDLC_FLAG
+    print '[OUT]',
+    print ":".join("{0:x}".format(ord(c)) for c in cmd )
+
+    ser.write( cmd )
+    response = ser.read(512)
+    print '[IN]',
+    #print response
+    print ":".join("{0:x}".format(ord(c)) for c in response )
+
+
+now = datetime.datetime.now()
+filename = now.strftime('dmlog-%Y-%m-%d-%H:%M.raw')
+
+of = open(filename, 'wb')
+total = 0
+while 1:
+    try:
+        pkts = ser.read(512)
+        of.write(pkts)
+        total = total + len(pkts)
+        print "\rlogging %d bytes" % total,
+        sys.stdout.flush()
+    except KeyboardInterrupt:
+        break
+
+of.close()
+ser.close()
+sys.exit(0)

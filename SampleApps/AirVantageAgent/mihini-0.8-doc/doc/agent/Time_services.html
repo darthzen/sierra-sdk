@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="time-services">Time services</h1>
+<h4 id="ntp-time-synchronization">NTP time synchronization</h4>
+<p>The time synchronization client is based on Simple Network Time Protocol (SNTP) Version 4, RFC 4330.</p>
+<h5 id="main-algorithm">Main algorithm</h5>
+<p>On each synchronization, the Time module does up to 8 exchanges request/response with NTP server (Any potential NTP packet sanity check failures or UDP errors are included in this number exchanges)<br /> For each successful exchange, the Time module computes the roundtrip time of the exchange, and the offset to apply to local clock to set time the more accurately.<br /> Finally, the offset computed from the packet with the minimum roundtrip time, is used to change the local clock.</p>
+<p>Notes</p>
+<ul>
+<li>The precision of the time sync is about 0.01 sec.</li>
+</ul>
+<h5 id="ntp-api">NTP API</h5>
+<pre class="sourceCode lua"><code class="sourceCode lua">synchronize<span class="ot">()</span></code></pre>
+<p>Run NTP time synchronization <strong>asynchronously</strong>.</p>
+<h6 id="time-update-broadcast-notification">Time update broadcast / notification</h6>
+<ul>
+<li>Internal notification (within the Agent Lua VM):<br /> -&gt; Time updated given the offset computed from NTP packet (local clock updated)</li>
+</ul>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">Lua</span> <span class="kw">Event</span> : <span class="kw">emitter</span><span class="ot">=</span><span class="st">&quot;TIME&quot;</span>, <span class="kw">event</span><span class="ot">=</span><span class="st">&quot;TIME_UPDATED&quot;</span>, <span class="kw">params</span><span class="ot">=</span>applied_offset<span class="ot">(</span><span class="kw">LuaNumber</span><span class="ot">)</span></code></pre>
+<ul>
+<li>External notification:<br /> Not available for now.</li>
+</ul>
+<h6 id="clock-update-vs-timers">Clock Update Vs timers</h6>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>The local clock update that can occur during time synchronization can have some impacts on timers and other time-related actions.<br />This can be quite important when the clock is updated with a big positive offset (i.e clock was way in the past), as scheduled events will be delayed by this big offset.</p>
+</blockquote>
+<p>Example:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">function</span> test_ntp_timer <span class="ot">()</span>
+    <span class="kw">local</span> <span class="kw">sys</span> <span class="ot">=</span> <span class="fu">require</span><span class="st">&quot;system&quot;</span>
+    <span class="kw">local</span> <span class="kw">timer</span> <span class="ot">=</span> <span class="fu">require</span><span class="st">&quot;timer&quot;</span>
+    <span class="kw">local</span> <span class="kw">string</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&quot;string&quot;</span>
+    <span class="kw">local</span> <span class="kw">now</span> <span class="ot">=</span> <span class="fu">os.time</span><span class="ot">()</span>
+    <span class="kw">local</span> <span class="kw">t1</span> <span class="ot">=</span> <span class="kw">timer</span><span class="ot">.</span>new<span class="ot">(</span><span class="dv">10</span>, <span class="kw">function</span><span class="ot">()</span> <span class="fu">print</span><span class="ot">(</span><span class="fu">string.format</span><span class="ot">(</span><span class="st">&quot;now = %d, one shot 10, should arrive %d&quot;</span>, <span class="fu">os.time</span><span class="ot">()</span>, <span class="kw">now</span><span class="ot">+</span><span class="dv">10</span><span class="ot">))</span> <span class="kw">end</span><span class="ot">)</span>
+    <span class="kw">local</span> <span class="kw">t2</span> <span class="ot">=</span> <span class="kw">timer</span><span class="ot">.</span>new<span class="ot">(-</span><span class="dv">10</span>, <span class="kw">function</span><span class="ot">()</span><span class="fu">print</span><span class="ot">(</span><span class="fu">string.format</span><span class="ot">(</span><span class="st">&quot;now = %d, period 10, should arrive first %d&quot;</span>, <span class="fu">os.time</span><span class="ot">()</span>, <span class="kw">now</span><span class="ot">+</span><span class="dv">10</span><span class="ot">))</span>  <span class="kw">end</span><span class="ot">)</span>
+    <span class="kw">sys</span><span class="ot">.</span>settime<span class="ot">(</span><span class="fu">os.time</span><span class="ot">()+</span> <span class="kw">TIME_OFFSET</span><span class="ot">)</span>
+<span class="kw">end</span></code></pre>
+<ul>
+<li>if TIME_OFFSET is positive (e.g. 20), then:
+<ul>
+<li>on Linux devices, any event that should happen with a delay &lt; TIME_OFFSET will trigger immediately (here, t1 and t2 will trigger just after the time update, then t2 will trigger each 10s)</li>
+<li>on Open AT devices, pending events will be done after the correct delay</li>
+</ul></li>
+<li>if TIME_OFFSET is negative(e.g. -20), then:<br /> on any device, the events will trigger after delay+TIME_OFFSET time (here t1 and t2 will trigger after 10+20=30s, then t2 will trigger each 10s)</li>
+</ul>
+<h4 id="time-zone-and-daylight-saving-time-dst">Time zone and Daylight Saving Time (DST)</h4>
+<p>Time zone and Daylight Saving Time parameters are defined in the Agent's Config table.</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Those parameters are here just to provide a way to read those values for applicative logic purpose and to be set/read by server commands.<br />All timestamps exchanged with the server, or used internally, are in <strong>UTC</strong>.</p>
+</blockquote>
+<h4 id="useful-documentation">Useful documentation</h4>
+<p>SNTP RFC: <a href="http://www.faqs.org/rfcs/rfc4330.html">http://www.faqs.org/rfcs/rfc4330.html</a><br /> NTP papers, best practices, ... : <a href="http://www.ece.udel.edu/~mills/ntp.html">http://www.ece.udel.edu/~mills/ntp.html</a></p>
+</body>
+</html>

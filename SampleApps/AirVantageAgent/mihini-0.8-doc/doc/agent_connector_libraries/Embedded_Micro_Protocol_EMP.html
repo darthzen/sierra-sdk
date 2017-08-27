@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="embedded-micro-protocol-emp">Embedded Micro Protocol (EMP)</h1>
+<h4 id="presentation">1. Presentation</h4>
+<p>On the embedded target, several processes (tasks/threads/modules/etc, depending on the target) are running and providing simple services.</p>
+<p>The Agent and the different clients (assets) need to exchange data. This micro protocol specifies the way of exchanging those data.</p>
+<p>The communication is done using a standard IPC, i.e. a socket on localhost. However the protocol does not require that socket must be used, any transport layer that provide the same level of features can be used.<br /> On a linux target, the Agent proxy opens a socket on localhost, default port is 9999. The client can connect to it when it needs to send data or be able to receive data from a remote server.</p>
+<h4 id="frame-format">2. Frame format</h4>
+<p>All Commands expect a Response. The Response has the same command id and the same request id, but the bit0 of the status byte is set to 1.</p>
+<p>Commands and Responses can be interleaved, and a maximum of <strong>256</strong> Commands (same or different ones) can be running at the same time.</p>
+<p>A frame (Command or Response) is a set of bytes, composed of a header followed by a payload.</p>
+<p><br /> Header is composed of 8 bytes:</p>
+<table>
+<col width="39%" />
+<col width="60%" />
+<thead>
+<tr class="header">
+<th align="left">Frame section</th>
+<th align="left">Size and description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">command id</td>
+<td align="left">2 bytes: Command id (See #List of commands)</td>
+</tr>
+<tr class="even">
+<td align="left">type</td>
+<td align="left">1 byte:<br />- bit0: 0-command, 1-response<br />- bit1-7: reserved (set to 0)</td>
+</tr>
+<tr class="odd">
+<td align="left">requestid</td>
+<td align="left">1 byte: unsigned integer to code command request id</td>
+</tr>
+<tr class="even">
+<td align="left">payloadsize</td>
+<td align="left">4 bytes: BigEndian coded unsigned integer.<br />Size of the payload in bytes</td>
+</tr>
+</tbody>
+</table>
+<p>Command payload is encoded in JSON:</p>
+<table>
+<col width="39%" />
+<col width="60%" />
+<thead>
+<tr class="header">
+<th align="left">Frame section</th>
+<th align="left">Size and description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">payload</td>
+<td align="left">payload of '<code>payloadsize</code>' bytes of JSON</td>
+</tr>
+</tbody>
+</table>
+<p>Response Payload is composed of bytes which may be interpreted according to the 'command' field from the header, however it contains at least 2 bytes that are interpreted as the status of the response:</p>
+<table>
+<col width="39%" />
+<col width="60%" />
+<thead>
+<tr class="header">
+<th align="left">Frame section</th>
+<th align="left">Size and description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">status</td>
+<td align="left">2 bytes: if status == 0 the command went OK, <br />if status != 0 an error occurred. <br />The status value is to be interpreted as a <br /><a href="../c/returncodes_8h.html">rc_ReturnCode_t</a> type.</td>
+</tr>
+<tr class="even">
+<td align="left">payload</td>
+<td align="left">payload '<code>payloadsize-2</code>' bytes of JSON</td>
+</tr>
+</tbody>
+</table>
+<h4 id="list-of-commands-and-their-respective-payloads.">3. List of commands and their respective payloads.</h4>
+<p>Vocabulary:</p>
+<ul>
+<li>App: stands for Application</li>
+<li>Agt: stands for (Mihini) Agent</li>
+</ul>
+<table>
+<col width="8%" />
+<col width="18%" />
+<col width="15%" />
+<col width="56%" />
+<thead>
+<tr class="header">
+<th align="left">ID</th>
+<th align="left">Command ID</th>
+<th align="left">Request Direction</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">SendData</td>
+<td align="left">Agt-&gt;App</td>
+<td align="left">Data coming from server.<br />The payload contains the message (containing metadata and regular data) sent by the server.<br /><br /><strong>Command payload</strong>: <br />The message is a JSON <code>map</code> which format is:<br />- <code>Path</code>: a <code>string</code> identifying the root path of all variables contained in this message.<br />- <code>TicketId</code>: a <code>number</code> that serves as a acknowledge request for this message. The <code>TicketId</code> value must be given in <code>PAcknowledge</code> EMP command to acknowledge the message to the server.<br />- <code>Body</code>: variables sent by the server, the data is in a <code>map</code> which format is:<br />-- <code>variable_name</code> = <code>variable_value</code> : <code>variable_name</code> is the variable sub path and name relative to <code>Path</code>.<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Register</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Register client asset/service to the Agent <br /><br /><strong>Command payload</strong>: <br />- the path for which this client want to receive messages (a JSON string). <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. <br /><br /><strong>Remarks</strong>:<br />- It is possible to register several assets for the same IPC<br />connection by sending several Register commands from that IPC.<br />- When the IPC is closed, the asset is unregistered automatically.<br />- If several assets were registered, closing IPC will unregister all<br />the assets linked to that IPC.</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Unregister</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Unregisters a path previously registered with &quot;Register&quot;. <br /><strong>Command payload</strong>: <br />- the path to unregister (a JSON string).<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. <br /></td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">ConnectToServer</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Forces the agent to connect to the server <br />The connection is made synchronously if no latency is specified (i.e. the connection is finished when response is sent), otherwise when <br />a latency is specified the connection is likely to happen after the response is sent. <br /><br /><strong>Command payload</strong>: <br />- optional positive integer: the latency in seconds before executing the connect to server action. If no latency specified, the connexion is made synchronously.<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. The response has a status == 0 when no latency was specified and the connection to the server was successful. <br />If <code>latency</code> was specified, then status==0 means that the connection request was successfully scheduled</td>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="left">RegisterSMSListener</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Register a client as a SMS listener to the Agent. <br /><br /><strong>Command payload</strong>: a <code>list</code> of two objects: <br />- <code>String</code>: Phone number pattern to listen to. <br />- <code>String</code>: Message content pattern to listen to. <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. <br />if the status is OK (=0) <br />- <code>id</code>: an unsigned integer, giving the registration id, identifying the sms listening registration for the combination: (sms module instance/phone pattern/message pattern). This is the id to be used to call UnregisterSMSListener command. <br /><br /><strong>Note</strong>: Patterns syntax should conformed to <a href="http://www.lua.org/manual/5.1/manual.html#5.4.1">Lua patterns</a></td>
+</tr>
+<tr class="even">
+<td align="left">51</td>
+<td align="left">UnregisterSMSListener</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Unregister a client as a SMS listener to the Agent. <br /><br /><strong>Command payload</strong>: <br />- <code>id</code>: an unsigned integer, the registration id to unregister, as returned by RegisterSMSListener command <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.</td>
+</tr>
+<tr class="odd">
+<td align="left">8</td>
+<td align="left">NewSMS</td>
+<td align="left">Agt-&gt;App</td>
+<td align="left">Notify an application that a SMS is received <br /><br /><strong>Command payload:</strong> a <code>list</code> of 3 objects: <br />- <code>String</code>: Phone number of the sender (for incoming messages) / recipient (for outgoing messages) <br />- <code>String</code>: payload of the message <br />- <code>Integer</code>: the registration id (i.e. the id for the couple message pattern and sender pattern) that matched the incoming sms <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="even">
+<td align="left">52</td>
+<td align="left">SendSMS</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Used by the application to send a SMS <br /><br /><strong>Command payload</strong>: a <code>list</code> of 3 objects: <br />- <code>String</code>: Phone number of the recipient of the outgoing message <br />- <code>String</code>: payload of the message <br />- <code>String</code>: format of the SMS, supported values are &quot;8bits&quot;, &quot;7bits&quot;, &quot;ucs2&quot; <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command</td>
+</tr>
+<tr class="odd">
+<td align="left">9</td>
+<td align="left">GetVariable</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Retrieve one or several variable from the Core Agent. <br /><br /><strong>Command payload</strong>: <br />- <code>String</code>: name of the variable to get (usually a string that is a path!) (it can be a list when getting several variables) <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. <br />if the status is OK (=0) <br />2 objects, can be null. The first object is the value of the variable, or null if the variable is a table. The second object is a list of all sub tree names</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="left">SetVariable</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Set one or several variables on the Core Agent. <br /><br /><strong>Command payload</strong>: a <code>list</code> of 2 objects: <br />- 1 <code>String</code> representing the variable to set (usually a string that is a path!) <br />- 1 <code>object</code> representing the value of the variable (it can be a hashtable when setting several variables)<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.</td>
+</tr>
+<tr class="odd">
+<td align="left">11</td>
+<td align="left">RegisterVariable</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Register one variable or path to get notification when it changes. <br /><br /><strong>Command payload</strong>: a <code>list</code> of 2 objects: <br />- <code>reg vars</code>: list of strings representing the variables to register to, each string is a path to register to <br />- <code>passive vars</code>: list of strings, each string identifying the path of a passive variable <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command. <br />- <code>registration id</code>: string identifying this registration for variable change, this id is to be given to DeRegisterVariable command.</td>
+</tr>
+<tr class="even">
+<td align="left">12</td>
+<td align="left">NotifyVariable</td>
+<td align="left">Agt-&gt;App</td>
+<td align="left">Notify that a variable changed. <br /><br /><strong>Command payload</strong>: a <code>list</code> of 2 objects: <br />- 1 <code>string</code> representing the registration id that provoked this notification <br />- 1 <code>map</code> representing the variables data sent in the change notification, map keys are variables full path, map values are variable values, the map contains both registered variables that have changed and passive variables set in register request <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.</td>
+</tr>
+<tr class="odd">
+<td align="left">13</td>
+<td align="left">DeRegisterVariable</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Cancel previous registration for watching variable changes. <br /><br /><strong>Command payload</strong>: <br />- <code>String</code> representing the registration id (sent in RegisterVariable command Response payload) <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.</td>
+</tr>
+<tr class="even">
+<td align="left">20</td>
+<td align="left">SoftwareUpdate</td>
+<td align="left">Agt-&gt;App</td>
+<td align="left">Notify the Application that an update must be downloaded and installed from the url given into payload. <br /><br /><strong>Command payload</strong>: <br />- <code>componentname</code>: string that contains the application / bundle to update (the path <strong>does contain</strong> the assetid of the asset responsible for that update) <br />- <code>version</code>: string, empty string (but not null!) to specify de-installation request, non empty string for regular update/install of software component. <br />- <code>URL</code>: string; Can be empty when version is empty too, otherwise URL will be a non empty string defining the url (can be local) from which the application has to be updated and an optional username and userpassword ex <em>url:username@password</em> (username and/or password can be empty). <br />- <code>params</code>: a <code>map</code> whose content depends on the Application and the content of the Update package received by the Agent. Those params provide a way to give application specific update params. <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command <br /><br /><strong>Note</strong>: There can be only one SoftwareUpdate request at a time.</td>
+</tr>
+<tr class="odd">
+<td align="left">21</td>
+<td align="left">SoftwareUpdateResult</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Return the result of the previous SoftwareUpdate request. <br /><br /><strong>Command payload</strong>: a <code>list</code> of 2 objects: <br />- <code>componentname</code>: a string holding the name of the component <br />update status code: integer (see <a href="../agent/Software_Update_Module.html">Software Update Module</a> error code documentation) <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command <br /><br /><strong>Note</strong>: There can be only one SoftwareUpdate request at a time.</td>
+</tr>
+<tr class="even">
+<td align="left">22</td>
+<td align="left">SoftwareUpdateStatus</td>
+<td align="left">Agt-&gt;App</td>
+<td align="left">Notify the application that the update's status has changed in agent update module.<br /><br /><strong>Command payload</strong>: a <code>list</code> of 2 objects: <br />- <code>status</code>: an integer representing the current update status. More details in <a href="../c/swi__update_8h.html#a2f73926feabc8ef9800b642aa632cb57">swi_update_Event enum</a> in swi_update.h<br />- <code>details</code>: a string containing additional informations for this status.<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.<br /></td>
+</tr>
+<tr class="odd">
+<td align="left">23</td>
+<td align="left">SoftwareUpdateRequest</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Request agent to change the current update status: can pause, resume , abort the update.<br /><br /><strong>Command payload</strong>: <br />- <code>status</code>: an integer representing the new required update status. More details in <a href="../c/swi__update_8h.html#ad3de109c1a370fb8ae98ed2a83f8e6ca">swi_update_Request enum</a> in swi_update.h<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.<br /></td>
+</tr>
+<tr class="even">
+<td align="left">24</td>
+<td align="left">RegisterUpdateListener</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Enable an application to receive notifications to watch progress (by the mean of EMP <code>SoftwareUpdateStatus</code> msg) of an update job in the agent .<br /><br /><strong>Command payload</strong>: empty! <br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.<br /></td>
+</tr>
+<tr class="odd">
+<td align="left">25</td>
+<td align="left">UnregisterUpdateListener</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Disable software update notification sending to this application.<br /><br /><strong>Command payload</strong>: empty!<br /><br /><strong>Response payload</strong>: <br />- <code>status</code>: 2 bytes acknowledging the command.<br /></td>
+</tr>
+<tr class="even">
+<td align="left">30</td>
+<td align="left">PData</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Push some unstructured data to the data manager <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>asset</code>: name of the asset <br />- <code>queue</code>: triggering policy (nil refers to the default policy) <br />- <code>path</code>: common path prefix for sent data <br />- <code>data</code>: possibly nested table of path suffix / data pairs <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="odd">
+<td align="left">32</td>
+<td align="left">PFlush</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Force the immediate flush of a given trigger policy. <br /><br /><strong>Command payload:</strong> an <code>hashmap</code> with :field &quot;policy&quot; containing the name of the policy to flush. If no name is given, the &quot;default&quot; policy is flushed. <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="even">
+<td align="left">33</td>
+<td align="left">PAcknowledge</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Push an acknowledge to data manager, given trigger policy. <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with a fields:<br />- <code>ticket</code>: the ticket identifying the message to acknowledge,<br />- <code>status</code>: status code (integer) for the acknowledge (0=OK, other value means error)<br />- <code>message</code>: error message to send along with status code in the acknowledge<br />- <code>policy</code>: triggering policy (nil refers to the default policy)<br />- <code>persisted</code>: whether the acknowledge has to be stored in ram or flash.<br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="odd">
+<td align="left">40</td>
+<td align="left">TableNew</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Create a new structured table <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields: - <code>asset</code>: name of the asset<br />- <code>storage</code>: &quot;ram&quot; or &quot;flash&quot;<br />- <code>policy</code>: triggering policy (nil refers to the default policy)<br />- <code>path</code>: common path prefix for table data<br />- <code>columns</code>: columns configuration, as used by stagedb's constructor. <br /><br /><strong>Response:</strong> 2 bytes acknowledgement, plus a table identifier to be used in further operations on this table</td>
+</tr>
+<tr class="even">
+<td align="left">41</td>
+<td align="left">TableRow</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Push a row of data in an existing data table <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>table</code>: table identifier<br />- <code>row</code>: map of data to push, which format is { columnname1 = value, columnname2 = value, ... }<br /><br /><strong>Response</strong>: 2 bytes acknowledgement.</td>
+</tr>
+<tr class="odd">
+<td align="left">43</td>
+<td align="left">TableSetMaxRows</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Set a maximum number of rows in the table. The table will auto-flush itself when it reaches that number <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>table</code>: table identifier<br />- <code>maxrows</code>: max # of row in the table <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="even">
+<td align="left">44</td>
+<td align="left">TableReset</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Remove all content from a table <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>table</code>: table identifier <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="odd">
+<td align="left">45</td>
+<td align="left">ConsoNew</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Setup a new consolidation table <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields: - <code>src</code>: source table identifier<br />- <code>path</code>: common path prefix for table data<br />- <code>columns</code>: columns configuration, as used by stagedb's constructor<br />- <code>storage</code>: &quot;ram&quot; or &quot;flash&quot;<br />- <code>send_queue</code>: send triggering policy for destination table (nil refers to the default policy)<br />- <code>conso_queue</code>: consolidation policy for source table (nil refers to the default policy) <br /><br /><strong>Response:</strong> 2 bytes acknowledgement, plus destination table identifier to be used in further operations on this table</td>
+</tr>
+<tr class="even">
+<td align="left">46</td>
+<td align="left">ConsoTrigger</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Consolidate content of table immediately <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>table</code>: table identifier<br />- <code>dont_reset</code>: (Boolean) if true, the table's content isn't erased<br />after it's been consolidated. <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="odd">
+<td align="left">47</td>
+<td align="left">SendTrigger</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Send content of table to server immediately <br /><br /><strong>Command payload:</strong> <br />an <code>hashmap</code> with fields:<br />- <code>table</code>: table identifier<br />- <code>dont_reset</code>: (Boolean) if true, the table's content isn't erased after it's been sent. <br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+<tr class="even">
+<td align="left">50</td>
+<td align="left">Reboot</td>
+<td align="left">App-&gt;Agt</td>
+<td align="left">Requests reboot of the system running the Agent. The reboot will occur after a small delay. <br /><br /><strong>Command payload:</strong><br />- <code>reason</code>: string describing the reason to request the reboot, the<br />reason will be displayed in the Agent logs.<br /><br /><strong>Response:</strong> 2 bytes acknowledgement.</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

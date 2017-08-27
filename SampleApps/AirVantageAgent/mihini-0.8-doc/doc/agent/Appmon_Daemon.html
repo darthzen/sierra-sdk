@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="appmon-daemon">Appmon Daemon</h1>
+<h1 id="goals-and-context">1. Goals and context</h1>
+<p>Appmon Daemon is a standalone executable aimed to manage applications life circles on simple Linux systems.<br /> Appmon Daemon can start, stop, restart or send status of monitored applications.<br /> When an application is monitored by the Appmon Daemon, the Appmon Daemon will run the command (in a new spawned process) and checks if the application stops with an error and then restart it.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>As Appmon Daemon was designed to use simple mechanisms, it cannot give hard constraints on application reboot time accuracy or application stopping time accuracy.</p>
+</blockquote>
+<h1 id="external-interface-and-usage">2. External Interface and usage</h1>
+<h4 id="start-the-daemon">2.1. Start the daemon</h4>
+<p>It is up to user/solution provider to find a way to start Appmon Daemon at the device boot.<br /> Some basic ideas: init/rc scripts, cron ...</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>The daemon has to be started with correct permissions including: opening a socket on specified port, changing uid/gid of processes, changing process priority, etc. As a result, this daemon is very likely to be run using root-like permissions.</p>
+</blockquote>
+<p>usage:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ ./appmon_daemon -p [tcp_port_number] -a [privileged_app] -w [privileged app working directory] -u [user <span class="kw">id</span> to use to start apps] -g [group <span class="kw">id</span> to use to start apps] <span class="kw">\</span>
+  -n [process priority to run apps]</code></pre>
+<ul>
+<li><strong>-p</strong>: tcp_port_number is an optional parameter to specify the TCP port on which the Appmon Daemon will listen to get clients requests.<br /> Must be less than 65535.<br /> Default value is 4242.</li>
+<li><strong>-a</strong>: privileged_app is the absolute path to the executable file to use as a privileged app (See specific section)<br /> No default value, if -a option is not given, then no privileged_app will be started, it is not possible to start it later.</li>
+<li><strong>-w</strong>: privileged app working directory is the absolute path to a directory where to run privileged app<br /> No effect if -a option is omitted.<br /> Default value: Current working directory of Appmon Daemon.</li>
+<li><strong>-v</strong>: user id to use to start privileged app<br /> Can be user id or user name.<br /> Default value is: no change of uid of privileged app, keeping the one of Appmon_daemon</li>
+<li><strong>-h</strong>: group id to use to start privileged app<br /> Can be group id or group name.<br /> Default value is: no change of gid of privileged app, keeping the one of Appmon_daemon</li>
+<li><strong>-u</strong>: user id to use to start apps<br /> Can be user id or user name.<br /> Default value is 65534(&quot;nobody&quot; user)</li>
+<li><strong>-g</strong>: group id to use to start apps<br /> Can be group id or group name.<br /> Default value is 65534(&quot;nogroup&quot; group)</li>
+<li><strong>-n</strong>: process priority to run apps<br /> Positive number to decrease apps process priority, value valid interval is [ -20, 19 ]<br /> Default value is to run apps with the same process priority than the one used for running Appmon Daemon.<br /> Note that privileged app priority can not be changed, and will use the Appmon Daemon priority.</li>
+</ul>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>When an option is given, its value must be correctly set, otherwise the Appmon Daemon is very likely to exit synchronously with an error.</p>
+</blockquote>
+<ul>
+<li>system return code: 0 if daemon successfully started, non zero if a problem occurred during init phase:
+<ul>
+<li>1000 if it is an internal error code</li>
+<li>errno value if system error occurred</li>
+</ul></li>
+</ul>
+<p>example:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ ./appmon_daemon -p 45874 -a /tmp/myapp -w /tmp -u myuser -g 32500</code></pre>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>As the use of the term daemon suggests it, Appmon Daemon immediately exits, even when init was successful, then continuing to run in background being accessible using the socket API.</p>
+</blockquote>
+<h4 id="socket-interface">2.2. Socket Interface</h4>
+<p>TCP port will default to port <strong>4242</strong> if not specified in command used to start the daemon.</p>
+<p>When the client connects to the daemon, it can send command and get results several times.</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>The client must pay attention to close the socket connected to the daemon if other clients have to send requests: only one client connection is possible at the same time.</p>
+</blockquote>
+<h4 id="commands">2.3. Commands</h4>
+<h5 id="generic-command-format">2.3.1. Generic command format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">command_name arg1 arg2 ..<span class="kw">.</span> argn\n</code></pre>
+<p>The format of command is the command name followed by command arguments.<br /> The command line element separator is <strong>space</strong> and the command line ending character is <strong>\n</strong>.</p>
+<h5 id="generic-command-response-format">2.3.2. Generic command response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result1\t result2\t ...resultn\n</code></pre>
+<p>The command produce several results, those are separated by character <strong>\t</strong> (see List command for example)<br /> The command results are ended by character <strong>\n</strong>.</p>
+<h5 id="setup-command">2.3.3. Setup command</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">setup working_directory application</code></pre>
+<p>working_directory is the <strong>absolute</strong> path used as working directory to execute the application.<br /> application is the <strong>absolute</strong> path to the application executable. Can be any type of Linux executable file, <strong>read/write/exec access rights</strong> must be correctly set (prior to calling setup command and during application life circle).</p>
+<h5 id="actions">2.3.3.1. actions</h5>
+<ul>
+<li>checks working_directory and application paths are valid.</li>
+<li>create monitored app, store working_directory/application path and set its state to STOPPED. (start command needs to be called to actuallty start the new app).</li>
+<li>the new app is an unprivileged app: it will be started using user/uid and group/gid given as appmon_daemon param</li>
+</ul>
+<h5 id="setup-response-format">2.3.3.2. setup response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">Application_id</code></pre>
+<p>Application_id is a string:</p>
+<ul>
+<li>in case of success: the string represents an integer that will identify the started application. This integer will have to be provided when using other commands on monitored application.</li>
+<li>in case of error: the string is a description of the error.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">setup/tmp /tmp/app
+1
+setup /tmp /path/that/doesnt/exist
+Cannot <span class="kw">install</span> app</code></pre>
+<h4 id="start-command">2.3.4. Start command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">start application_id</code></pre>
+<p>application_id is the id as returned by the setup command to identify the application.</p>
+<h5 id="actions-1">2.3.4.1. actions</h5>
+<ul>
+<li>create new process to run the application (using fork)</li>
+<li>set the working directory of the new process to working_directory param value (using chdir)</li>
+<li>create a new process group id, and making the new process the leader of this process group (using setpgrp)</li>
+<li>replace current user and group by user/uid and group/gid given as appmon_daemon param (or default ones)</li>
+<li>change the process priority according to command line param, or don't anything and keep Appmon Daemon priority.</li>
+<li>start the application in the new process (using execvp)</li>
+</ul>
+<h5 id="start-response-format">2.3.4.2. start response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result</code></pre>
+<p>result is a string:</p>
+<ul>
+<li>in case of success: the string represents an integer that will identify the started application. This integer will have to be provided when using other commands on monitored application.</li>
+<li>in case of error: the string is a description of the error.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">start /tmp /tmp/app
+1
+start /tmp /path/that/doesnt/exist
+Cannot start app</code></pre>
+<h4 id="stop-command">2.3.5. Stop command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">stop application_id</code></pre>
+<p>application_id is the id as returned by the setup command to identify the application.</p>
+<h5 id="actions-2">2.3.5.1. actions</h5>
+<ul>
+<li>send SIGTERM signal to the whole process group leaded by the monitored app (see start actions)</li>
+<li>wait 5 seconds for app termination (using SIGCHLD signal)</li>
+<li>if monitored app is not stopped yet, send SIGKILL signal to the whole process group leaded by the monitored app (see start actions)</li>
+<li>wait 5 seconds for app termination (using SIGCHLD signal)</li>
+<li>if the process reach this point (very unlikely), stop command has failed.</li>
+</ul>
+<p>Note: All app childs, if any, will be killed with the monitored application, unless the childs detach from it.</p>
+<h5 id="stop-response-format">2.3.5.2. stop response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result</code></pre>
+<p>result is a string:</p>
+<ul>
+<li>in case of success: &quot;ok&quot;</li>
+<li>in case of error: the string is a description of the error.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">stop 3
+ok
+stop 4344444
+Unknown app
+stop 1
+Privileged App, cannot act on it through socket.</code></pre>
+<h4 id="remove-command">2.3.6. Remove command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">remove application_id</code></pre>
+<p>application_id is the id as returned by the setup command to identify the application.</p>
+<h5 id="actions-3">2.3.6.1. actions</h5>
+<ul>
+<li>try to stop app</li>
+<li>remove app from the list (i.e. if stopping app has failed, at least it won't be restarted anymore whatever it next exit type)</li>
+</ul>
+<h5 id="remove-response-format">2.3.6.2. Remove response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result</code></pre>
+<p>result is a string:</p>
+<ul>
+<li>in case of success: &quot;ok&quot;</li>
+<li>in case of error: the string is a description of the error.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">remove 3
+ok
+remove 4344444
+Unknown app</code></pre>
+<h4 id="status-command">2.3.7. Status command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">status application_id</code></pre>
+<p>application_id is returned by the start command to identify the application.</p>
+<h5 id="status-response-format">2.3.7.1. Status response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result</code></pre>
+<p>result is a string:</p>
+<ul>
+<li>in case of success: it is a string describing the monitored application.</li>
+<li>in case of error: the string is a description of the error.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">status 2
+<span class="ot">AppID=</span>[2] Privileged=[0] Prog=[/tmp/prog] Wd=[/tmp] Status=[STARTED] Pid=[16855] StartCount[2] LastExitType=[STOP_REGULAR] LastExitCode[140]
+status 4344444
+Unknown app</code></pre>
+<h4 id="list-command">2.3.8. List command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">List</code></pre>
+<p>No argument.</p>
+<h5 id="list-response-format">2.3.8.1. List response format</h5>
+<pre class="sourceCode bash"><code class="sourceCode bash">result</code></pre>
+<p>result is a string:</p>
+<ul>
+<li>in case of success: it is a string with each application status listed (same format as status command), application status lines are separated by &quot;\t&quot; character, and the whole result is ended by '\n'.</li>
+<li>in case of error: the string is a description of the error.<br /> Note: When no application is currently managed by Appmon Daemon, then list result is only &quot;\n&quot;, an empty line.</li>
+</ul>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">list
+<span class="ot">AppID=</span>[1] Privileged=[1] Prog=[/tmp/prog] Wd=[/tmp] Status=[STARTED] Pid=[16855] StartCount[2] LastExitType=[STOP_REGULAR] LastExitCode[140]
+<span class="ot">AppID=</span>[2] Privileged=[0] Prog=[/tmp/prog2] Wd=[/tmp] Status=[STARTED] Pid=[16856] StartCount[1] LastExitType=[STOP_REGULAR] LastExitCode[140]
+<span class="ot">AppID=</span>[3] Privileged=[0] Prog=[/tmp/prog3] Wd=[/tmp] Status=[STARTED] Pid=[16858] StartCount[6] LastExitType=[STOP_REGULAR] LastExitCode[140]
+<span class="ot">AppID=</span>[4] Privileged=[0] Prog=[/tmp/prog4] Wd=[/tmp] Status=[STARTED] Pid=[16859] StartCount[1] LastExitType=[STOP_REGULAR] LastExitCode[140]
+<span class="ot">AppID=</span>[5] Privileged=[0] Prog=[/tmp/prog] Wd=[/tmp] Status=[STOPPED] Pid=[16862] StartCount[0] LastExitType=[App haven<span class="st">&#39;t died yet] LastExitCode[-1]</span></code></pre>
+<h4 id="setenv-command">2.3.9 setenv command</h4>
+<pre class="sourceCode bash"><code class="sourceCode bash">setenv <span class="ot">variable_name=</span>value</code></pre>
+<p>Where <code>variable_name</code> is the name of the variable to set in Appmon Daemon's address space, and <code>value</code> its value.</p>
+<p>ex:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">setenv <span class="ot">LD_LIBRARY_PATH=</span><span class="st">&quot;/path/to/lib&quot;</span>
+setenv <span class="ot">LUA_CPATH=</span><span class="st">&quot;/path/to/lua/native/modules/?.so&quot;</span>
+setenv <span class="ot">LUA_PATH=</span><span class="st">&quot;/path/to/lua/modules/?.lua;/path/to/lua/modules/?/init.lua&quot;</span></code></pre>
+<h1 id="usage-examples">3. Usage examples</h1>
+<p>Given the socket interface, one of the simplest way to interact with the Appmon Daemon can be to use the <strong>nc</strong> aka <strong>netcat</strong> tool usually provided in most of Linux distributions.</p>
+<p>Let's start the Appmon Daemon</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ ./appmon_daemon -p 7865</code></pre>
+<p>To get some kind of <strong>interactive</strong> mode do:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ nc localhost 7865
+setup /tmp /tmp/some_absent_file                           <span class="co">## send this command by hitting enter</span>
+prog <span class="kw">(</span>/tmp/sdflklsdjkflsdkjflkdsj<span class="kw">)</span> cannot be <span class="kw">stat</span>!         <span class="co">## result sent by Appmon Daemon</span>
+..<span class="kw">.</span>                                                        <span class="co">## you can type other commands</span></code></pre>
+<p>To get some kind of client to send command, for exemple to be used in a shell script, you can do something like:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">echo</span> <span class="st">&quot;setup /tmp /tmp/some_absent_file&quot;</span> <span class="kw">|</span> nc localhost 7865</code></pre>
+<h1 id="application-life-cicle">4. Application life cicle</h1>
+<p>Once monitored by the Appmon Daemon, an application can have several state:</p>
+<ul>
+<li><strong>STARTED</strong>: application is monitored and currently running</li>
+<li><strong>STOPPING</strong>: application is monitored and currently running but a stop request has been done on stop it.<br /> (Usually, this state will not be seen by the user, unless stop request fails for some reason, otherwise directly after the stop request, the application state is likely to be KILLED)</li>
+<li><strong>STARTING</strong>: application is monitored and currently dead but set to be restarted in usually less than 5 seconds.</li>
+<li><strong>STOPPED</strong>: application is monitored and currently dead but will not been restarted: a stop request must have been done to avoid it.</li>
+</ul>
+<p>Here is a schema about application states with some details on which events triggers state transitions.</p>
+<div class="figure">
+<img src="images/Appmon_Daemon_application_life_cicle.png" /><p class="caption"></p>
+</div>
+<p>Caption:<br /> Black arrows: commands coming from client API.<br /> Red arrows: internal events<br /> Others remarks:</p>
+<ul>
+<li>&quot;exit success&quot; means the app ends using regular means (like POSIX exit call), with status code equal to 0</li>
+<li>&quot;exit error&quot; means the app died with some kind of error, it can be:
+<ul>
+<li>ending with a status code different from 0</li>
+<li>die upon uncaught signal reception</li>
+</ul></li>
+<li>&quot;restart&quot; is the automatic restart of an app after some delay, it's an internal action, no socket API command is involved. See Application automatic restart section.</li>
+</ul>
+<p>Stopped status can occur because of several causes, next sections explains them more precisely.</p>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>Child process suspend/resume actions (using SIGSTOP/SIGCONT/... signals) that can cause the child to change its state, are neither detected, nor managed, i.e. suspended application/child will still be reported as &quot;started&quot;</p>
+</blockquote>
+<h4 id="termination-status">4.1. Termination status</h4>
+<p>The termination status is shown in status/list command result in &quot;LastExitType&quot; field.<br /> It is the combination of the cause of the app exit and the state of the app at this precise moment.</p>
+<div class="figure">
+<img src="images/Appmon_Daemon_termination_status.png" /><p class="caption"></p>
+</div>
+<p>When a SIGCHLD meaning child termination is received, termination status is computed like that:</p>
+<ul>
+<li>Exit Regular: application was not requested to stop and exited with exit code equal to 0</li>
+<li>Exit Error: application was not requested to stop and exited with exit code different from 0</li>
+<li>Stop Regular: application was requested to stop and either was killed by receiving SIGTERM (sent by Appmon Daemon) or exited (whatever exit code)</li>
+<li>Stop Kill: application was requested to stop and was killed by receiving SIGKILL (sent by Appmon Daemon).</li>
+<li>Signal Uncaught: application was requested to stop and was killed by receiving a signal that is not SIGTERM or SIGKILL, or application was not requested to stop and was killed by receiving any signal.</li>
+</ul>
+<h4 id="application-automatic-restart">4.2. Application automatic restart</h4>
+<p>The Appmon Daemon will restart a monitored application when it dies if:</p>
+<ul>
+<li>no client has requested to stop the application<br /> <strong>and</strong>
+<ul>
+<li>the application died returning a system code different from 0 (this is usually done by calling exit or return from the main in C application, see the application or shell command documentation to get details)<br /> <strong>or</strong></li>
+<li>the application died because of a system signal.</li>
+</ul></li>
+</ul>
+<p>When restarted, the application will keep its id, but will be started in a new process with a new pid.<br /> All actions/configurations on the application (working directory, process group creation, ...) done on regular start also apply on automatic restart.</p>
+<h1 id="known-limitations">5. Known limitations</h1>
+<ul>
+<li>Application list is not persisted, i.e. doesn't survive to Appmon Daemon reboot.<br /> Thus, if the Appmon Daemon stops, you have to restart Appmon Daemon, and then manually restart applications.</li>
+<li>Only one client can connect at the time to send command request to the daemon.</li>
+<li>Client requests may postpone some actions on application (like restarting):<br /> -if a client send the stop command on a first application. This stop command can take up to 10 sec.<br /> -then a second application dies during the execution of the stop command.<br /> -the 2nd application death will be detected and restart will be programmed only after the end of execution of previous stop command.</li>
+<li>...</li>
+</ul>
+</body>
+</html>

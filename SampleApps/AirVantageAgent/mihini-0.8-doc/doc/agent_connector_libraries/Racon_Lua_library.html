@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="racon-lua-library">Racon Lua library</h1>
+<h4 id="presentation">1. Presentation</h4>
+<p>The Racon Connector library provides access to the M2M platform through the Agent. On architectures supporting multiple processes, it is a library which dialogs with the Agent process through a dedicated IPC channel, most commonly a socket.</p>
+<p>Communications with the server include buffering and consolidating data on the embedded side, flushing them to the server according to customizable policies, subscribing to server-side or hardware events and value changes, acknowledge management.</p>
+<p>The Agent naturally reasons by assets: connections to it are associated with a given asset when established, events and notifications are dispatched by asset, etc. The Agent's logical assets might map one-to-one with physical assets connected to the physical device, but they don't have to. Within an asset, data are organized into tree paths, and it is possible to subscribe to data or event limited to any arbitrary sub-path.</p>
+<p>As a general principle, the Agent takes responsibility for the data that have been passed to it: it is in charge of optimizing their encoding and regrouping, of handling acknowledgements, of securing them in non-volatile memory if asked to, etc.</p>
+<p>In addition to offering communication means to the server, the Racon library also gives access to other Agent features: SMS communications, hardware I/O control and monitoring, etc.</p>
+<h4 id="create-a-new-asset-instance-initialize-a-new-asset">2. Create a New Asset Instance, Initialize a New Asset</h4>
+<p>Creating a new asset is as simple as calling <code>racon.newasset()</code> with a mandatory asset id string.<br /> It returns an Racon asset object, which acts on behalf of the asset.<br /> An asset does not necessarily represent a physical piece of hardware; it is merely a representation of the global application architecture.</p>
+<p>At this point, the asset is created but is not ready to communicate with the Agent. To make it active, the <code>start</code> method must be called first, after any required event subscription has been performed.</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="kw">racon</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&quot;racon&quot;</span>
+<span class="kw">racon</span><span class="ot">.</span>init<span class="ot">()</span> <span class="co">-- configure the module</span>
+
+<span class="co">-- create asset</span>
+<span class="kw">asset</span> <span class="ot">=</span> <span class="kw">racon</span><span class="ot">.</span>newAsset<span class="ot">(</span><span class="st">&quot;newassetid&quot;</span><span class="ot">)</span>
+<span class="co">-- register asset</span>
+<span class="kw">local</span> <span class="kw">status</span>, <span class="kw">err</span> <span class="ot">=</span> <span class="kw">asset</span> :start<span class="ot">()</span>
+<span class="kw">if</span> <span class="kw">not</span> <span class="kw">status</span> <span class="kw">then</span> <span class="fu">print</span><span class="ot">(</span><span class="st">&quot;Error when starting the asset: &quot;</span><span class="ot">..</span><span class="kw">err</span><span class="ot">)</span>
+<span class="kw">end</span></code></pre>
+<p>The asset identifier is the root element of the message path. For instance, if the variable &quot;foo&quot; is written under path &quot;bar&quot; in the asset &quot;myAsset&quot;, the complete path as seen by the server is &quot;myAsset.bar.foo&quot;.</p>
+<h4 id="data-sending">3. Data Sending</h4>
+<h5 id="generalities">3.1. Generalities</h5>
+<p>Data can be sent with two different APIs:</p>
+<ul>
+<li>Through pre-declared tables, where the user can specify the table's persistence mode, columns, serialization options, etc.</li>
+<li>Directly, by passing data in a Lua table. This is the most flexible way in terms of what can be sent, but it does not allow you to customize storage and emission settings.</li>
+</ul>
+<h5 id="event-sending">3.2. Event Sending</h5>
+<p>Noteworthy events are notified between the assets and the server by sending data. When designing an application, some conventions are taken about which paths represent &quot;normal&quot; data, and which ones<br /> will be used to represent events. The embedded application will subscribe to these paths and hook a proper handling function on them; symmetrically, the server will be configured to react to &quot;event<br /> paths&quot; by causing the appropriate notifications.</p>
+<p>Both data sending APIs can be used (raw data or predeclared tables). However, given the generally simple and immediate kind of data exchange suitable to event notifications, the raw data API will most often be the best choice.</p>
+<h5 id="policies">3.3. Policies</h5>
+<p>Data is not normally sent to the server as soon as the user requests it. It is accumulated by the Agent to limit the number of connections, to optimize their encoding, and optionally to perform some data consolidation operations on them. Data emission is performed according to a policy, which can be:</p>
+<ul>
+<li>cron=&quot;cron_config&quot;: The operation is performed at predefined dates, specified using the standard Unix cron syntax.</li>
+<li>latency=n: The operation will be performed in <code>n</code> seconds at most.</li>
+<li>manually=true: The connection will be triggered by the application through an explicit call to <code>racon.triggerPolicy()</code>.</li>
+<li>boot=n: The operation will be performed <code>n</code> seconds after the <code>racon</code> module has been initialized.</li>
+</ul>
+<p>There can be multiple policies set up on a single device, and Racon APIs allow to choose according to which policy when each data is sent.</p>
+<h6 id="policy-examples">3.3.1. Policy Examples</h6>
+<p>If <code>cron=&quot;*&quot;</code>, the device will connect at the beginning of every hour if there is something to send. Even if a connection is forced at 8:59, the cron connection will still be forced at 9:00.</p>
+<p>If <code>latency=60*60</code>, the device will connect every one hour: the first connection will be done one hour after the device booted. However, if a periodic connection is due at 9:00, and a connection is forced at 8:59, the next connection will occur at 9:59 rather than at 9:00. This policy guarantees that data will not be buffered for more than 60<em>60 seconds before being sent to the server, and that no more than 60</em>60 seconds will pass between two connections. (Connections not only allow data to be sent to the server, but also to receive data sent by it).</p>
+<p><code>boot=n</code> policy rules are mostly useful if some unsent, persisted data might have been left unsent before a reboot. With such a policy, data unsent because of a shutdown will be sent when the device reboots.</p>
+<h6 id="policy-configurations">3.3.2. Policy Configurations</h6>
+<p>To allow the handling of several policies, policy queues can be declared, in unlimited number, in the agent's configuration. They are indexed by name in <code>&quot;data.policy&quot;</code>, and contain a table with one key and one value. The key is one of <code>&quot;cron&quot;, &quot;latency&quot;, &quot;manually&quot;</code>. More than one pair can be given for a single policy.</p>
+<ul>
+<li>cron policies are triggered at predefined dates, which can be described with the same formalism as POSIX' cron task scheduler;</li>
+<li>latency policies are guaranteed to be triggered before a given delay in seconds elapses. The delay, when non-zero, leaves a chance to group several triggerings together and to save some bandwidth;</li>
+<li>manual policies are only triggered when the user application explicitly triggers them.</li>
+</ul>
+<p>Some policies must exist and have certain properties:</p>
+<ul>
+<li><code>&quot;default&quot;</code> is the policy chosen when a data sending command is given with no explicit policy. Users can change the way this policy is triggered.</li>
+<li><code>&quot;never&quot;</code> cannot be triggered: data associated with this policy are never sent.</li>
+<li><code>&quot;now&quot;</code> is intended for data which are to be sent (almost) immediately. It must be configured to be sent with a latency, and in normal situations, this latency should be short, no more than a couple of seconds.</li>
+</ul>
+<p id="policy-configuration-examples">3.3.2.1. Policy configuration examples</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="st">&#39;data.policy.hourly.latency&#39;</span>, <span class="dv">60</span><span class="ot">*</span><span class="dv">60</span><span class="ot">)</span> <span class="co">-- this policy connects at least once per hour</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="st">&#39;data.policy.manual.manually&#39;</span>, <span class="kw">true</span><span class="ot">)</span> <span class="co">-- this policy only connects when the user requests it</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="st">&#39;data.policy.midnight.cron&#39;</span>, <span class="st">&#39;0 0 * * \*&#39;</span><span class="ot">)</span> <span class="co">-- this policy connects at midnight</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="st">&#39;data.policy.default.latency&#39;</span>,<span class="dv">30</span><span class="ot">)</span> <span class="co">-- change default policy step 1</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="st">&#39;data.policy.default.1&#39;</span>,<span class="kw">nil</span><span class="ot">)</span>      <span class="co">-- change default policy step 2 (optional)</span></code></pre>
+<p id="why-policies">3.3.2.2. Why policies?</p>
+<p>Policies introduce an indirection in the way data are flushed from the agent to the server. This indirection is extremely precious over the lifetime of an M2M application: policies can be changed remotely, by asking the server to update the agent's configuration. If data triggering were done explicitly by the application, adapting the reporting policy to changing conditions (bandwidth congestion and billing, change in usage patterns...) owuld require a full software update.</p>
+<p>There are a couple of legitimate, very advanced cases where an application needs direct control over data sending policies, and this can be done by forcing the triggers on a manual-only policy. But it should be avoided in most reasonable use cases, and represents a liability for long term maintenance.</p>
+<h5 id="sending-undeclared-data">3.4. Sending Undeclared Data</h5>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">asset</span> :pushData <span class="ot">(</span>?<span class="kw">path</span>, <span class="kw">record</span>, ?<span class="kw">policy</span><span class="ot">)</span></code></pre>
+<p>This function sends some data according to the specified policy (or the default policy if unspecified). The record can be a flat key/value set of values, which will be stored under the specified path (relative to the asset's root on the server).<br /> If the record contains nested sub-tables, it will be interpreted as several sub-trees (cf. examples).<br /> If the path is omitted, data is stored at the asset's root.<br /> If the record is not a table, the last segment of the path is used as only record key.</p>
+<p>Notice that for the server, all data is timestamped. If there is no 'timestamp' or 'timestamps' entry on a record, it will be timestamped at the date of its reception by the server.</p>
+<h6 id="examples">3.4.1. Examples</h6>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">asset</span> :pushData<span class="ot">(</span><span class="st">&#39;foo&#39;</span>, <span class="ot">{</span><span class="kw">x</span><span class="ot">=</span><span class="dv">1</span>, <span class="kw">y</span><span class="ot">=</span><span class="dv">2</span><span class="ot">})</span> <span class="co">-- sends &lt;assetroot&gt;.foo.x=1, &lt;assetroot&gt;.foo.y=2</span>
+<span class="kw">asset</span> :pushData<span class="ot">(</span><span class="st">&#39;foo.x&#39;</span>, <span class="dv">1</span>, <span class="st">&#39;midnight&#39;</span><span class="ot">)</span> <span class="co">-- will send &lt;assetroot&gt;.foo.x=1 according to the &quot;midnight&quot; policy</span>
+<span class="kw">asset</span> :pushData<span class="ot">(</span><span class="st">&#39;foo&#39;</span>, <span class="ot">{</span><span class="kw">x</span><span class="ot">=</span><span class="dv">1</span>, <span class="kw">y</span><span class="ot">={</span><span class="kw">a</span><span class="ot">=</span><span class="dv">2</span>, <span class="kw">b</span><span class="ot">=</span><span class="dv">3</span><span class="ot">}})</span> <span class="co">-- sends &lt;assetroot&gt;.foo.x=1, &lt;assetroot&gt;.foo.y.a=2, &lt;assetroot&gt;.foo.y.b=3</span></code></pre>
+<h5 id="predeclared-data-tables">3.5. Predeclared Data Tables</h5>
+<p>Data tables can be declared as follows:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">tbl</span> <span class="ot">=</span> <span class="kw">asset</span> :newTable<span class="ot">(</span><span class="kw">path</span>, <span class="kw">columns</span>, ?<span class="kw">storage</span>, ?<span class="kw">policy</span><span class="ot">)</span></code></pre>
+<p>A table is associated with a given path (relative to the asset's root) and policy (default policy if unspecified). It can also have either a <code>&quot;ram&quot;</code> or <code>&quot;file&quot;</code> storage mode. Finally, it predeclares the columns which it handles; all records later pushed in the table must conform to this set of columns. The paramater columns is a list of column names as strings.</p>
+<p>In the future, columns will support more advanced settings, including serialization policies which affect their bandwidth usage vs. data precision compromise.</p>
+<p>The result of this function is a table proxy object <code>tbl</code>, which supports methods <code>:pushRow()</code> to feed data in it, and <code>:send()</code> to force an immediate flush to the server, bypassing any policy setup.</p>
+<h6 id="example">3.5.1. Example</h6>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">tbl</span> <span class="ot">=</span> <span class="kw">asset</span> :newTable<span class="ot">(</span><span class="st">&#39;position&#39;</span>, <span class="ot">{</span><span class="st">&#39;latitude&#39;</span>, <span class="st">&#39;longitude&#39;</span>, <span class="st">&#39;altitude&#39;</span>, <span class="st">&#39;timestamp&#39;</span><span class="ot">}</span>, <span class="st">&#39;ram&#39;</span>, <span class="st">&#39;hourly&#39;</span><span class="ot">)</span></code></pre>
+<h6 id="pushing-a-row-in-a-predeclared-table">3.5.2. Pushing a Row in a Predeclared Table</h6>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">tbl</span> :pushRow<span class="ot">{</span><span class="kw">k_1</span><span class="ot">=</span><span class="kw">v_1</span>, <span class="ot">...</span>, <span class="kw">k_n</span><span class="ot">=</span><span class="kw">v_n</span><span class="ot">}</span></code></pre>
+<p>Push a row of data in a predeclared table. Keys must match the predeclared column names.</p>
+<h6 id="example-1">3.5.3. Example</h6>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">tbl</span> :pushRow<span class="ot">{</span><span class="kw">latitude</span><span class="ot">=</span><span class="kw">y</span>, <span class="kw">longitude</span><span class="ot">=</span><span class="kw">x</span>, <span class="kw">altitude</span><span class="ot">=</span><span class="kw">z</span>, <span class="kw">timestamp</span><span class="ot">=</span><span class="fu">os.time</span><span class="ot">()}</span></code></pre>
+<h6 id="forcing-the-emission-of-a-table-content">3.5.4. Forcing the Emission of a Table Content</h6>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">tbl</span> :send<span class="ot">(</span>?<span class="kw">no_reset</span><span class="ot">)</span></code></pre>
+<p>Force the immediate emission of the table's content to the server. The table content will be erased unless either the transmission fails, or the <code>no_reset</code> argument is true.</p>
+<h6 id="forcing-a-policy-flush">3.5.5. Forcing a Policy Flush</h6>
+<p>All the data attached to a given policy can be flushed to the server immediately with function:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">racon</span><span class="ot">.</span>triggerPolicy<span class="ot">(</span>?<span class="kw">policy_name</span><span class="ot">)</span></code></pre>
+<p>If no <code>policy_name</code> is passed, the default policy is used. If the special name <code>&quot;*&quot;</code> is passed, all policies are flushed.</p>
+<h4 id="data-reception-data-writing">4. Data Reception (Data Writing)</h4>
+<h5 id="asset-data-tree">4.1. Asset <code>Data Tree</code></h5>
+<p>The Racon asset instance (returned by a call to <code>racon.newAsset()</code>) contains a <code>data tree</code>: a set of nested lua tables, stored in the asset's <code>tree</code> field. Data sent by the server will be written in this tree, under the proper path, unless a handler function has been set up in the tree. If a suitable handler function is found in the tree, data writings sent by the server are passed to that handler rather than written in the tree.</p>
+<p>FYI, server can only modify data defined in datamodel as a setting, and not a variable.</p>
+<h5 id="registering-a-function-on-the-data-tree">4.2. Registering a Function on the <code>Data Tree</code></h5>
+<p>The <code>data tree</code>, or any sub path (branch) of it, can be set to a function.<br /> In that case, a data writing will trigger a function call with the remaining path and value as parameters.<br /> It is possible to set a default function handler for a path by setting the key <code>__default</code> to a function in the given path.</p>
+<p>Data writing handlers can either:</p>
+<ul>
+<li>fail with nil+message, or by returning a non-zero numeric status code; in this case, if the server required an acknowledgement, a failure will be reported to it.</li>
+<li>succeed and return either the <code>&quot;ok&quot;</code> string or the number 0: if the server required an acknowledgement, success will be reported to it as a response</li>
+<li>succeed and return the <code>&quot;async&quot;</code> string as a result: this means the handler takes acknowledgement in charge, and will eventually call <code>portal.acknowledge</code> to report to the server.</li>
+</ul>
+<p>Data handlers receive the following parameters:</p>
+<ul>
+<li>the Racon asset instance to which the data was destined;</li>
+<li>the data, as a table of key/value pairs; keys are suffixes to the common path prefix (see next parameter);</li>
+<li>a path prefix, common to all data; actual data paths are the set of <code>utils.path.concat(path, key)</code> for all keys in the 2nd parameter;</li>
+<li>an optional ticketid number for acknowledgement. Unless the handler needs to perform asynchronous acknowledgement, which is a rather unusual use case, this parameter should be ignored.</li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>The <code>data tree</code> contains some default handlers for common tasks. Overwriting the tree with a fresh table will disable these pre-wired tasks.</p>
+</blockquote>
+<p>The following example illustrates the registration of function on the <code>data tree</code>:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- create an asset</span>
+<span class="kw">asset</span> <span class="ot">=</span> <span class="kw">racon</span><span class="ot">.</span>newAsset<span class="ot">(</span><span class="st">&quot;myasset&quot;</span><span class="ot">)</span>
+
+<span class="co">-- create a sub path &#39;engine&#39; in the asset data tree</span>
+<span class="co">-- in developper studio datamodel, &#39;engine&#39; is represented as a node</span>
+<span class="kw">asset</span><span class="ot">.</span><span class="kw">tree</span><span class="ot">.</span><span class="kw">engine</span> <span class="ot">=</span> <span class="ot">{}</span>
+
+<span class="co">-- dummy function to set on the data tree</span>
+<span class="kw">local</span> <span class="kw">function</span> writebranch<span class="ot">(</span><span class="kw">tablevalues</span>, <span class="kw">remaingpath</span><span class="ot">)</span>
+    <span class="fu">print</span><span class="ot">(</span><span class="kw">remaingpath</span><span class="ot">)</span>
+    <span class="kw">for</span> <span class="kw">k</span>,<span class="kw">v</span> <span class="kw">in</span> <span class="fu">pairs</span><span class="ot">(</span><span class="kw">tablevalues</span><span class="ot">)</span> <span class="kw">do</span>
+        <span class="fu">print</span><span class="ot">(</span><span class="st">&quot;set&quot;</span>, <span class="kw">k</span> ,<span class="kw">v</span><span class="ot">)</span>
+    <span class="kw">end</span>
+<span class="kw">end</span>
+
+<span class="co">-- add function on path &#39;myasset.engine.temperature&#39;: called whenever a data writing is done on &#39;myasset.engine.temperature&#39;</span>
+<span class="kw">asset</span><span class="ot">.</span><span class="kw">tree</span><span class="ot">.</span><span class="kw">engine</span><span class="ot">.</span><span class="kw">temperature</span> <span class="ot">=</span> <span class="kw">writebranch</span>
+
+<span class="co">-- add default function on path &#39;myasset.engine&#39;: called whenever a data writing is done on &#39;myasset.engine&#39;</span>
+<span class="kw">asset</span><span class="ot">.</span><span class="kw">tree</span><span class="ot">.</span><span class="kw">engine</span><span class="ot">.</span><span class="kw">__default</span> <span class="ot">=</span> <span class="kw">writebranch</span>
+
+<span class="co">-- register the asset</span>
+<span class="kw">asset</span>:start<span class="ot">()</span></code></pre>
+<h5 id="pre-wired-tasks">4.3. Pre-wired Tasks</h5>
+<p>The <code>'commands'</code> sub-table is preset in an asset's <code>data tree</code> when it's created. It contains the <code>'ReadNode'</code> command. The <code>'ReadNode'</code> command is registered on the asset's <code>data tree</code> at 'commands.ReadNode'.</p>
+<h6 id="command-reception">4.3.1. Command Reception</h6>
+<p>TODO: Update this section</p>
+<p>AWTDA3 deprecates AWTDA2's concept of commands. Instead, the protocol transports commands as regular data writing. The concept of command remains supported, through the convention that data writings under the <code>&quot;commands.``&quot;</code> <strong>path represent commands, and command callbacks should be registered as handlers under</strong> <code>&quot;commands.``&quot;</code>.</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>A command is just a function registered in the asset <code>data tree</code> under the &quot;special&quot; path <code>@assetid.commands</code>.<br />The asset <code>data tree</code> comes with:</p>
+<ul>
+<li>Pre-wired commands (ex: <code>ReadNode</code>, function registered on <code>@assetid.commands.ReadNode</code>)</li>
+<li>A default command (registered on <code>@assetid.commands.__default</code>) returning an <code>&quot;unknown command&quot;</code> error.</li>
+</ul>
+</blockquote>
+<p>The following example illustrates the registration of commands on the asset <code>data tree</code>:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">asset</span> <span class="ot">=</span> <span class="kw">portal</span><span class="ot">.</span>newasset<span class="ot">(</span><span class="st">&quot;myasset&quot;</span><span class="ot">)</span>
+
+<span class="co">-- This function will be called when the Command StartEngine is sent to the asset</span>
+<span class="kw">asset</span><span class="ot">.</span><span class="kw">tree</span><span class="ot">.</span><span class="kw">commands</span><span class="ot">.</span><span class="kw">StartEngine</span> <span class="ot">=</span> <span class="kw">function</span><span class="ot">(</span><span class="kw">asset</span>, <span class="kw">tablevalues</span>, <span class="kw">remaingpath</span><span class="ot">)</span> <span class="kw">end</span> <span class="co">-- do something that starts the engine...</span>
+
+<span class="kw">asset</span>:start<span class="ot">()</span></code></pre>
+<h4 id="setting-and-getting-agent-internal-variables">5. Setting and Getting Agent Internal Variables</h4>
+<p>The Agent has a list of internal variables that can be manipulated by a user application. For instance, these variables allow to interact with the Monitoring Engine, Agent configuration.</p>
+<p>The provided <code>devicetree.get</code> and <code>devicetree.set</code> API allow to access those Agent internal variables.<br /> The Get API allows you to retrieve the value of a terminal variable as well as to retrieve and discover branches of the tree representation of variables.<br /> The Set API allows you to set the value of a terminal variable, to set a sub tree at once, and to create a new variable when it does not exist.</p>
+<p>The Register API allows you to subscribe to change on individual variables, on whole sub-trees, or on a mix thereof. It also handles passive variables: normally, when a callback is triggered because some registered variables changed, it only receives the variables whose values changed as parameters. If some passive variables are listed during the registration, their content is always passed to the callback, whether it changed or not. A change in a passive variable won't trigger the callback, though--unless it is also listed as an active one.</p>
+<h4 id="software-update">6. Software Update</h4>
+<p>The Agent Connector library provides an easy software update mechanism that is well coupled with the Platform Server. The final update process (replace a binary file, update a text configuration file, upgrade a device firmware, etc.) is really dependent on the application, and thus this part is let at user discretion. There are exceptions to the process. For example, for updating application managed by the Application Container, everything is managed by the Agent.</p>
+<p>The Platform Server and Agent are actually in charge of the transfer and notification of new software update packages. The system guarantees that the software package transfer is safe and different options are available: checksums, authentication, and encryption.</p>
+<p>In order to receive Software Update notifications, the user must register a listener on the Agent Connector context. The notification provides a <code>packageName</code>, a <code>packageVersion</code>, an <code>url</code> that specifies where the file is located (on the local file system) and some custom applicative <code>parameters</code> to help the update process.</p>
+<h4 id="sending-and-receiving-sms">7. Sending and Receiving SMS</h4>
+<p>The library provides an API in order to register a listener for SMS reception. In order to register for SMS reception the user has to give two patterns: one on the emitter and one on the message content. If the emitter or the message of a received SMS matches the corresponding pattern, then this listener is called.</p>
+<p>A simple send SMS API is provided in order to send SMS.<br /> When sending an SMS, the user has to provide a format parameter that fits the modem (and network) capabilities of the device.<br /> Available options are 7bits, 8bits, and UCS2.</p>
+<p>The Agent relays incoming and outgoing SMS and handles the concatenation if the SMS content is larger than the single SMS capacity. There is no restriction on the emitter/recipient of an SMS at the Agent itself, though it must be connected to a modem with an activated SIM card.</p>
+</body>
+</html>

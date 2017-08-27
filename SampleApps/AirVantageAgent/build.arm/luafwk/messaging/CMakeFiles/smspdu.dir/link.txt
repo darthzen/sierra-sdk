@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,smspdu.so -o ../../runtime/lua/smspdu.so CMakeFiles/smspdu.dir/smspdu.c.o 

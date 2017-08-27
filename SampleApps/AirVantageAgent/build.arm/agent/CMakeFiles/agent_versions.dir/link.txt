@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,versions.so -o ../runtime/lua/agent/versions.so CMakeFiles/agent_versions.dir/executable/version.c.o CMakeFiles/agent_versions.dir/executable/sysversion.c.o 

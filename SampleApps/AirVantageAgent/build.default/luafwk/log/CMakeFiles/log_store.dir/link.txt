@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,store.so -o ../../runtime/lua/log/store.so CMakeFiles/log_store.dir/log_store.c.o CMakeFiles/log_store.dir/log_storeflash.c.o 

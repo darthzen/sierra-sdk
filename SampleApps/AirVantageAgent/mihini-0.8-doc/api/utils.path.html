@@ -1,0 +1,479 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li>utils.path</li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>utils.path</code></h1>
+   
+<p>Path utils.</p>
+
+   
+
+<p><strong>Definition of path</strong> used by this file:</p>
+
+<ul>
+    <li>it is <strong>not Lua path</strong>, Lua path meaning the way Lua provide table indexing.
+    <ul>
+        <li>especially, <strong>'table[ ]'</strong> notation is not supported</li>
+    </ul></li>
+    <li><strong>element separator is  '.'</strong> (dot)</li>
+    <li>provided <strong>path is always cleaned</strong> before being processed:
+    <ul>
+        <li>if the path starts and/or ends with one or several dots, there are automatically removed.<br />
+        e.g.: <code>'...toto.tutu....'</code> means <code>'toto.tutu'</code></li>
+        <li>internal repetitions of successives dots are replaced by a single dot.<br />
+        e.g.: <code>'toto...tutu.tata..foo.bar'</code> means <code>'toto.tutu.tata.foo.bar'</code></li>
+    </ul></li>
+    <li>if a path element can be <strong>converted to a number</strong>, then it is returned as a number,
+    otherwise all elements or paths are returned as strings.<br />
+    e.g.: <code>split('a.2', 1)</code> -> <code>('a', 2)</code>   (where 2 is returned as a number) <br />
+    e.g.: <code>split('a.b.2e3.c', 1)</code> -> <code>('a', 'b.2000.c')</code></li>
+</ul>
+
+
+	<h2><a id="#(utils.path)" >Type <code>utils.path</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).clean">utils.path.clean(path)</a></td>
+		<td class="summary">
+<p>Cleans a path.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).concat">utils.path.concat(varargs)</a></td>
+		<td class="summary">
+<p>Concatenates a sequence of path strings together.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).find">utils.path.find(t, path, force)</a></td>
+		<td class="summary">
+<p>Retrieves the element in a sub-table corresponding to the path.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).get">utils.path.get(t, path)</a></td>
+		<td class="summary">
+<p>Gets the value of a table field.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).gsplit">utils.path.gsplit(path)</a></td>
+		<td class="summary">
+<p>Enumerates path partitions in a for-loop generator, starting from the right.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).segments">utils.path.segments(path)</a></td>
+		<td class="summary">
+<p>Splits a path into segments.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).set">utils.path.set(t, path, value)</a></td>
+		<td class="summary">
+<p>Sets a value in a tree-like table structure.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.path).split">utils.path.split(path, n)</a></td>
+		<td class="summary">
+<p>Splits a path into two halves, can be used to get path root, tail etc.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(utils.path)" >Type <code>utils.path</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).clean" >
+<strong>utils.path.clean(path)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Cleans a path.</p>
+
+	
+
+<p>Removes trailing/preceding/doubling '.'.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+string containing the path to clean.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>cleaned path as a string.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).concat" >
+<strong>utils.path.concat(varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Concatenates a sequence of path strings together.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+list of strings to concatenate into a valid path</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>resulting path as a string</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).find" >
+<strong>utils.path.find(t, path, force)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Retrieves the element in a sub-table corresponding to the path.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+is the table to look into.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> path </em></code>: 
+can be either a string (see <a href="segments.html">segments</a>) or an array where
+<code>path[1]</code> is the root and <code>path[n]</code> is the leaf.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> force </em></code>: 
+parameter allows to create intermediate tables as specified
+ by the path, if necessary.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>returned values depend on force value:</p>
+
+<ul>
+    <li><p>if force is false (or nil), find returns the table if it finds one,
+    or it returns nil followed by the subpath that points to non table value</p></li>
+    <li><p>if force is true, find overwrites or create tables as necessary so
+    it always returns a table.</p></li>
+    <li><p>if force is 'noowr', find creates tables as necessary but does not
+    overwrite non-table values. So as with <code>force=false</code>, it only returns a
+    table if possible, and nil followed by the path that points to the first
+    neither-table-nor-nil value otherwise.</p></li>
+</ul>
+
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>config = {toto={titi={tutu = 5}}}
+    find(config, "toto.titi") -- will return the table titi
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).get" >
+<strong>utils.path.get(t, path)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Gets the value of a table field.</p>
+
+	
+<p>The field can be in a sub table.</p>
+
+<p>The field to get is indicated by a path relative to the table.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+table where to get the value.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> path </em></code>: 
+can be either a string (see <a href="split.html">split</a>) or an array where path[1] is the root and path[n] is the leaf.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>value if the field is found.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).gsplit" >
+<strong>utils.path.gsplit(path)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Enumerates path partitions in a for-loop generator, starting from the right.</p>
+
+	
+
+<p>For instance, <code>gsplit "a.b.c"</code> will generate successively
+<code>("a.b.c", ""), ("a.b", "c"), ("a", "b.c"), ("", "a.b.c")</code>.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+the path as a string</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the for-loop iterator function</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).segments" >
+<strong>utils.path.segments(path)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Splits a path into segments.</p>
+
+	
+
+<p>Each segment is delimited by '.' pattern.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+string containing the path to split.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>list of split path elements.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).set" >
+<strong>utils.path.set(t, path, value)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Sets a value in a tree-like table structure.</p>
+
+	
+
+<p>The value to set is indicated by the path relative to the table.
+This function creates the table structure to store the value, unless the value to set is nil.
+If the value to set is nil and the table structure already exists then the value is set to nil.
+If the value is not nil, then the table structure is always created/overwritten and the value set.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+table where to set the value.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> path </em></code>: 
+can be either a string (see <a href="##(utils.path).split">utils.path.split</a>)
+ or an array where path[1] is the root and path[n] is the leaf.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> value </em></code>: 
+the value to set.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.path).split" >
+<strong>utils.path.split(path, n)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Splits a path into two halves, can be used to get path root, tail etc.</p>
+
+	
+
+<p>The content of the two halves depends on 'n' param: there will be <code>n</code> segments in the first half if <code>n&gt;0</code>,
+<code>-n</code> segments in the second half if <code>n&lt;0</code>.</p>
+
+<p>If there are less then <code>n</code> segments, returns the path argument followed by
+an empty path.</p>
+
+<p>If there are less then <code>-n</code> segments, returns an empty path followed by the
+path argument.</p>
+
+<p>Note that if a half is a single element and that this element can be converted into a number,
+it is returned as a number.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> path </em></code>: 
+the path as a string</p>
+
+				</li>
+				<li>
+				
+<p><code><em> n </em></code>: 
+number defining how the path is splitted (see above description).</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the two halves</p>
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>local root, tail = split('a.b.c', 1)
+-&gt;root contains 'a', tail contains 'b.c'
+
+</code></pre>
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

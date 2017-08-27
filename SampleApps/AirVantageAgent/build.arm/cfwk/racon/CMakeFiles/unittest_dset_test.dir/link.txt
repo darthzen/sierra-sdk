@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -O3 -DNDEBUG    CMakeFiles/unittest_dset_test.dir/dset_test.c.o  -o ../../runtime/bin/dset_test -rdynamic ../../runtime/lib/libSwi_log.so ../../runtime/lib/libSwi_DSet.so ../../static-libs/libpointerlist.a -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.arm/runtime/lib 

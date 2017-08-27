@@ -1,0 +1,1 @@
+/root/toolchain/arm/bin/arm-none-linux-gnueabi-gcc  -O3 -DNDEBUG    CMakeFiles/luasignalcmd.dir/luasignalcmd.c.o  -o ../../runtime/bin/luasignalcmd -rdynamic ../../static-libs/libluasignal.a ../../runtime/lib/libSwi_log.so -lpthread -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.arm/runtime/lib 

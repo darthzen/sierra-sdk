@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li>pack</li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>pack</code></h1>
+   
+<p>  A library for packing and unpacking binary data.</p>
+
+   
+
+<p>The library adds two functions to the <a href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a> library: pack and unpack.</p>
+
+<p>Supported letter codes:</p>
+
+<ul>
+    <li>'z': zero-terminated string</li>
+    <li>'p': string preceded by length byte</li>
+    <li>'P': string preceded by length word</li>
+    <li>'a': string preceded by length size_t</li>
+    <li>'A': string</li>
+    <li>'f': float</li>
+    <li>'d': double</li>
+    <li>'n': Lua number</li>
+    <li>'c': char</li>
+    <li>'b': byte = unsigned char</li>
+    <li>'h': short</li>
+    <li>'H': unsigned short</li>
+    <li>'i': int</li>
+    <li>'I': unsigned int</li>
+    <li>'l': long</li>
+    <li>'L': unsigned long</li>
+    <li>'x': unsigned char</li>
+    <li>'&lt;': little endian</li>
+    <li>'>': big endian</li>
+    <li>'=': native endian</li>
+    <li>'{': unbreakable little endian</li>
+    <li>'}': unbreakable big endian</li>
+</ul>
+
+<p>This library was made by Luiz Henrique de Figueiredo (<a href="&#x6d;&#97;&#x69;&#108;&#x74;&#111;&#x3a;l&#104;&#x66;&#64;&#x74;&#101;&#x63;&#103;&#x72;a&#102;&#x2e;&#112;&#x75;&#99;&#x2d;&#114;&#x69;&#111;&#x2e;b&#114;">&#x6c;&#104;&#x66;&#64;&#x74;&#101;&#x63;g&#114;&#x61;&#102;&#x2e;&#112;&#x75;&#99;&#x2d;r&#105;&#x6f;&#46;&#x62;&#114;</a>) with
+contributions from Ignacio Castaño (<a href="&#x6d;&#97;&#x69;&#108;&#x74;&#111;&#x3a;c&#97;&#x73;&#116;&#x61;&#110;&#x79;&#111;&#x40;y&#97;&#x68;&#111;&#x6f;&#46;&#x65;&#115;">&#x63;&#97;&#x73;&#116;&#x61;&#110;&#x79;o&#64;&#x79;&#97;&#x68;&#111;&#x6f;&#46;&#x65;s</a>) and Roberto Ierusalimschy (<a href="&#x6d;&#97;&#x69;&#108;&#x74;&#111;&#x3a;r&#111;&#x62;&#101;&#x72;&#116;&#x6f;&#64;&#x69;n&#102;&#x2e;&#112;&#x75;&#99;&#x2d;&#114;&#x69;&#111;&#x2e;b&#114;">&#x72;&#111;&#x62;&#101;&#x72;&#116;&#x6f;&#64;&#x69;n&#102;&#x2e;&#112;&#x75;&#99;&#x2d;r&#105;&#x6f;&#46;&#x62;&#114;</a>).
+Original library can be found <a href="http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/">here</a>.</p>
+
+
+			<h2>Usage:</h2>
+		<pre class="example"><code>require"pack"
+local bindata = string.pack("zf", "foo", 4.2)
+local mystring,myfloat = string.unpack(bindata, "zf")
+ 
+</code></pre>
+
+	<h2><a id="#(pack)" >Type <code>pack</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(pack).pack">pack.pack(F, x1)</a></td>
+		<td class="summary">
+<p>Pack binary data into a string.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(pack).unpack">pack.unpack(s, F, init)</a></td>
+		<td class="summary">
+<p>Unpacks a binary string into values.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(pack)" >Type <code>pack</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(pack).pack" >
+<strong>pack.pack(F, x1)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Pack binary data into a string.</p>
+
+	
+
+<p>The letter codes understood by pack are listed above in module description.
+Numbers following letter codes indicate repetitions.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> F </em></code>: 
+a string describing how the values x1, x2, ... are to be interpreted and formatted.
+ Each letter in the format string F consumes one of the given values.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> x1 </em></code>: 
+ x2, ... : variable number of values. Only values of type number or string are accepted.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>a (binary) string containing the values packed as described in F.</p>
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>require"pack"
+local bindata = string.pack("zf", "foo", 4.2)
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(pack).unpack" >
+<strong>pack.unpack(s, F, init)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Unpacks a binary string into values.</p>
+
+	
+
+<p>The letters codes are the same as for pack, except that numbers following 'A'
+are interpreted as the number of characters to read into the string and not as
+repetitions.
+The first value returned by unpack is the next unread position in s, which can
+be used as the init position in a subsequent call to unpack.
+This allows you to unpack values in a loop or in several steps.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> s </em></code>: 
+is a (binary) string containing data packed as if by pack</p>
+
+				</li>
+				<li>
+				
+<p><code><em> F </em></code>: 
+is a format string describing what is to be read from s</p>
+
+				</li>
+				<li>
+				
+<p><code><em> init </em></code>: 
+optional init marks where in s to begin reading the values</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the next unread position in s, followed by one value per letter in F until F or s is exhausted.</p>
+
+				</li>
+				<li>
+				
+
+<p>nil if either s has been exhausted or init is bigger than the length of the s</p>
+
+				</li>
+			</ol>
+			<h3>Usage:</h3>
+		<pre class="example"><code> require"pack"
+ local _,mystring,myfloat = string.unpack(bindata, "zf")
+
+</code></pre>
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

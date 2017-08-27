@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="device-management">Device Management</h1>
+<h4 id="commands">Commands</h4>
+<p>This page references all generic commands used by a M3DA server. The commands are serialized and sent using M3DA Protocol.</p>
+<p>This is an &quot;applicative level&quot; specification opposed to the &quot;serialization level&quot; specification from the M3DA Protocol document.</p>
+<p>In order to send command from the server to the device, or from the device to the server, an <strong>M3DA</strong> data writing is to be done on a node path, encapsulated into an <strong>M3DA::</strong><strong>Message</strong> object as stated into the protocol specification.</p>
+<h4 id="main">Main</h4>
+<table>
+<col width="18%" />
+<col width="36%" />
+<col width="45%" />
+<thead>
+<tr class="header">
+<th align="left">Command Name</th>
+<th align="left">Command Argument name -&gt; description (type)</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ReadNode</td>
+<td align="left">&quot;1&quot; -&gt; path.of.the.node.to.read (string),<br />...<br />&quot;n&quot; -&gt; path.of.the.node.to.read (string)</td>
+<td align="left">Read a node or several nodes and its/their children children (if any) from a tree. The node can be either terminal (a leaf: to get the value of a property) or have sub nodes. In the later case the content of the node and all its sub nodes will be transmitted. <br />This command provokes the sending of Data Messages that that will contain the data associated to that node. The data of the message is composed of a map that hold the properties as key, and their value as value. <br />If a node contains a child, Data Messages will be sent recursively in order to present all the data of the sub nodes as well. If the specified node does not exist or contains no data, a nil value will be sent.</td>
+</tr>
+<tr class="even">
+<td align="left">Connect</td>
+<td align="left"></td>
+<td align="left">Ask the M2M Agent to connect to the platform server.<br />The command must be addressed to the device (M3DA::Message.path = &quot;@sys&quot;).</td>
+</tr>
+<tr class="odd">
+<td align="left">Reboot</td>
+<td align="left"></td>
+<td align="left">Ask the device or one of its asset to reboot. <br />The device or the asset is designated thanks to the path of the M3DA::Message that wrap this command.</td>
+</tr>
+<tr class="even">
+<td align="left">ResetToFactoryDefault</td>
+<td align="left">&quot;restart&quot; -&gt; once cleared the agent reboots after a given number of seconds or defaults to 6 seconds if this param is equal to &quot;true&quot; or &quot;1&quot; (boolean, number)</td>
+<td align="left">Reset agent settings to factory defaults. All persisted data about agent settings and installed software are lost. <br /><br /><br /><strong>Impacted</strong> modules/functionalities: <br />- Agent persisted <strong>config</strong> is reset to <strong>defaultconfig</strong>( depending on the differences between defaultconfig.lua and persisted config, this operation may impact: server url, hearbeat, ..., or any Agent config parameter) <br />- Treemgr mapping are reset: it will be regenerated from .map files on next boot <br />- <strong>Persisted M3DA data</strong>: asset and device data are reset <br />- <strong>Applications</strong> installed in ApplicationContainer are erased <br />- Update module: any update in progress, <strong>software version list</strong> <br />is cleared. <br /><strong>Not impacted</strong> modules: M3DA security credentials</td>
+</tr>
+</tbody>
+</table>
+<h4 id="software-update">Software update</h4>
+<table>
+<col width="18%" />
+<col width="35%" />
+<col width="46%" />
+<thead>
+<tr class="header">
+<th align="left">Command Name</th>
+<th align="left">Command Argument name -&gt; description (type)</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ExecuteScript</td>
+<td align="left">&quot;url&quot; | &quot;1&quot; -&gt; url to retrieve the Lua script (string) <br /><br /><br />signature | &quot;2&quot; -&gt; signature of the script (string)</td>
+<td align="left">-&gt; url to retrieve the Lua script <br />The Lua script can be either Lua source file or precompiled Lua bytecode file. <br /><br />-&gt; signature of Lua Script <br />The signature will fit the security level defined within the Agent. First step: Signature will be <strong>MD5 hash</strong>, and will be sent in <strong>hexa</strong> in an ascii string.</td>
+</tr>
+<tr class="even">
+<td align="left">SoftwareUpdate</td>
+<td align="left">&quot;url&quot; | &quot;1&quot; -&gt; url to download the package (string) <br /><br />&quot;signature&quot; | &quot;2&quot; -&gt; signature of the package (string)</td>
+<td align="left">-&gt; url provided by the server where the Software Update Package can be downloaded. <br />Must <strong>not</strong> end by a trailing &quot;/&quot; character, unless archive name contains one (not recommended) <br />-&gt; signature of the Software Update Package <br />The signature will fit the security level defined within the Agent. <br /><br />First step: Signature will be <strong>MD5 hash</strong>, and will be sent in <strong>hexa</strong> in an ascii string which size must be 32 chars (prefixing zeros chars must be sent!), and in lower case only.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="tcp-remote-connection">TCP Remote Connection</h4>
+<table>
+<col width="18%" />
+<col width="34%" />
+<col width="47%" />
+<thead>
+<tr class="header">
+<th align="left">Command Name</th>
+<th align="left">Command Argument name -&gt; description (type)</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">TCPRemoteConnect</td>
+<td align="left"></td>
+<td align="left">Install a TCP tunnel</td>
+</tr>
+</tbody>
+</table>
+<h4 id="log-upload">Log Upload</h4>
+<table>
+<col width="18%" />
+<col width="34%" />
+<col width="47%" />
+<thead>
+<tr class="header">
+<th align="left">Command Name</th>
+<th align="left">Command Argument name -&gt; description (type)</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">LogUpload</td>
+<td align="left">&quot;url&quot; | &quot;1&quot; -&gt; url (string) <br /><br />&quot;logtype&quot; | &quot;2&quot; -&gt; log type (string in {&quot;ram&quot; or &quot;flash&quot;})</td>
+<td align="left">The url where the logs are to be uploaded. Has to be of the form &quot;ftp://&quot; to request ftp upload, else &quot;http://&quot; for HTTP Post upload string equal to: &quot;ram&quot; to retrieve logs in ram (i.e. only from current Agent execution), or &quot;flash&quot; to get the logs from flash space Note: The content of flash or ram buffer depends on the log policy defined in Agent Config</td>
+</tr>
+</tbody>
+</table>
+<h4 id="application-container">Application Container</h4>
+<table>
+<col width="18%" />
+<col width="34%" />
+<col width="47%" />
+<thead>
+<tr class="header">
+<th align="left">Command Name</th>
+<th align="left">Command Argument name -&gt; description (type)</th>
+<th align="left">Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">appcon.start</td>
+<td align="left">&quot;appname&quot; | &quot;1&quot; -&gt; application name S (string)</td>
+<td align="left">tart an application</td>
+</tr>
+<tr class="even">
+<td align="left">appcon.stop</td>
+<td align="left">&quot;appname&quot; | &quot;1&quot; -&gt; application name S (string)</td>
+<td align="left">top an application</td>
+</tr>
+<tr class="odd">
+<td align="left">appcon.autostart</td>
+<td align="left">&quot;appname&quot; | &quot;1&quot; -&gt; application name C (string)<br /><br />&quot;autostart&quot; | &quot;2&quot; -&gt; autostart flag (boolean)</td>
+<td align="left">onfigure an application to start automatically or not</td>
+</tr>
+</tbody>
+</table>
+<h4 id="variables">Variables</h4>
+<table>
+<col width="32%" />
+<col width="14%" />
+<col width="53%" />
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="left">Read/Write</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">@sys.appcon.list</td>
+<td align="left">RO</td>
+<td align="left">List of all applications currently managed by appcon, as a single string of space-separated names</td>
+</tr>
+<tr class="even">
+<td align="left">@sys.appcon.apps.<appname>.started</td>
+<td align="left">RW</td>
+<td align="left">Whether the application is currently started (Boolean)</td>
+</tr>
+<tr class="odd">
+<td align="left">@sys.appcon.apps.<appname>.autostart</td>
+<td align="left">RW</td>
+<td align="left">Whether the application starts automatically (Boolean)</td>
+</tr>
+<tr class="even">
+<td align="left">@sys.appcon.apps.<appname>.runnable</td>
+<td align="left">RO</td>
+<td align="left">Whether it is a runnable application</td>
+</tr>
+<tr class="odd">
+<td align="left">@sys.appcon.apps.<appname>.<daemonattr></td>
+<td align="left">RO</td>
+<td align="left">The current value of every daemon attribute <daemonattr>. Current attributes include: <br />appname, priviledged, prog, wd, pid, startcount, lastexittype, lastexitcode</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

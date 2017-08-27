@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,cipher.so -o ../../runtime/lua/crypto/cipher.so CMakeFiles/crypto_cipher.dir/lcipher.c.o ../../runtime/lib/libtomcrypt.so ../../runtime/lib/libkeystore.so ../../runtime/lib/libtommath.so -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.default/runtime/lib 

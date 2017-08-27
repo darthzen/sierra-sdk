@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li>niltoken</li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>niltoken</code></h1>
+   
+<p>Module to provide Nil token.</p>
+
+   
+
+<h2>Purpose</h2>
+
+<p>The <code>nil</code> value is somewhat special in Lua, and can be difficult to use
+in some contexts. This module offers a unified way to circumvent these
+difficulties.</p>
+
+<h2>The problem</h2>
+
+<p>In Lua, <code>nil</code> means "nothing". As such, in a table, there is no way to
+tell apart a key associated with the value <code>nil</code> from a key which doesn't
+exist at all in this table. For instance, <code>{ foo=123, bar=nil }</code> is exactly
+the same as <code>{ foo=123 }</code>.</p>
+
+<p>However, in some contexts, Lua tables are used to represent data structures
+which might contain a <code>NULL</code>/<code>nil</code> value. For instance, if the server wants
+to indicate that it erased the variable <code>foo</code>, it cannot simply send the
+record <code>{ foo=nil }</code>: it would be undistinguishable from the empty record
+<code>{ }</code>. Similarly, Hessian has a <code>Null</code> value which almost naturally maps to
+Lua's <code>nil</code>; but Hessian's <code>Null</code> can be used as a record value, and even as
+a record key, whereas Lua's <code>nil</code> can't.</p>
+
+<h2>The solution</h2>
+
+<p>The way to address those issues of representing a null value when <code>nil</code> can't
+be used is to have a token, an arbitrary object which by convention means null.
+Whenever the need for such a token appears, we use the same <code>niltoken</code> object
+as this token.</p>
+
+<p>It is preferable for <code>niltoken</code> not to be a naturally easy to serialize type,
+such as a table. This mainly leaves <code>userdata</code> and functions as good candidates.
+For reasons exposed below, it has been decided to represent <code>niltoken</code> as
+a function.</p>
+
+<h2>Converting between <code>niltoken</code> and <code>nil</code></h2>
+
+<p>There are three common operations to perform on <code>niltoken</code> and tables likely
+to contain references to <code>niltoken</code>:</p>
+
+<ul>
+    <li>Test for equality with <code>niltoken</code>, as in <code>if foo==niltoken then ... end</code>;</li>
+    <li>Convert <code>niltoken</code> references into actual <code>nil</code>;</li>
+    <li>Convert <code>nil</code> values into <code>niltoken</code> references.</li>
+</ul>
+
+<p>Equality tests are performed by the usual <code>==</code> Lua operator. Conversions
+are performed by <code>niltoken</code> itself, which is a function:</p>
+
+<ul>
+    <li>It converts <code>niltoken</code> references into <code>nil</code>:
+    <code>assert(niltoken(niltoken)==nil)</code>;</li>
+    <li>It converts <code>nil</code> values into <code>niltoken</code> references:
+    <code>assert(niltoken(nil)==niltoken)</code>.</li>
+    <li>It leaves everything else alone:
+    <code>if a~=nil and a~=niltoken</code> then assert(niltoken(a)==a) end`.</li>
+</ul>
+
+<h2>Packaging</h2>
+
+<p>the <code>niltoken</code> function is directly returned as the <code>niltoken</code> module, i.e.
+the idiomatic way to use it is to put a <code>local niltoken = require 'niltoken'</code>
+statement at the top of modules which might need it.</p>
+
+
+	<h2><a id="#(niltoken)" >Type <code>niltoken</code></a></h2>
+	
+</div>
+
+</div>
+</body>
+</html>

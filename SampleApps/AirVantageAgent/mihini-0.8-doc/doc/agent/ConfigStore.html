@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="configstore">ConfigStore</h1>
+<p>The following configuration elements are accessible through different APIs/Protocols: remotely from the server, through an RPC in Lua applications connected to the Agent process, and locally in the Agent process (e.g. through the telnet shell).</p>
+<h4 id="from-the-server-through-m3da">From the Server through M3DA</h4>
+<p>The configuration table can be read (M3DA Command <em>ReadNode</em>) and written (Data writing).</p>
+<p>The path of the elements is prefixed by the path <code>&quot;@sys.config&quot;</code>.</p>
+<h4 id="from-the-agents-lua-shell">From The Agent's Lua Shell</h4>
+<p>In the Lua Shell you can access the configuration table thanks to the <code>agent.config</code> module:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Load/retrieve the config module</span>
+<span class="kw">c</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&#39;agent.config&#39;</span>
+<span class="co">-- print all config from the rest sub category</span>
+p<span class="ot">(</span><span class="kw">c</span><span class="ot">.</span><span class="kw">rest</span><span class="ot">)</span>
+<span class="co">-- assign a new parameter (de-activate rest stuff)</span>
+<span class="kw">c</span><span class="ot">.</span><span class="kw">rest</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">false</span></code></pre>
+<h4 id="from-an-asset-application">From an Asset Application</h4>
+<p>See <code>DeviceTree</code> library API. A couple of function for setting and reading variables are provided.</p>
+<p>Generated doc is available here:</p>
+<ul>
+<li><a href="http://download.eclipse.org/mihini/api/lua/devicetree.html">Lua DeviceTree API</a></li>
+<li><a href="http://download.eclipse.org/mihini/api/c/swi__devicetree_8h.html">C DeviceTree API</a></li>
+</ul>
+<p>Most likely, user will need the following command:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">dt</span> <span class="ot">=</span> <span class="fu">require</span> <span class="st">&quot;devicetree&quot;</span>
+<span class="kw">dt</span><span class="ot">.</span>init<span class="ot">()</span>
+:<span class="kw">dt</span><span class="ot">.</span>get<span class="ot">(</span><span class="st">&quot;config&quot;</span><span class="ot">)</span>
+<span class="co">-- user may append strings after config in order to browse deeper into the tree, e.g. &quot;:dt.get(&quot;config.server.autoconnect&quot;)&quot;</span></code></pre>
+<h1 id="how-the-config-store-works">How the Config Store works</h1>
+<h4 id="default-configuration">Default configuration</h4>
+<p>The Agent comes with a default configuration that can be altered and restored at any time. <br /> The default configuration of the Agent is provided by thespecified into the fil <code>agent/defaultconfig.lua</code> file, which ships with each porting of the Agent to a target. Beware that changes to <code>defaultconfig</code> are only taken into account at first run, or after a <code>make clean</code>: the Agent makes a read/write copy of the config on the filesystem, which can be modified through the APIs described below, and won't detect a modification of <code>defaultconfig</code>.</p>
+<h4 id="persisted-configuration">Persisted configuration</h4>
+<p>The preferred way to modify an Agent instance's configuration is to alter its persisted configuration, copied from <code>defaultconfig</code> the first time the Agent runs. On Linux-like operating systems, the config is stored in a custom database format, on a read-write file system (often flash in embedded devices). By default, it goes in the is stored into <code>&quot;./persist/ConfigStore&quot;</code> file, in the Agent's read+write directory.relative to the directory where the Agent is executed.</p>
+<h4 id="configuration-loading-workflow">Configuration loading workflow</h4>
+<p>When the Agent starts, it looks for an existing stored configuration (ConfigStore). If none is found, it is created from the template provided by <code>agent.defaultconfig</code>.</p>
+<p><strong>This means that changing <code>agent.defaultconfig</code> after the first start of the Agent will not change the current configuration of the Agent. A call to <code>agent.config.default()</code> is necessary to reload the default configuration.</strong></p>
+<p>The configuration tree is stored in persisted memory (flash). Any change to the configuration is written synchronously, meaning that the settings are persisted as soon as returning from a <code>set()</code> operation.</p>
+<h4 id="configstore-api">ConfigStore API</h4>
+<p>The Configuration module has an API to manipulate the configuration; in a Lua shell, you can type:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>default<span class="ot">(</span><span class="kw">path</span><span class="ot">)</span>   <span class="co">-- reloads the configuration subtree &#39;path&#39; from the defaultconfig.lua file.</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>diff<span class="ot">(</span><span class="kw">path</span><span class="ot">)</span>      <span class="co">-- returns a list of items that are different from the default config.</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>pdiff<span class="ot">(</span><span class="kw">path</span><span class="ot">)</span>     <span class="co">-- pretty print the above list</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>set<span class="ot">(</span><span class="kw">path</span>, <span class="kw">value</span><span class="ot">)</span><span class="co">-- set a value in the configuration</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">config</span><span class="ot">.</span>get<span class="ot">(</span><span class="kw">path</span><span class="ot">)</span>       <span class="co">-- gets a value for the configuration subtree</span></code></pre>
+<h1 id="configuration-parameters-that-can-be-applied-to-mihini">Configuration parameters that can be applied to Mihini</h1>
+<h4 id="agent-generic-settings">Agent generic settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--Defines the local port on which the agent is listening in order to communicate with the assets</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">assetport</span> <span class="ot">=</span> <span class="dv">9999</span>
+
+<span class="co">--Address on which the agent is accepting connection in order to communicate with the assets</span>
+<span class="co">--Pattern is accepted: can be set to &quot;*&quot; to accept connection from any address, by default shell accepts only localhost connection.</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">assetaddress</span> <span class="ot">=</span> <span class="st">&quot;*&quot;</span>
+
+<span class="co">--Devices ID used to communicate with the platform server</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">deviceId</span> <span class="ot">=</span> <span class="st">&quot;012345678901234&quot;</span>
+
+<span class="co">--Device type, for example to be used in Update before accepting an update.</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">devicetype</span><span class="ot">=</span> <span class="st">&quot;&quot;</span>
+
+<span class="co">--Defines the local port on which the agent is listening in order to receive LUASIGNAL from external applications (Linux only)</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">signalport</span> <span class="ot">=</span> <span class="dv">18888</span>
+
+<span class="co">--Persistence options</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">persistlatency</span> <span class="ot">=</span> <span class="dv">60</span> <span class="co">--latency before data persistence in seconds,nil to disable</span>
+<span class="kw">agent</span><span class="ot">.</span><span class="kw">persistsize</span> <span class="ot">=</span> <span class="dv">20000</span> <span class="co">--max byte length</span></code></pre>
+<h4 id="server-connection-settings">Server connection settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--URL on which the agent will try the server connection. This parameter is only relevant for HTTP transport protocol</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">url</span> <span class="ot">=</span> <span class="st">&quot;http://m2mop.net/device/com&quot;</span>
+
+<span class="co">--When the device is behind a proxy this settings defines a HTTP proxy.</span>
+<span class="co">-- This parameter is only relevant for HTTP transport protocol</span>
+<span class="co">--server.proxy must be a URL starting by &quot;http://&quot;.</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">proxy</span> <span class="ot">=</span> <span class="st">&quot;some.proxy.server&quot;</span>
+
+<span class="co">--Agent auto connection policy</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">autoconnect</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">autoconnect</span><span class="ot">.</span><span class="kw">onboot</span> <span class="ot">=</span> <span class="kw">true</span> <span class="co">-- connect a few seconds after the agent started</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">autoconnect</span><span class="ot">.</span><span class="kw">period</span> <span class="ot">=</span> <span class="dv">5</span> <span class="co">-- period in minute (connect every 5 minutes)</span>
+<span class="kw">server</span><span class="ot">.</span><span class="kw">autoconnect</span><span class="ot">.</span><span class="kw">cron</span> <span class="ot">=</span> <span class="st">&quot;0 0 * * *&quot;</span> <span class="co">-- cron entry (connect once a day at midnight)</span></code></pre>
+<h4 id="communication-security-settings">Communication security settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Security:</span>
+<span class="co">-- * authentication is either &quot;hmac-md5&quot; or nil (prevents attackers from forging fake messages,</span>
+<span class="co">--   doesn&#39;t ensure secrecy).</span>
+<span class="co">-- * encryption is only available when authentication is enabled.</span>
+<span class="co">--   The format is &quot;&lt;cipher&gt;-&lt;chaining&gt;-&lt;length&gt;&quot;, the only officially supported configurations are</span>
+<span class="co">--   &quot;aes-cbc-128&quot; and nil.</span>
+<span class="co">-- Both settings must match those on the server, and crypto keys on device and server must also match.</span>
+<span class="co">-- </span>
+<span class="co">-- server.authentication = &#39;hmac-md5&#39;</span>
+<span class="co">-- server.encryption = &#39;aes-cbc-128&#39;</span></code></pre>
+<!--- Commented out for now, Mediation not officially supported
+#### Mediation protocol settings
+
+~~~{.lua}
+--Activate or de-activate the mediation client on the device
+mediation.activate = true
+--Connection timeout (in seconds)
+mediation.timeout = 5
+--Defines the ordered list of mediation server to connect to
+mediation.servers = { {addr = "srv1.com", port = 2048}, {addr = "srv2.com", port = 2048} }
+--this is equivalent to
+--mediation.servers[1].addr = "srv1.com"
+--mediation.servers[1].port = 2048
+--mediation.servers[2].addr = "srv2.com"
+--mediation.servers[2].port = 2048
+
+--Defines the polling period (in seconds) of the mediation protocol according to each bearer
+--When period is set to 0, it will do a one time polling when the bearer is mounted.
+--If a bearer is absent from this list, mediation protocol is not used on that bearer
+mediation.pollingperiod = { ETH=0, GPRS=10}
+--this is equivalent to
+--mediation.pollingperiod.ETH=0
+--mediation.pollingperiod.GPRS=10
+
+--Defines the number of attempts before considering current mediation servers as dead
+mediation.servers.retries = 5
+
+--Mediation restart after failure delay (in seconds), default value (if not set) is 1800 seconds (30 minutes)
+mediation.retrydelay = 300
+~~~
+-->
+
+
+<h4 id="shell-related-settings">Shell related settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--Activate the Lua Shell</span>
+<span class="kw">shell</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">--Local port on which the Lua Shell server is listening</span>
+<span class="kw">shell</span><span class="ot">.</span><span class="kw">port</span> <span class="ot">=</span> <span class="dv">2000</span>
+
+<span class="co">--Address on which the Lua Shell server is accepting connection</span>
+<span class="co">--Pattern is accepted: can be set to &quot;*&quot; to accept connection from any address, by default shell accepts only localhost connection.</span>
+<span class="kw">shell</span><span class="ot">.</span><span class="kw">address</span> <span class="ot">=</span> <span class="st">&quot;*&quot;</span>
+
+<span class="kw">shell</span><span class="ot">.</span><span class="kw">editmode</span> <span class="ot">=</span> <span class="st">&quot;edit&quot;</span> <span class="co">-- can be &quot;line&quot; if the trivial line by line mode is wanted</span>
+<span class="kw">shell</span><span class="ot">.</span><span class="kw">historysize</span> <span class="ot">=</span> <span class="dv">30</span> <span class="co">-- only valid for edit mode</span></code></pre>
+<h4 id="rest-related-settings">REST related settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">rest</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">port</span> <span class="ot">=</span> <span class="dv">8357</span>
+
+
+<span class="co">-- http digest authentication</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">authentication</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">authentication</span><span class="ot">.</span><span class="kw">realm</span> <span class="ot">=</span> <span class="st">&quot;username@localhost&quot;</span>
+<span class="co">-- HA1 is the MD5 sum of the string &quot;username:realm:password&quot;</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">authentication</span><span class="ot">.</span><span class="kw">ha1</span> <span class="ot">=</span> <span class="st">&quot;your hash here&quot;</span>
+
+
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="co">-- Either globally</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;*&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+
+<span class="co">-- Or per URI</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;devicetree/[%w.]+&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;application$&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;application/[%w%.]+&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;application/[%w%.]+/start&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;application/[%w%.]+/stop&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;application/[%w%.]+/configure&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">rest</span><span class="ot">.</span><span class="kw">restricted_uri</span><span class="ot">[</span><span class="st">&quot;update[/%w%?]*$&quot;</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span></code></pre>
+<h4 id="time-related-settings">Time related settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- activate Time Services (see ntppolling config param): sync can be done on demand using synchronize API</span>
+<span class="kw">time</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+
+<span class="co">--timezone: signed integer representing quarter(s) of hour to be added</span>
+<span class="kw">to</span> <span class="kw">UTC</span> time <span class="ot">(</span><span class="kw">examples</span>: <span class="ot">-</span><span class="dv">4</span> <span class="kw">for</span> <span class="kw">UTC</span><span class="ot">-</span><span class="dv">1</span>, <span class="dv">23</span> <span class="kw">for</span> <span class="kw">UTC</span><span class="ot">+</span><span class="dv">5</span>:<span class="dv">45</span>, <span class="ot">...)</span>
+<span class="kw">time</span><span class="ot">.</span><span class="kw">timezone</span> <span class="ot">=</span> <span class="dv">0</span>
+<span class="co">-- daylight time saving: signed integer (1, -1) to be added to UTC</span>
+<span class="kw">time</span><span class="ot">.</span><span class="kw">dst</span> <span class="ot">=</span> <span class="dv">0</span>
+
+<span class="co">-- NTP params</span>
+<span class="kw">time</span><span class="ot">.</span><span class="kw">ntpserver</span> <span class="ot">=</span> <span class="st">&quot;pool.ntp.org&quot;</span>
+
+<span class="co">--polling period for auto time sync</span>
+<span class="co">--whatever ntppolling value, time sync is done on Agent boot if Time and NetworkManager are activated</span>
+<span class="co">--if ntppolling is set to 0 or nil value, no periodic time sync is done</span>
+<span class="co">--if set to string value, it will be interpreted as a cron entry (see timer.lua doc)</span>
+<span class="co">--else positive number representing minutes is expected to specify periodic time sync</span>
+<span class="kw">time</span><span class="ot">.</span><span class="kw">ntppolling</span> <span class="ot">=</span> <span class="dv">0</span></code></pre>
+<h4 id="modem-configuration">Modem configuration</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--activate</span>
+<span class="kw">modem</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">--SIM pin code</span>
+<span class="kw">modem</span><span class="ot">.</span><span class="kw">pin</span> <span class="ot">=</span> <span class="st">&quot;&quot;</span>
+
+<span class="co">--AT Serial interface (Linux Only)</span>
+<span class="kw">modem</span><span class="ot">.</span><span class="kw">atport</span> <span class="ot">=</span> <span class="st">&quot;/dev/ttyS0&quot;</span>
+<span class="co">--PPP Serial port</span>
+<span class="kw">modem</span><span class="ot">.</span><span class="kw">pppport</span> <span class="ot">=</span> <span class="st">&quot;/dev/ttyS2&quot;</span>
+<span class="co">--export sms api to assets</span>
+<span class="kw">modem</span><span class="ot">.</span><span class="kw">sms</span> <span class="ot">=</span> <span class="kw">true</span></code></pre>
+<h4 id="network-connectivity-settings">Network connectivity settings</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Activate / deactivate the NetworkManager</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+
+<span class="co">-- FakeNetman Signal</span>
+<span class="co">-- When non nil and network.activate==false then the signal(&quot;NETMAN&quot;, &quot;CONNECTED&quot;, network.initsignal) is emitted when the Agent is initialized</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">initsignal</span> <span class="ot">=</span> <span class="st">&quot;Default&quot;</span>
+
+<span class="co">--Maximum failures on bearer selection</span>
+<span class="co">--network.maxfailure = 2</span>
+
+<span class="co">--List of supported bearers and ordered priority</span>
+ <span class="kw">network</span><span class="ot">.</span><span class="kw">bearerpriority</span> <span class="ot">=</span> <span class="ot">{</span><span class="st">&quot;ETH&quot;</span>,<span class="st">&quot;GPRS&quot;</span><span class="ot">}</span>
+ <span class="co">--this is equivalent to</span>
+ <span class="co">--network.bearerpriority[1] = &quot;ETH&quot;</span>
+ <span class="co">--network.bearerpriority[2] = &quot;GPRS&quot;</span>
+
+<span class="co">--amount of time to wait before going back to the preferred bearer if connected bearer is not the first of bearerpriority list.</span>
+<span class="co">--if set to nil or equals to 0 netman will never go back automatically to first bearer</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">maxconnectiontime</span> <span class="ot">=</span> <span class="dv">30</span>
+
+<span class="co">--SMS fallback - Activate the SMS fallback: if the network is unavailable, an sms is sent instead of making an http connection</span>
+<span class="co">--network.smsfallback = &quot;+33102345879&quot; </span><span class="al">--</span><span class="co">address to send outgoing smsto (e.g. server SMS reception number)</span>
+<span class="co">--network.pinghost </span><span class="al">--</span><span class="co">host for tcpping</span>
+<span class="co">--network.pingport </span><span class="al">--</span><span class="co">port for tcpping</span>
+
+<span class="co">-- Bearer configuration</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">bearer</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="co">-- GPRS configuration</span>
+<span class="co">-- retry is the number of retries before switching to the next bearer, MANDATORY</span>
+<span class="co">-- retryperiod is the time (in seconds on linux) between 2 retries on the same bearer, MANDATORY</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">bearer</span><span class="ot">.</span><span class="kw">GPRS</span> <span class="ot">=</span> <span class="ot">{</span> <span class="kw">retry</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="kw">retryperiod</span> <span class="ot">=</span> <span class="dv">50</span>, <span class="kw">apn</span> <span class="ot">=</span> <span class="st">&quot;yourapn&quot;</span>, <span class="kw">username</span><span class="ot">=</span><span class="st">&quot;orange&quot;</span>, <span class="kw">password</span><span class="ot">=</span><span class="st">&quot;orange&quot;</span><span class="ot">}</span> <span class="co">-- username and password can be not set if not mandatory by the operator</span>
+
+<span class="co">-- If network.bearer.XXX.retry and / or network.bearer.XXX.retryperiod are not specified the NetworkManager will try to use those &#39;global&#39; setting</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">retry</span><span class="ot">=</span><span class="dv">5</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">retryperiod</span><span class="ot">=</span><span class="dv">50</span>
+
+<span class="co">-- ETHERNET configuration</span>
+<span class="co">-- ETHERNET with DHCP</span>
+<span class="co">-- retry is the number of retries before switching to the next bearer, MANDATORY</span>
+<span class="co">-- retryperiod is the time (in seconds on linux) between 2 retries on the same bearer, MANDATORY</span>
+<span class="kw">network</span><span class="ot">.</span><span class="kw">bearer</span><span class="ot">.</span><span class="kw">ETH</span> <span class="ot">=</span> <span class="ot">{</span><span class="kw">retry</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="kw">retryperiod</span> <span class="ot">=</span> <span class="dv">5</span>, <span class="kw">mode</span> <span class="ot">=</span> <span class="st">&quot;dhcp&quot;</span> <span class="ot">}</span>
+<span class="co">-- ETHERNET with static IP</span>
+<span class="co">-- network.bearer.ETH = {retry = 2, retryperiod = 5, mode = &quot;static&quot;, address = &quot;10.0.2.87&quot;, netmask = &quot;255.255.0.0&quot;, broadcast = &quot;10.0.255.255&quot;, gateway= &quot;10.0.0.254&quot;, nameserver1 = &quot;10.6.0.224&quot;, nameserver2 = &quot;10.6.0.225&quot;}</span></code></pre>
+<h4 id="device-management">Device Management</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Activate the Device Management module</span>
+<span class="kw">device</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">-- ip address or host name and port number of the server hosting the ServerAppSide for the TCPRemoteConnect command</span>
+<span class="co">-- device.tcprconnect ={addr = &#39;10.41.51.50&#39;, port = 2065 }</span></code></pre>
+<h4 id="logging-framework">Logging framework</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--default log level: can be one of NONE, ERROR, INFO, DETAIL, DEBUG, ALL. See log.lua for details</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">defaultlevel</span> <span class="ot">=</span> <span class="st">&quot;ALL&quot;</span>
+<span class="co">-- per module log level</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">moduleslevel</span><span class="ot">.</span><span class="kw">GENERAL</span> <span class="ot">=</span> <span class="st">&quot;ALL&quot;</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">moduleslevel</span><span class="ot">.</span><span class="kw">SERVER</span> <span class="ot">=</span> <span class="st">&quot;INFO&quot;</span>
+<span class="co">-- formating options</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">enablecolors</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">-- change default format for all logs</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">format</span> <span class="ot">=</span> <span class="st">&quot;%t %m-%s: %l&quot;</span>
+<span class="co">-- timestampformat specifies strftime format to print date/time</span>
+<span class="co">-- timestampformat is useful only if %t% is in formatter string</span>
+<span class="kw">log</span><span class="ot">.</span><span class="kw">timestampformat</span> <span class="ot">=</span> <span class="st">&quot;%F %T&quot;</span></code></pre>
+<!--- Commented out: Log policies needs to be reworked
+-- Log policies config : nothing activated by default
+
+-- Log policy is activated only if log.policy is not nil
+-- log.policy.name can take 3 values for now: "buffered_all", "sole" or"context"
+-- log.policy= {}
+-- log.policy.name = "buffered_all"
+-- log.policy.name = "sole"
+-- log.policy.name = "context"
+
+-- log.policy.params = {}
+-- params.level can be used to configure trigger level for some policies
+-- log.policy.params.level="WARNING"
+-- When activated, log policy needs a config for low level module logstore
+-- Shared config for Ram logstore: ramlogger with size param to rammaxsize
+-- log.policy.params.ramlogger = {size = 2048}
+-- Regular config for Flash logstore for Linux: flashlogger with size param to flashmaxsize and path param to set logs location
+-- log.policy.params.flashlogger ={size = 15 * 1024, path="logs/" }
+-- Parameter for Log upload command
+-- log.policy.ftpuser = ""
+-- log.policy.ftppwd = ""
+-->
+
+
+<h4 id="update-framework">Update framework</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">--Update module settings</span>
+<span class="co">--Activate the Update Agent</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">false</span>
+
+<span class="co">-- Update process settings</span>
+<span class="co">-- retries number per component, default value:2</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">retries</span> <span class="ot">=</span> <span class="dv">2</span>
+<span class="co">-- timeout in seconds for component update response, default value:40</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">timeout</span> <span class="ot">=</span> <span class="dv">40</span>
+
+<span class="co">-- dwlnotifperiod: number of seconds between update notification during downloads, default value is 2s</span>
+<span class="kw">update</span><span class="ot">.</span><span class="kw">dwlnotifperiod</span> <span class="ot">=</span> <span class="dv">30</span></code></pre>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Activate Application Container</span>
+<span class="kw">appcon</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">false</span>
+<span class="co">-- Tcp Port to connect to appmon_daemon.</span>
+<span class="co">-- No need to use this config value if using appmon_daemon default port (4242)</span>
+<span class="kw">appcon</span><span class="ot">.</span><span class="kw">port</span> <span class="ot">=</span> <span class="dv">4243</span>
+
+<span class="kw">appcon</span><span class="ot">.</span><span class="kw">envvars</span> <span class="ot">=</span> <span class="ot">{}</span>
+<span class="co">-- @LUA_AF_RO_PATH@ is a pattern which is replaced by the runtime path LUA_AF_RO_PATH</span>
+<span class="co">-- when the appcon component is loaded.</span>
+<span class="kw">appcon</span><span class="ot">.</span><span class="kw">envvars</span><span class="ot">.</span><span class="kw">PYTHONPATH</span> <span class="ot">=</span> <span class="st">&quot;@LUA_AF_RO_PATH@/python&quot;</span>
+<span class="kw">appcon</span><span class="ot">.</span><span class="kw">envvars</span><span class="ot">.</span><span class="kw">CLASSPATH</span> <span class="ot">=</span> <span class="st">&quot;@LUA_AF_RO_PATH@/java&quot;</span></code></pre>
+<h4 id="monitoring-system">Monitoring system</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- activate the monitoring</span>
+<span class="kw">monitoring</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">-- gives access to the global environment into the monitoring scripts</span>
+<span class="kw">monitoring</span><span class="ot">.</span><span class="kw">debug</span> <span class="ot">=</span> <span class="kw">true</span></code></pre>
+<h4 id="lua-rpc-server">Lua RPC server</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- activate LuaRPC server</span>
+<span class="kw">rpc</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="co">-- optional: define the address to bind the server socket to. default value is &#39;localhost&#39;</span>
+<span class="kw">rpc</span><span class="ot">.</span><span class="kw">address</span> <span class="ot">=</span> <span class="st">&#39;localhost&#39;</span>
+<span class="co">-- optional: define the port to bind the server socket to. default value is 1999</span>
+<span class="kw">rpc</span><span class="ot">.</span><span class="kw">port</span> <span class="ot">=</span> <span class="dv">1999</span></code></pre>
+<h4 id="data-queues">Data queues</h4>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- activate Data queues</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">activate</span> <span class="ot">=</span> <span class="kw">true</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span> <span class="ot">=</span> <span class="ot">{</span> <span class="ot">}</span> <span class="co">-- list of available Data queues</span>
+<span class="co">-- Each data queue correspond to a data sending policy, there are three main types of policies:</span>
+<span class="co">-- manual: data sending is triggered by the user</span>
+<span class="co">-- cron: data sending is triggered on cron events</span>
+<span class="co">-- latency: data sending is triggered some times after a data push</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span><span class="ot">.</span><span class="kw">default</span> <span class="ot">=</span> <span class="ot">{</span> <span class="st">&#39;manual&#39;</span> <span class="ot">}</span> <span class="co">-- default data queue to use when no policy name is used when sending data</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span><span class="ot">.</span><span class="kw">hourly</span> <span class="ot">=</span> <span class="ot">{</span> <span class="kw">latency</span> <span class="ot">=</span> <span class="dv">60</span> <span class="ot">*</span> <span class="dv">60</span> <span class="ot">}</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span><span class="ot">.</span><span class="kw">daily</span> <span class="ot">=</span> <span class="ot">{</span> <span class="kw">latency</span> <span class="ot">=</span> <span class="dv">24</span> <span class="ot">*</span> <span class="dv">60</span> <span class="ot">*</span> <span class="dv">60</span> <span class="ot">}</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span><span class="ot">.</span><span class="kw">never</span> <span class="ot">=</span> <span class="ot">{</span> <span class="st">&#39;manual&#39;</span> <span class="ot">}</span>
+<span class="kw">data</span><span class="ot">.</span><span class="kw">queues</span><span class="ot">.</span><span class="kw">now</span> <span class="ot">=</span> <span class="ot">{</span> <span class="kw">latency</span> <span class="ot">=</span> <span class="dv">5</span> <span class="ot">}</span></code></pre>
+</body>
+</html>

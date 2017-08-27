@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li>utils.table</li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>utils.table</code></h1>
+   
+<p>Table utils.</p>
+
+
+	<h2><a id="#(utils.table)" >Type <code>utils.table</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).copy">utils.table.copy(src, dst, overwrite)</a></td>
+		<td class="summary">
+<p>Copies a table from the source to destination table.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).diff">utils.table.diff(t1, t2, norecurse)</a></td>
+		<td class="summary">
+<p>Produces a diff of two tables.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).isArray">utils.table.isArray(T)</a></td>
+		<td class="summary">
+<p>Checks if the table is regular array.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).keys">utils.table.keys(T)</a></td>
+		<td class="summary">
+<p>Extracts the keys of a table into a list.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).map">utils.table.map(T, func, recursive, inplace)</a></td>
+		<td class="summary">
+<p>Executes a function on each element of a table.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).pack">utils.table.pack(varargs)</a></td>
+		<td class="summary">
+<p>Packs a variable number of arguments into a table.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).recursivePairs">utils.table.recursivePairs(t, prefix)</a></td>
+		<td class="summary">
+<p>Iterator that returns key/value pairs except walking through sub tables and concatenating the path in the key.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.table).sortedPairs">utils.table.sortedPairs(t)</a></td>
+		<td class="summary">
+<p>Iterator that iterates on the table in key ascending order.</p>
+
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(utils.map)">Type <code>utils.map</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(utils.map).multiPairs">utils.map.multiPairs(t1, ...)</a></td>
+		<td class="summary">
+<p>Iterator that returns key/value on multiple tables.</p>
+
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(utils.table)" >Type <code>utils.table</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).copy" >
+<strong>utils.table.copy(src, dst, overwrite)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Copies a table from the source to destination table.</p>
+
+	
+
+<p>The copy is recursive.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> src </em></code>: 
+a table to be used as the source of the copy.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> dst </em></code>: 
+a table to be used as the destination of the copy.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> overwrite </em></code>: 
+boolean value, to enable overwrite of existing field in dst table.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the resulting dst table.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).diff" >
+<strong>utils.table.diff(t1, t2, norecurse)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Produces a diff of two tables.</p>
+
+	
+
+<p>Recursive diff by default.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t1 </em></code>: 
+first table to compare.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> t2 </em></code>: 
+second table to compare.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> norecurse </em></code>: 
+boolean value to disable recursive diff.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the diff result as a table.</p>
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>&gt; t1 = { a = 1, b=3, c = "foo"}
+&gt; t2 = { a = 1, b=3, c = "foo"}
+&gt; :diff(t1, t2)
+= {  }
+&gt; t1 = { a = 1, b=3, c = "foo"}
+&gt; t2 = { a = 1, b=4, c = "foo"}
+&gt; :diff(t1, t2)
+= { "b" }
+&gt; t1 = { a = 1, b=3, c = "foo"}
+&gt; t2 = { a = 1, b=3}
+&gt; :diff(t1, t2)
+= { "c" }
+&gt; t1 = { b=3, c = "foo", d="bar"}
+&gt; t2 = { a = 1, b=3, c = "foo"}
+&gt; :diff(t1, t2)
+= {
+  "a",
+  "d" }
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).isArray" >
+<strong>utils.table.isArray(T)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Checks if the table is regular array.</p>
+
+	
+
+<p>Regular array is a table with only conscutive integer keys (no holes).</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> T </em></code>: 
+table to check.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>true or false.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).keys" >
+<strong>utils.table.keys(T)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Extracts the keys of a table into a list.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> T </em></code>: 
+the table to extract keys from.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>a list of keys of T table.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).map" >
+<strong>utils.table.map(T, func, recursive, inplace)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Executes a function on each element of a table.</p>
+
+	
+
+<p>If recursive is non false the map function will be called recursively.</p>
+
+<p>If inplace is set to true, then the table is modified in place.</p>
+
+<p>The function is called with key and value as a parameter.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> T </em></code>: 
+the table to apply map on.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> func </em></code>: 
+the function to call for each value of the map.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> recursive </em></code>: 
+if non false, the map is executed recusively.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> inplace </em></code>: 
+if non false, the table is modified in place.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the table with each value mapped by the function</p>
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>local data = { key1 = "val1", key2 = "val2"}
+local function foo(key, value) print("foo:" key, value) end
+map(data, foo)
+-&gt; will print:
+foo:    key1        val1
+foo:    key2        val2
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).pack" >
+<strong>utils.table.pack(varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Packs a variable number of arguments into a table.</p>
+
+	
+<p>This is a temporary function until we switch to Lua 5.2.</p>
+
+<p>Returns a new table with all parameters stored into keys 1, 2, etc. and with a field "n" with
+the total number of parameters. Also returns, as a second result, the total number of parameters.</p>
+
+<p>Note that the resulting table may not be a sequence.</p>
+
+<p>Note that when loading utils.table module, this pack function is also added to global/std table module.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+arguments to pack</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>a table that contains all the arguments followed by the number of arguments.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).recursivePairs" >
+<strong>utils.table.recursivePairs(t, prefix)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Iterator that returns key/value pairs except walking through sub tables and concatenating the path in the key.</p>
+
+	
+
+<p>This iterator break cycles: it does not recur. If it detects a cycle, the entry causing a cycle is ignored.
+However, if a table is repeated, its contents will be repeated by this function.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+table to iterate.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> prefix </em></code>: 
+path prefix to prepend to the key path returned.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>iterator function.</p>
+
+			<h3>Usage:</h3>
+		<pre class="example"><code>{toto={titi=1, tutu=2}, tata = 3, tonton={4, 5}} will iterate through
+("toto.titi",1), ("toto.tutu",2), ("tata",3) ("tonton.1", 4), ("tonton.2"=5)
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(utils.table).sortedPairs" >
+<strong>utils.table.sortedPairs(t)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Iterator that iterates on the table in key ascending order.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+table to iterate.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>iterator function.</p>
+
+
+
+</dd>
+</dl>
+
+			<h2><a id="#(utils.map)" >Type <code>utils.map</code></a></h2>
+				<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(utils.map).multiPairs" >
+<strong>utils.map.multiPairs(t1, ...)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Iterator that returns key/value on multiple tables.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t1 </em></code>: 
+first table to traverse.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> ... </em></code>: 
+additional tables to traverse.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>iterator function.</p>
+
+
+
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

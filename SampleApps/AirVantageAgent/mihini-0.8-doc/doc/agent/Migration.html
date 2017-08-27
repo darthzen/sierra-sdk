@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="migration">Migration</h1>
+<h4 id="location">Location</h4>
+<p>The migration logic itself will be put in application code, not in Agent. The Agent only provides a generic module that can automatically load migration scripts.</p>
+<h4 id="migration-process">Migration process</h4>
+<p>The migration module will determine if a migration is needed.<br /> For that purpose, it will use a persisted object named <strong>&quot;AgentVersion&quot;</strong>.<br /> The content of this persisted object is the value of <strong>MIHINI_AGENT_RELEASE</strong> Lua global variable (the version is also displayed in the logs).</p>
+<p>If the content of persisted object is different of current version result then the migration will be done.<br /> This includes the case where the persisted object doesn't exist, then versionFrom migration param (see bellow) will be set to &quot;unknown&quot;.</p>
+<p>Then the user/project specific migration code is done.<br /> Finally, the persisted object value is set with current version.</p>
+<h4 id="userproject-specific-code">User/Project specific code</h4>
+<p>Lua API only.<br /> When migration is needed, generic code will load user/project specific migration code using:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">require</span> <span class="st">&quot;agent.migration&quot;</span></code></pre>
+<p>It's up to the user/project to provide the migration code itself. (Agent dev team is here to help of course.)<br /> The migration code is very likely to be a Lua file named &quot;agent/migration.lua&quot;.<br /> However, if the user migration needs to run C code, it is possible, providing the C code exports a function:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">int</span> luaopen_agent_migration<span class="ot">(</span><span class="kw">LuaState</span><span class="ot">*</span> <span class="kw">L</span><span class="ot">);</span></code></pre>
+<p>So that it can be loaded the same way if it was Lua file.</p>
+<p>In any case, <em>agent.migration</em> <strong>must</strong> provide one function:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">function</span> <span class="fu">execute</span><span class="ot">(</span><span class="kw">versionFrom</span>, <span class="kw">versionTo</span><span class="ot">)</span></code></pre>
+<p>This is the function that will be called in order to actually do the migration, with those parameters:<br /> versionFrom: string, current value of persisted of object, or &quot;unknown&quot; if no Agent version was persisted yet.<br /> versionTo: string, current value of getversion() result</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Please pay attention to make the migration script as light as possible, with minimum dependencies with others modules.<br /> agent.migration will be executed very early at the Agent boot phase, no configuration will be loaded, no module will be running, only low level features of Lua VM will be available.<br /> For example, do not use log module, when agent.migration will be executed, log is not configured yet.<br /> If you need to report some error, check next section: Migration status reporting</p>
+</blockquote>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>It is also the responsibility of the user/project to put the migration code in the application binary.<br /> By default, Agent only embeds a simple Lua template of migration code.</p>
+</blockquote>
+<h4 id="migration-status-reporting">Migration status reporting</h4>
+<p>The user migration script needs to <strong>throw Lua error</strong> to report some error in migration.<br /> Otherwise, the migration script execution is considered as successful.<br /> Note: if migration script is absent, an error will be reported once.</p>
+<p>When migration script is triggered, migration execution status is logged in Agent boot logs:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="ot">+</span><span class="kw">LUALOG</span>: <span class="st">&quot;GENERAL&quot;</span>,<span class="st">&quot;INFO&quot;</span>,<span class="st">&quot;Migration executed successfully&quot;</span></code></pre>
+<h4 id="migration-script-templates">Migration script templates</h4>
+<p>For Lua migration script template, pick up migration.lua<br /> For C-Lua migration script template, pick up migration.c <strong>and</strong> migration.h<br /> CMakeLists.txt is an example of how to compile migration.c using CMake (the default build system used by the agent).</p>
+<table>
+<col width="69%" />
+<col width="30%" />
+<thead>
+<tr class="header">
+<th align="left">Name</th>
+<th align="left">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><a href="http://git.eclipse.org/c/mihini/org.eclipse.mihini.git/tree/agent/agent/migration.lua">migration.lua</a></td>
+<td align="left">Lua migration script template</td>
+</tr>
+<tr class="even">
+<td align="left"><a href="Migration_MigrationScript_h.html">MigrationScript.h</a></td>
+<td align="left">C-Lua migration script template header</td>
+</tr>
+<tr class="odd">
+<td align="left"><a href="Migration_MigrationScript_c.html">MigrationScript.c</a></td>
+<td align="left">C-Lua migration script template module</td>
+</tr>
+<tr class="even">
+<td align="left"><a href="Migration_CMakeLists_txt.html">CMakeLists.txt</a></td>
+<td align="left">How to compile MigrationScript.c using CMake</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

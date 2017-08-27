@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,posixsignal.so -o ../../runtime/lua/sched/posixsignal.so CMakeFiles/sched_posixsignal.dir/lposixsignal.c.o 

@@ -1,0 +1,379 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li><a href="checks.html">checks</a></li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li>persist</li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>persist</code></h1>
+   
+<p>This module allows to save and retrieve Lua values in table-like objects, in
+a non-volatile way.</p>
+
+   
+<p>Once stored in a persisted table, these Lua values can
+be retrieved even after the Lua process and/or the CPU running it have been
+rebooted.</p>
+
+<p>Compared to raw files, the <code>persist</code> module offers a higher level of
+abstraction, allowing to save and retrieve Lua objects directly, without
+explicitly dealing with serialization, deserialization or other filesystem
+issues. It can also be ported to environmnets which don't have a filesystem.</p>
+
+<p>This version of the module naively writes data in a file, and keeps whole
+tables' content in RAM. Its purpose is to avoid using the more efficient QDBM
+version, whose LGPL license might be problematic to some use cases.</p>
+
+<p>Persistence services are offered through two public APIs:</p>
+
+<ul>
+    <li><p>general purpose persisted tables: they behave mostly as regular tables,
+    except that their content survives across reboots. These tables are
+    created with <a href="##(table).new">table.new</a>;</p></li>
+    <li><p>To easily save and retrieve isolated objects, <a href="##(persist).save">persist.save</a> and
+    <a href="##(persist).load">persist.load</a> allow single-line operations with no extra bookkeeping.</p></li>
+</ul>
+
+<h2>Persisted Tables.</h2>
+
+<p>Persisted tables behave mostly as regular Lua tables, except that their
+content survives across reboots. They can hold strings, numbers, booleans,
+and possibly nested tables thereof, both as their keys and as their values.</p>
+
+<p>Functions can be persisted if and only if they don't capture any upvalue
+(see examples below).</p>
+
+<p>Beware that tables are stored structurally; what's retrieved are copies of
+the objects store in them, not the objects themselves:</p>
+
+<pre><code>local persist = require 'persist'
+t = persist.table.new('test')
+t[1] = { }
+assert(t[1] ~= t[1])
+</code></pre>
+
+<p>However, loops and shared table parts are preserved within a single
+item (key or value) stored and retrieved from a persisted table:</p>
+
+<pre><code>local y  = { }
+local x1 = { y1=y; y2=y } -- y1 and y2 point to the same object
+x1.x = x                  -- x1 points to itself through its field x
+assert(x1.x == x1)
+assert(x1.y1 == x1.y2)
+t[2] = x1                 -- save it in a table
+local x2 = t[2]           -- retrieve a copy from the table
+assert(x2 ~= x1)          -- it's a copy, not the original
+assert(x2.x == x2)        -- but it points to itself
+assert(x2.y1 == x2.y2)    -- and its shared parts are still shared
+</code></pre>
+
+<p>Since tables retrieved from persisted tables are actually copies, alterations
+of these returned tables won't affect the store's content:</p>
+
+<pre><code>x = { foo = 'bar' }
+t.x = x
+x.foo = 42 -- modifying `x`, not the copy in `t`
+assert (t.x.foo == 'bar') -- `t` remains unchanged
+t.x = x -- overriding `t.x` with the whole `x` value
+assert (t.x.foo == 42) -- now `t` reflects the change
+</code></pre>
+
+<p>"Simple" function, which don't capture any local variable, can be saved:</p>
+
+<pre><code>function plus_one(x) return x+1 end
+t.plus_one = plus_one
+assert(t.plus_one(1) == 2)
+</code></pre>
+
+<p>As for tables, persisted functions don't retain their identity:</p>
+
+<pre><code>assert(t.plus_one ~= t.plus_one)
+</code></pre>
+
+<p>Finally, functions which capture local variables cannot be saved. Below,
+the alternative implementation of <code>plus_one</code> captures a local variable <code>i</code>,
+and won't be properly serialized:</p>
+
+<pre><code>function make_incrementer (i)
+    return function(x) return x+i end
+end
+plus_one = make_incrementer(1)
+t.plus_one = plus_one
+</code></pre>
+
+<h2>Persisted Objects.</h2>
+
+<p>The usual way to persist data with the <code>persist</code> module is to create a table
+object, then fill it with values to persist. However, this is neither
+practical nor efficient when only one or a couple of small values need to be
+saved.</p>
+
+<p>To avoid a needless proliferation of tiny persisted tables, a pair of
+<code>persist.save</code> and <code>persist.load</code> functions are provided, to easily store
+individual objects with a single line of code.</p>
+
+<p>Objects stored through this API have the same limitations as those stored
+in full-featured persisted tables: no userdata, no threads, no upvalues in
+functions, no preservation of table and function identities.</p>
+
+
+<h2>POSIX implementation details.</h2>
+
+<p>All objects are saved in a SQLITE3 database file called
+persist/persist.sqlite3.</p>
+
+
+	<h2><a id="#(persist)" >Type <code>persist</code></a></h2>
+		<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(persist).load">persist.load(name)</a></td>
+		<td class="summary">
+<p>Retrieve from flash an object saved with <a href="##(persist).save">persist.save</a>.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(persist).save">persist.save(name, obj)</a></td>
+		<td class="summary">
+<p>Saves an object for later retrieval.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(persist).table">persist.table</a></td>
+		<td class="summary">
+<p>The table sub-module of persist</p>
+</td>
+		</tr>
+	</table>
+
+			<h2><a id="#(table)">Type <code>table</code></a></h2>
+				<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).empty">table.empty(t)</a></td>
+		<td class="summary">
+<p>Empties a table and releases associateed resources.</p>
+
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="##(table).new">table.new(name)</a></td>
+		<td class="summary">
+<p>Creates or loads a new persisted table.</p>
+</td>
+		</tr>
+	</table>
+
+	<h2><a id="#(persist)" >Type <code>persist</code></a></h2>
+		<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(persist).load" >
+<strong>persist.load(name)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Retrieve from flash an object saved with <a href="##(persist).save">persist.save</a>.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> name </em></code>: 
+the name of the persisted object to load.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>the object stored under that name, or <code>nil</code> if no such object exists.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(persist).save" >
+<strong>persist.save(name, obj)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Saves an object for later retrieval.</p>
+
+	
+
+<p>If the saving operation cannot be performed successfully, an error is thrown.
+Objects saved with this function can be retrieved with <a href="##(persist).load">persist.load</a>, by
+giving back the same name, even after a reboot.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> name </em></code>: 
+the name of the persisted object to save.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> obj </em></code>: 
+the object to persist.</p>
+
+				</li>
+		</ul>
+			<h3>Usage:</h3>
+		<pre class="example"><code>
+persist.save ('xxx', 1357) -- Save it in the store as 'xxx'
+[...] -- reboot
+x = persist.load 'xxx' -- Retrieve it from the store
+assert(x == 1357)
+
+</code></pre>
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+		<em>#table</em>
+<a id="#(persist).table" >
+<strong>persist.table</strong>
+</a>
+</dt>
+<dd>
+	
+<p>The table sub-module of persist</p>
+
+</dd>
+</dl>
+
+			<h2><a id="#(table)" >Type <code>table</code></a></h2>
+				
+<p>The table sub-module of persist</p>
+
+	<h3>Field(s)</h3>
+		<dl class="function">
+<dt>
+<a id="#(table).empty" >
+<strong>table.empty(t)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Empties a table and releases associateed resources.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> t </em></code>: 
+persited table returned by <a href="##(table).new">table.new</a> call.</p>
+
+
+
+				</li>
+		</ul>
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="#(table).new" >
+<strong>table.new(name)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>Creates or loads a new persisted table.</p>
+
+	
+
+<p>If a table already exists with the provided name, it is loaded; otherwise,
+a new one is created.</p>
+
+
+		<h3>Parameter</h3>
+		<ul>
+				<li>
+				
+<p><code><em> name </em></code>: 
+persisted table name.</p>
+
+				</li>
+		</ul>
+		<h3>Return values</h3>
+			<ol>
+				<li>
+				
+
+<p>the persisted table on success.</p>
+
+				</li>
+				<li>
+				
+
+<p><code>nil</code> + error message otherwise.</p>
+
+
+
+				</li>
+			</ol>
+</dd>
+</dl>
+
+</div>
+
+</div>
+</body>
+</html>

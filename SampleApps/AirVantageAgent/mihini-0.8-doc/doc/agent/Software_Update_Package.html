@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="software-update-package">Software Update Package</h1>
+<p>This type of update package is:</p>
+<ul>
+<li>supported only on <strong>Linux devices with Agent installed</strong>.</li>
+<li>can be delivered by M3DA protocol, or directly copied on the device and then &quot;locally&quot; installed.</li>
+</ul>
+<p>The purpose of this file format is to :</p>
+<ul>
+<li>handle update of several components on embedded device.</li>
+</ul>
+<p>Definitions:</p>
+<ul>
+<li><strong>feature</strong>: unit of software that provides one functionality, can be provided by different components, a feature can be provided several times on the same device by different component.<br /> A feature can not be installed or removed directly (i.e you have to use a component for that).</li>
+<li><strong>component</strong>: id of a group of files, once installed those files can provide one or several features.<br /> A component can be installed or removed.</li>
+<li><strong>update package</strong>: archive with several components.</li>
+</ul>
+<h1 id="software-update-package-format">1. Software Update Package Format</h1>
+<h4 id="archive-format">1.1. Archive Format</h4>
+<p>Software Update Package is basically an <strong>archive file in tar format</strong> containing:</p>
+<ul>
+<li><strong>Manifest</strong>: a file describing the content of the update (see Manifest section for further description)</li>
+<li><strong>one or more components</strong>: those are the files and/or folders to be used to process the update of the given component.</li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Avoid file names or sub folder names containing <strong>'</strong> (single quote) character within Software Update Package archive.<br />There is no other limitation related to components folders/files.</p>
+</blockquote>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>Exact <strong>archive file format</strong> support (for both extraction and automatic format detection steps) totally <strong>relies</strong> on <strong>tar command</strong> available options on the <strong>embedded target</strong>.<br /> Once downloaded, the archive file is extracted using <strong><em>tar -xvf</em></strong> command, with no specific compression format specified.<br /> See your embedded Linux distribution documentation to know which formats are supported for extraction with automatic format detection.<br /> Usually, gz and bz2 are correctly supported.</p>
+</blockquote>
+<h4 id="manifest-content">1.2. Manifest content</h4>
+<p>The manifest file format is:</p>
+<ul>
+<li><strong>file named &quot;Manifest&quot;</strong> put <strong>at the root</strong> of the update package</li>
+<li>the file must <strong>declare a Lua table</strong> containing the description of the update, the manifest must contain <strong>only this table</strong> (plus comments).</li>
+</ul>
+<p>The manifest is divided in two parts:</p>
+<ul>
+<li>The first one contains global update information</li>
+<li>The second part describes each component included in the archive.</li>
+</ul>
+<h5 id="version-declaration-checking">1.2.1. Version declaration / checking</h5>
+<p>Versions are used in various places of the Manifest.<br /> The versions will be put <strong>as string</strong> and the comparison between 2 versions will be done using <strong>strcmp-like</strong> function, using <strong>ascii order</strong>.<br /> The version string only allows the following characters: alphanumeric, '-' (minus), '_' (underscore), '.' (dot), ':'(colon).<br /> Examples: &quot;2.1&quot; &gt; &quot;1.3&quot;, &quot;3.a&quot; &gt; &quot;3.9&quot;, &quot;1.a&quot; &gt; &quot;1.Z&quot;, &quot;1.10&quot; &lt; &quot;1.9&quot; but &quot;1.10&quot; &gt; &quot;1.09&quot; etc.</p>
+<p>When defining a <strong>dependency</strong> on one or several version of a component, the following format should be used:</p>
+<ul>
+<li>embedded in a string</li>
+<li>space as separator between part of dependency, earch part is and a <strong>logical and</strong> with the next part</li>
+<li>special characters &quot;=&quot;, &quot;!=&quot;, &quot;&gt;=, &quot;&gt;&quot;, &quot;&lt;=&quot;, &quot;&lt;&quot; have the regular meaning of comparison operators, using the ascii order.</li>
+<li>special character &quot;#&quot; enables to specify a list (i.e <strong>logical or</strong>) of accepted exact match separated by a comma.</li>
+<li>at least one special character must start the dependency definition</li>
+</ul>
+<p>This format is referred as <strong>[version_dep]</strong> in the following sections.<br /> example: &quot;&gt;1.0 &lt;=3.0&quot; means any version strictly above &quot;1.0&quot; <strong>and</strong> inferior or equal to &quot;3.0&quot;.<br /> example: &quot;#a,b,c&quot; means any version a <strong>or</strong> b <strong>or</strong> c</p>
+<h5 id="global-package-information">1.2.2. Global package information</h5>
+<ul>
+<li>components: <strong>mandatory</strong>, this is a <strong>table</strong>, used as an <strong>ordered list</strong>, the list of components to be installed ,</li>
+<li>force: optional, <strong>boolean</strong>, if set then no dependency checking is done on the update package. Default value is false, meaning dependency checking will be done,</li>
+<li>version: optional, <strong>string</strong> (non empty), some kind of user data: this can be used to give a name to a combination of components available on the device after the update.<br /> No check is performed on this field, and if the update is successful, then the old value is replaced by this one.</li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>force parameter is to be used with caution.<br />force parameter is likely to put the device in a software configuration that will <strong>not</strong> be valid, requiring other &quot;forced&quot; updates to put it back in valid state.</p>
+</blockquote>
+<h5 id="component-update-information">1.2.3. Component update information</h5>
+<ul>
+<li>name: <strong>mandatory</strong>, it's the component name as a <strong>string</strong> (non empty), and it must be <strong>unique</strong> within one update package.<br /> This is usually a path in dot notation, the first elements of the component path determine which software module is responsible for a component update. See below section.</li>
+<li>version: <strong>mandatory</strong> (unless for component removal), <strong>string</strong> (non empty), version of this component</li>
+<li>location: optional, <strong>string</strong> (non empty), it's the relative path to locate the file or folder within the update package to be used as component update. The same location can be reused by several components within one update package. When given, location must point to a file/folder in the update package, if location points to an absent file/folder, the update package will be rejected.</li>
+<li>depends: optional, <strong>table</strong>, keys are the feature names or component names as <strong>strings</strong> (non empty), values are (non empty) <strong>strings in [version_dep]</strong> format.</li>
+<li>provides: optional, <strong>table</strong>, keys are the feature names as <strong>strings</strong> (non empty), values are <strong>strings</strong> (non empty) defining versions of features provided by this component.</li>
+<li>parameters: optional, <strong>table</strong>, keys are the parameters names as strings (non empty) or as integer to specify a list instead a map, values are parameters values (basic types only: string, number, boolean). Both parameters names and values are specific to the software module responsible for the update of this component.</li>
+</ul>
+<h5 id="a-little-example">1.2.4. A little example:</h5>
+<pre class="sourceCode json"><code class="sourceCode json">{
+  <span class="er">--</span> <span class="er">Global</span> <span class="er">information</span>
+  <span class="er">version</span> <span class="er">=</span> <span class="dt">&quot;1.1&quot;</span>,
+  
+  <span class="er">--</span> <span class="er">Components</span> <span class="er">information</span>
+  <span class="er">components</span> <span class="er">=</span> 
+  <span class="er">{</span>
+    <span class="er">{</span>   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;assetLivingRoom.LivingRoom.update&quot;</span>,
+        <span class="er">location</span> <span class="er">=</span> <span class="dt">&quot;assetLivingRoom/update.zip&quot;</span>,  <span class="er">--location</span> <span class="er">is</span> <span class="er">a</span> <span class="er">file</span> <span class="er">in</span> <span class="er">this</span> <span class="er">case</span>      
+        <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span> <span class="er">assetLivingRoom=</span><span class="dt">&quot;=1.0&quot;</span> }<span class="er">,</span>
+        <span class="er">provides</span> <span class="er">=</span> { <span class="er">assetLivingRoom=</span><span class="dt">&quot;1.1&quot;</span>}<span class="er">,</span>
+        <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;1.3&quot;</span>
+    <span class="er">},</span>
+    
+    {   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;assetBedRoom.BedRoom.update&quot;</span>,
+        <span class="er">location</span> <span class="er">=</span> <span class="dt">&quot;assetBedRoom/update.tar&quot;</span>, <span class="er">--location</span> <span class="er">is</span> <span class="er">a</span> <span class="er">file</span> <span class="er">in</span> <span class="er">this</span> <span class="er">case</span>        
+        <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span> <span class="er">assetBedRoom</span> <span class="er">=</span> <span class="dt">&quot;=1.0&quot;</span>, <span class="er">assetLivingRoom=</span><span class="dt">&quot;&gt;0.1 &lt;2.0&quot;</span> }<span class="er">,</span>
+        <span class="er">provides</span> <span class="er">=</span> {  <span class="er">assetBedRoom</span> <span class="er">=</span> <span class="dt">&quot;1.1&quot;</span> }<span class="er">,</span>
+        <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;1.2&quot;</span>
+    <span class="er">},</span>
+    
+    {   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;@sys.appcon.my_app&quot;</span>,
+        <span class="er">location</span> <span class="er">=</span> <span class="dt">&quot;app/&quot;</span>, <span class="er">--location</span> <span class="er">is</span> <span class="er">a</span> <span class="er">folder</span> <span class="er">in</span> <span class="er">this</span> <span class="er">case</span>        
+        <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span> <span class="er">Agent=</span><span class="dt">&quot;&gt;0.7&quot;</span>, <span class="er">my_app</span> <span class="er">=</span> <span class="dt">&quot;=1.1&quot;</span> }<span class="er">,</span>
+        <span class="er">provides</span> <span class="er">=</span>  { <span class="er">my_app</span> <span class="er">=</span> <span class="dt">&quot;1.2&quot;</span> }<span class="er">,</span>
+        <span class="er">--</span> <span class="er">ApplicationContainer</span> <span class="er">specifics</span> <span class="er">attributes</span>
+        <span class="er">parameters</span> <span class="er">=</span> { <span class="er">purge=true</span>, <span class="er">autostart=true</span> }<span class="er">,</span>
+        <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;1.2&quot;</span>
+    <span class="er">},</span>
+    <span class="er">--cmp</span> <span class="er">uninstall:</span>
+    {   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;@sys.appcon.app2&quot;</span>,
+    }<span class="er">,</span>
+    {   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;@sys.update.GardenApp&quot;</span>,
+        <span class="er">location</span> <span class="er">=</span> <span class="dt">&quot;GardenApp/&quot;</span>,        
+        <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span>}<span class="er">,</span>
+        <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;0.1&quot;</span>
+    <span class="er">},</span>
+    <span class="er">--cmp</span> <span class="er">uninstall:</span>
+    {   <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;@sys.appcon.app3&quot;</span>,
+    }<span class="er">,</span>
+  <span class="er">}</span>
+<span class="er">}</span></code></pre>
+<h1 id="componentsfeatures-management-use-cases">2. Components/Features Management Use Cases</h1>
+<p>This section lists some kind of &quot;applicative&quot; behaviors built over the update package defined above.</p>
+<h4 id="determine-which-software-module-is-responsible-for-a-component-update">2.1. Determine which software module is responsible for a component update</h4>
+<p>The software module responsible for an update is determined by the value of name field of each component description.<br />This field is interpreted as an M3DA path:</p>
+<ul>
+<li>dot is the separator</li>
+<li>@sys is special value targeting the device, i.e. the Agent.</li>
+<li>otherwise the root is the id/name of the asset that will be responsible to do the update.</li>
+</ul>
+<p>The value of this field is very important because it determines who will receive the update notification.</p>
+<p>If the component targets an asset, then you have to look at the asset API to see how to deal with the update.<br />Basically the asset will receive the path where to find files embedded in update package, but file copy/update operation will have to be handled by the application itself. To put it another way: when sending an update to an asset, make sure the asset application will know what to do with the files in the package.</p>
+<p>If the component targets the Agent, it means that the update uses a built-in update functionality of the Agent. Those built-in update functionalities of the Agent are identified using special values of component name, i.e. path shortcuts are defined to trigger them.</p>
+<p>New shortcuts may be added afterwards, here is the <strong>current built-in updaters</strong> of the Agent:</p>
+<h5 id="install-script">2.1.1. Install script</h5>
+<p>Install script is to execute a simple Lua script during update process, without having to write an Application to install in the ApplicationContainer, or any asset program etc.<br />The Lua script is embedded in the update package and is run by the Agent.</p>
+<p>More details on <a href="Software_Update_Module.html">Software Update Module</a> page.</p>
+<p>Manifest Component specific fields:</p>
+<ul>
+<li>name: @sys.update.[script_name]</li>
+</ul>
+<h5 id="applicationcontainer-update">2.1.2. ApplicationContainer update</h5>
+<p>To install/update/remove an application managed by the ApplicationContainer, the module of the Agent responsible for installing and monitoring applications.<br />As this kind of update is managed by an Agent module, the ApplicationContainer, the update actions are done by this module, please note that:</p>
+<ul>
+<li>the ApplicationContainer module does the files copies using the files present in the package without requiring any action of the application itself</li>
+<li>the application needs to conform to ApplicationContainer application requirements to enable application monitoring</li>
+<li>the install path is fixed : each application installed in ApplicationContainer is copied in specific folder, but all the applications folders have the same root folder.</li>
+</ul>
+<p>More details on <a href="Application_Container.html">Application Container</a> page.</p>
+<p>Manifest Component specific fields:</p>
+<ul>
+<li>name: <code>@sys.appcon.[application_name]</code><br /> [application_name] can be any value, the ApplicationContainer will receive it as one string all characters after the @sys.appcon. shortcut.</li>
+<li>location: it has to point to a <strong>folder</strong>, see <a href="Application_Container.html">Application Container</a> page for application data specifications.</li>
+<li>parameters: specific parameters: those parameters are used only for installing/reinstalling an application, those parameters are directly related to those of the install API of <a href="Application_Container.html">Application Container</a>.
+<ul>
+<li><code>autostart</code>: <code>boolean</code>, automatically start the app after install and on Agent reboot; default value is <code>false</code></li>
+<li><code>purge</code>: <code>boolean</code>, when reinstalling an application, the application runtime folder will be erased before reinstallation if this field is set to true; default value is <code>false</code></li>
+</ul></li>
+</ul>
+<blockquote>
+<p><strong>INFO</strong></p>
+<p>The following use cases (add/remove) are also valid for ApplicationContainer components</p>
+</blockquote>
+<h4 id="add-a-new-component">2.2. Add a new component</h4>
+<p>Nothing special to do, just give the new component name and choose the good path to target the software component.</p>
+<ul>
+<li>name:new component name (include updater prefix)</li>
+<li>version:version of that component</li>
+</ul>
+<h4 id="update-a-component">2.3. Update a component</h4>
+<ul>
+<li>name:updated component name (include updater prefix)</li>
+<li>version:version of that component</li>
+</ul>
+<h4 id="remove-a-component">2.4. Remove a component</h4>
+<ul>
+<li>name: name of the component to remove</li>
+<li>version: <strong>nil</strong></li>
+<li>provides: <strong>nil</strong></li>
+<li>depends: <strong>nil</strong></li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<ul>
+<li>When removing a component it will also remove all features that were provided by this component</li>
+<li>After uninstall, components are removed from the device software list</li>
+<li>If one or several components depend on the components (and its provided features) being removed by the uninstall operation, then this is treated as a dependency failure: the update is aborted.</li>
+</ul>
+</blockquote>
+<h4 id="dependencies-related-behavior-on-embedded-side">2.5. Dependencies-related behavior on embedded side</h4>
+<p>When global option <strong>force</strong> is set, then no dependency check is done, even if some dependencies are defined in the Manifest.<br /> Otherwise, dependencies checking is done before applying any update.<br /> If one or more dependencies fail to be satisfied, then the update is <strong>aborted</strong> and the software of the device is not altered.</p>
+<h1 id="transport-protocol-specifics">3. Transport Protocol specifics</h1>
+<p>The archive and its content as described above remain valid across protocols but there is still some specifics to define.</p>
+<h4 id="status-codes">3.1. Status Codes</h4>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>this is to be defined this is first questions and propositions</p>
+</blockquote>
+<p>First proposition:</p>
+<ul>
+<li>use the same numerical codes for errors reporting across protocols (this avoids to maintain two/n mapping (error code &lt;-&gt; error description) for the same errors)</li>
+<li>use OMADM FUMO codes + vendor specified ranges to defined codes not supported by FUMO (FUMO doesn't deal with several software components, dependencies etc)</li>
+<li>add error string description in AWTDA command acknowledge when a interesting text description of the error is available.</li>
+<li>keep a value range to set project specifics code, those code would be (set / overwritten) in some model</li>
+</ul>
+<h4 id="m3da-transport">3.2. M3DA transport</h4>
+<p>With M3DA, the embedded will receive the archive file described above, the MD5 being embedded as a parameter in the M3DA command used to get the update package.<br /> See M3DA <a href="Device_Management.html">Device Management commands</a> to see description of the M3DA SoftwareUpdate command.</p>
+<h1 id="steps-to-use-software-update-package">4. Steps to use Software Update Package</h1>
+<p>Those are the main steps.</p>
+<h4 id="embedded-side">4.1. Embedded Side</h4>
+<ol style="list-style-type: decimal">
+<li>Get MD5 sum and archive file (this steps depends on transport protocol used to retrieve the update package)</li>
+<li>Check archive file integrity</li>
+<li>Extract the archive</li>
+<li>Parse the Manifest file</li>
+<li>Check Manifest content (including dependencies)</li>
+<li>Send update notification to software module responsible to do the updates.</li>
+<li>Collect update result and compute whole update result</li>
+<li>Report the update result to the server (this steps depends on transport protocol used to retrieve the update package)</li>
+</ol>
+<h4 id="server-side">4.2. Server Side</h4>
+<ol style="list-style-type: decimal">
+<li>Get components to update with related dependencies</li>
+<li>Generate Manifest file according to previously gathered data</li>
+<li>Compress the archive</li>
+<li>Determine the transport protocol to use and protocol specific binaries if needed.</li>
+<li>Create the update job, ask the device to connect of wait the device to connect</li>
+<li>Wait for update status reported by device</li>
+</ol>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>it may be useful to define a configurable timeout for the update job, when this timeout is elapsed, then the job is failed, a server could set up a 'synchronize' job to check device state at next connexion, and the user can re-create an update job afterward without having to clean the previous job.</p>
+</blockquote>
+<h4 id="data-exchange">4.3. Data exchange</h4>
+<p>Those data will be accessible on the device (read only) so that the server can use them : either to give info to the user, or to generate update packages, ...</p>
+<pre class="sourceCode json"><code class="sourceCode json"><span class="er">@sys.update</span> <span class="er">=</span> {
+    <span class="er">last_update</span> <span class="er">=</span> <span class="er">{</span>}<span class="er">,</span> <span class="er">--</span> <span class="er">TBD</span>
+    <span class="er">last_failed_update</span> <span class="er">=</span> {}<span class="er">,</span>  <span class="er">--</span> <span class="er">TBD</span>
+
+    <span class="er">components</span> <span class="er">=</span> { 
+        <span class="er">{</span>
+            <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;assetBedRoom.BedRoom.update&quot;</span>,
+            <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span> <span class="er">assetBedRoom</span> <span class="er">=</span> <span class="dt">&quot;=1.0&quot;</span>, <span class="er">assetLivingRoom</span> <span class="er">=</span> <span class="dt">&quot;&gt;0.1 &lt;2.0&quot;</span>,  <span class="er">my_app</span> <span class="er">=</span> <span class="dt">&quot;&gt;= 1.1&quot;</span> }<span class="er">,</span>
+            <span class="er">provides</span> <span class="er">=</span> {  <span class="er">assetBedRoom</span> <span class="er">=</span> <span class="dt">&quot;1.1&quot;</span> }<span class="er">,</span>
+            <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;1.4&quot;</span>
+        <span class="er">},</span>
+        
+        {
+            <span class="er">name</span> <span class="er">=</span> <span class="dt">&quot;@sys.appcon.my_app&quot;</span>,
+            <span class="er">depends</span> <span class="er">=</span> <span class="er">{</span> <span class="er">Agent</span> <span class="er">=</span> <span class="dt">&quot;&gt;0.7&quot;</span>, <span class="er">my_app</span> <span class="er">=</span> <span class="dt">&quot;=1.1&quot;</span> }<span class="er">,</span>
+            <span class="er">provides</span> <span class="er">=</span>  { <span class="er">my_app</span> <span class="er">=</span> <span class="dt">&quot;1.2&quot;</span> } <span class="er">,</span>
+            <span class="er">parameters</span> <span class="er">=</span> {<span class="er">purge=true</span>, <span class="er">autostart=true</span> }<span class="er">,</span>
+            <span class="er">version</span> <span class="er">=</span> <span class="er">&quot;1.2&quot;</span>
+        <span class="er">}</span>
+    <span class="er">}</span>
+
+<span class="er">}</span></code></pre>
+</body>
+</html>

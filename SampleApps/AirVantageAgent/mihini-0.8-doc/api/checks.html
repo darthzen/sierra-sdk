@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" href="stylesheet.css" type="text/css"/>
+	</head>
+<body>
+<div id="container">
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div>
+<div id="main">
+	<div id="navigation">
+		<h2>Modules</h2>
+			<ul><li>
+				<a href="index.html">index</a>
+			</li></ul>
+		<ul>
+					<li><a href="airvantage.html">airvantage</a></li>
+					<li><a href="airvantage.asset.html">airvantage.asset</a></li>
+					<li><a href="airvantage.table.html">airvantage.table</a></li>
+					<li>checks</li>
+					<li><a href="coroutine.html">coroutine</a></li>
+					<li><a href="debug.html">debug</a></li>
+					<li><a href="devicetree.html">devicetree</a></li>
+					<li><a href="global.html">global</a></li>
+					<li><a href="io.html">io</a></li>
+					<li><a href="lfs.html">lfs</a></li>
+					<li><a href="log.html">log</a></li>
+					<li><a href="lua.html">lua</a></li>
+					<li><a href="math.html">math</a></li>
+					<li><a href="modbus.html">modbus</a></li>
+					<li><a href="modbustcp.html">modbustcp</a></li>
+					<li><a href="niltoken.html">niltoken</a></li>
+					<li><a href="os.html">os</a></li>
+					<li><a href="pack.html">pack</a></li>
+					<li><a href="package.html">package</a></li>
+					<li><a href="persist.html">persist</a></li>
+					<li><a href="sched.html">sched</a></li>
+					<li><a href="serial.html">serial</a></li>
+					<li><a href="sms.html">sms</a></li>
+					<li><a href="socket.html">socket</a></li>
+					<li><a href="string.html">string</a></li>
+					<li><a href="system.html">system</a></li>
+					<li><a href="table.html">table</a></li>
+					<li><a href="timer.html">timer</a></li>
+					<li><a href="utils.loader.html">utils.loader</a></li>
+					<li><a href="utils.ltn12.source.html">utils.ltn12.source</a></li>
+					<li><a href="utils.path.html">utils.path</a></li>
+					<li><a href="utils.table.html">utils.table</a></li>
+		</ul>
+	</div>
+	<div id="content">
+   <h1>Module <code>checks</code></h1>
+   
+<p> Argument type checking API.</p>
+
+   
+
+<p>This library declares a <code>checks()</code> function and a <code>checkers</code> table, which
+allow to check the parameters passed to a Lua function in a fast and
+unobtrusive  way.</p>
+
+<p><code>checks (type_1, ..., type_n)</code>, when called directly inside function
+<code>f</code>, checks that <code>f</code>'s 1st argument conforms to <code>type_1</code>, that its 2nd
+argument conforms to <code>type_2</code>, etc. until <code>type_n</code>. Type specifiers
+are strings, and if the arguments passed to <code>f</code> don't conform to their
+specification, a proper error message is produced, pinpointing the
+call to <code>f</code> as the faulty expression.</p>
+
+<p>Each type description <code>type_n</code> must be a string, and can describe:</p>
+
+<ul>
+    <li>the Lua type of an object, such as <code>"table"</code>, <code>"number"</code> etc.;</li>
+    <li>an arbitrary name, which would be stored in the <code>__type</code> field of
+    the argument's metatable;</li>
+    <li>a type-checking function, which would be stored in the <code>checkers</code>
+    global table. This table uses type names as keys, test functions
+    returning Booleans as keys.</li>
+</ul>
+
+<p>Moreover, types can be prefixed with a <code>"?"</code>, which makes them
+optional. For instance, <code>"?table"</code> accepts tables as well as <code>nil</code>
+values.</p>
+
+<p>A <code>"?"</code> alone accepts anything. It is mainly useful as a placeholder,
+to skip an argument which doesn't need to be checked.</p>
+
+<p>A <code>"!"</code> accepts everything except <code>nil</code>.</p>
+
+<p>Finally, several types can be accepted, if their names are
+concatenated with a bar <code>"|"</code> between them. For instance,
+<code>"table|number"</code> accepts tables as well as numbers. It can be combined
+with the question mark, so <code>"?table|number"</code> accepts tables, numbers
+and nil values. It is actually equivalent to <code>"nil|table|number"</code>.</p>
+
+<p>More formally, let's specify <code>conform(a, t)</code>, the property that
+argument <code>a</code> conforms to the type denoted by <code>t</code>. <code>conform(a,t)</code> is
+true if and only if at least one of the following propositions is
+verified:</p>
+
+<ul>
+    <li><code>conforms(a, t:match "^(.-)|.*"</code></li>
+    <li><code>t == "?"</code></li>
+    <li><code>t == "!" and a ~= nil</code></li>
+    <li><code>t:sub(1, 1) == "?" and (conforms(a, t:sub(2, -1)) or a==nil)</code></li>
+    <li><code>type(a) == t</code></li>
+    <li><code>getmetatable(a) and getmetatable(a).__type == t</code></li>
+    <li><code>checkers[t] and checkers[t](a) is true</code></li>
+    <li><code>conforms(a, t:match "^.-|(.*)")</code></li>
+</ul>
+
+<p> The above propositions are listed in the order in which they are
+ tried by <code>check</code>. The higher they appear in the list, the faster
+ <code>checks</code> accepts aconforming argument. For instance,
+ <code>checks("number")</code> is faster than
+ <code>checkers.mynumber=function(x) return type(x)=="number" end; checks("mynumber")</code>.</p>
+
+<h2>Usage examples</h2>
+
+<pre><code> require 'checks'
+
+ -- Custom checker function --
+ function checkers.port(p)
+   return type(p)=='number' and p&gt;0 and p&lt;0x10000
+ end
+
+ -- A new named type --
+ socket_mt = { __type='socket' }
+ asocket = setmetatable ({ }, socket_mt)
+
+ -- A function that checks its parameters --
+ function take_socket_then_port_then_maybe_string (sock, port, str)
+   checks ('socket', 'port', '?string')
+ end
+
+ take_socket_then_port_then_maybe_string (asocket, 1024, "hello")
+ take_socket_then_port_then_maybe_string (asocket, 1024)
+
+ -- A couple of other parameter-checking options --
+
+ function take_number_or_string()
+   checks("number|string")
+ end
+
+ function take_number_or_string_or_nil()
+   checks("?number|string")
+ end
+
+ function take_anything_followed_by_a_number()
+   checks("?", "number")
+ end
+
+ -- Catch some incorrect arguments passed to the function --
+
+ function must_fail(...)
+   assert (not pcall (take_socket_then_port_then_maybe_string, ...))
+ end
+
+ must_fail ({ }, 1024, "string")      -- 1st argument isn't a socket
+ must_fail (asocket, -1, "string")   -- port number must be 0-0xffff
+ must_fail (asocket, 1024, { })    -- 3rd argument cannot be a table
+</code></pre>
+
+<h2>Caveat</h2>
+
+<p><code>checks()</code> doesn't work properly on function arguments which are part of a
+<code>...</code> variable parameters list. For instance, the behavior of the following
+program is undefined:</p>
+
+<pre><code> function f(...)
+     checks('string')
+ end
+ f("some_string")
+</code></pre>
+
+
+	<h2>Global(s)</h2>
+	<table class="function_list">
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="#checks">checks(level, varargs)</a></td>
+		<td class="summary">
+<p>check whether the calling function's argument have the expected types.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="#error">error(level, narg, expected, got)</a></td>
+		<td class="summary">
+<p> Generate and throw an error.</p>
+</td>
+		</tr>
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="#matches">matches(actualType, expectedTypes)</a></td>
+		<td class="summary">
+<p> Return true iff actualType occurs in expecteTypes, the later being
+a list of type names separate by '|' chars.</p>
+</td>
+		</tr>
+	</table>
+	<h2>Global(s)</h2>
+		<dl class="function">
+<dt>
+<a id="checks" >
+<strong>checks(level, varargs)</strong>
+</a>
+</dt>
+<dd>
+	
+<p>check whether the calling function's argument have the expected types.</p>
+
+	
+
+<p><code>checks( [level], t_1, ..., t_n)</code> causes an error if the type of
+argument #<code>i</code> in stack frame #<code>level</code> isn't as described by <code>t_i</code>, for
+i in <code>[1...n]</code>.  <code>level</code> is optional, it defaults to one (checks the
+function immediately calling <code>checks</code>).</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> level </em></code>: 
+the number of stack levels to ignore in the error message,
+ should it be produced. Optional, defaults to 1.</p>
+
+				</li>
+				<li>
+				
+<p><code><em> varargs </em></code>: 
+one type string per expected argument.</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>nothing on success, throw an error on failure.</p>
+
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="error" >
+<strong>error(level, narg, expected, got)</strong>
+</a>
+</dt>
+<dd>
+	
+<p> Generate and throw an error.</p>
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> level </em></code>: 
+stack level where the error must be reported</p>
+
+				</li>
+				<li>
+				
+<p><code><em> narg </em></code>: 
+indice of the erroneous argument</p>
+
+				</li>
+				<li>
+				
+<p><code><em> expected </em></code>: 
+name of the expected type</p>
+
+				</li>
+				<li>
+				
+<p><code><em> got </em></code>: 
+name of the type actually found</p>
+
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>never returns (throws a Lua error instead) </p>
+
+
+</dd>
+</dl>
+		<dl class="function">
+<dt>
+<a id="matches" >
+<strong>matches(actualType, expectedTypes)</strong>
+</a>
+</dt>
+<dd>
+	
+<p> Return true iff actualType occurs in expecteTypes, the later being
+a list of type names separate by '|' chars.</p>
+
+	
+
+<p>If <code>WITH_SUM_TYPES</code> is disabled, the expectedTypes list must have one
+element, i.e. no '|' separator character.</p>
+
+
+		<h3>Parameters</h3>
+		<ul>
+				<li>
+				
+<p><code><em> actualType </em></code>: 
+the type of the tested object</p>
+
+				</li>
+				<li>
+				
+<p><code><em> expectedTypes </em></code>: 
+the list of types listed as acceptable in <code>checks()</code>
+ for this argument</p>
+
+				</li>
+		</ul>
+		<h3>Return value</h3>
+				
+
+<p>whether <code>actualType</code> is listed in <code>expectedTypes</code>.</p>
+
+
+
+</dd>
+</dl>
+	<h2><a id="#(checks)" >Type <code>checks</code></a></h2>
+	
+			<h2><a id="#(checkers)" >Type <code>checkers</code></a></h2>
+				
+<p>Table of custom type-checkers.</p>
+
+	
+<p> This table contain type-checking
+functions, indexed by type name.  If an argument <code>a</code> is expected to be
+of type <code>t</code>, and neither <code>type(a)</code> nor <code>getmetatable(a).__type</code> return
+<code>t</code>, but <code>checkers[t]</code> contains a function, this function will be
+called, with <code>a</code> as its only argument. If the function returns <code>true</code>,
+then <code>a</code> is considered to be of type <code>t</code>.</p>
+
+<h2>Example</h2>
+
+<pre><code> -- Create the type-checking function --
+ function checkers.positive_number(x)
+   return type(x)=='number' and x&gt;0
+ end
+
+ -- Use the `positive_number` type-checking function --
+ function sqrt(x)
+   checks('positive_number')
+   return x^(1/2)
+ end
+</code></pre>
+
+
+
+</div>
+
+</div>
+</body>
+</html>

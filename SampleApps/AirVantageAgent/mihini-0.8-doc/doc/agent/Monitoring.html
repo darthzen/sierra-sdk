@@ -1,0 +1,400 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="monitoring">Monitoring</h1>
+<p>The Monitoring module is a Rule Engine that allows writing simple scriplet to implement basic logic, based on a set of events (called triggers), executing some function (called actions).</p>
+<p>The general idea of the Monitoring Script Engine is to instanciate your triggers and actions and then connect them. The rule language is actually based on Lua which make easy to write clean and simple rules to implement your logic. Scriptlets can be loaded and unloaded dynamically in the system (See monitoring module APIs).</p>
+<p>The Monitoring Script Engine comes with a set of predefined triggers and actions that can be used in a scriptlet.</p>
+<h2 id="predefined-triggers">Predefined triggers</h2>
+<h3 id="onboot">onboot</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onboot<span class="ot">()</span></code></pre>
+<p>Activated when the agent is started, usually when the device boots (depends on how it is ported).</p>
+<h3 id="onconnect">onconnect</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onconnect<span class="ot">()</span></code></pre>
+<p>Activated before a connection with the Device Management Server is done.</p>
+<blockquote>
+<p><strong>Note</strong> this trigger is temporarily unavailable (need to work on the server connector module of the agent)</p>
+</blockquote>
+<h3 id="onperiod">onperiod</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onperiod<span class="ot">(</span><span class="kw">p</span><span class="ot">)</span></code></pre>
+<p>Activated on a timer:</p>
+<ul>
+<li><code>p</code> &gt; 0 means a periodic timer.</li>
+<li><code>p</code> &lt;= 0 means a one shot timer.</li>
+<li><code>p</code> is in seconds.</li>
+</ul>
+<h3 id="ondate">ondate</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">ondate<span class="ot">(</span><span class="kw">cron</span><span class="ot">)</span></code></pre>
+<p>Activated on a date. This date is specified with a cron entry (see timer.cron documetnation for format).</p>
+<p>Ex: With the compatible Unix CRON syntax, <code>&quot;22 7 * * *&quot;</code> means every day at 7:22 am</p>
+<h3 id="onchange">onchange</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onchange<span class="ot">(...)</span></code></pre>
+<p>Activated when one of the variable from the list changes.</p>
+<p><code>...</code> is a variable number of variable to monitor, named as string: ex <code>&quot;system.batterylevel&quot;</code>, <code>&quot;user.somevar&quot;</code>, etc.</p>
+<p>The first argument can also be a table containing all the variables, in that case the remaining args are ignored.</p>
+<blockquote>
+<p><strong>Note</strong> the action functions will be given a table containing the changed variables and their value as first argument</p>
+</blockquote>
+<h3 id="onhold">onhold</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onhold<span class="ot">(</span><span class="kw">timeout</span>, <span class="ot">...)</span></code></pre>
+<p>Activated when none of the listed variables change for the <code>timeout</code> amount of time.</p>
+<ul>
+<li>if <code>timeout</code> &gt; 0 then once activated, the trigger is re-armed only when a variable changes.</li>
+<li>if <code>timeout</code>timeout &lt; 0 then the trigger is automatically re-armed.</li>
+<li><code>...</code> is a list of variable as strings.</li>
+</ul>
+<blockquote>
+<p><strong>Note</strong> the action functions will be given a table containing the variables and the value that caused the last rearm of the holding timer, as first argument</p>
+</blockquote>
+<h3 id="onthreshold">onthreshold</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">onthreshold<span class="ot">(</span><span class="kw">threshold</span>, <span class="kw">var</span>, <span class="kw">edge</span><span class="ot">)</span></code></pre>
+<p>Activated when a value traverse a <code>threshold</code> (previous and new value are opposite side of the <code>threshold</code> value) when <code>edge</code> is specified it can be one of <code>&quot;up&quot;</code>, <code>&quot;down&quot;</code>, <code>&quot;both&quot;</code> meaning only triggering on rising edge or falling edge, or on both.</p>
+<ul>
+<li>an <code>&quot;up&quot;</code> edge is detected when <code>oldval</code> &lt; <code>threshold</code> and <code>newval</code> &gt;= <code>threshold</code></li>
+<li>a <code>&quot;down&quot;</code> edge is detected when <code>oldval</code> &gt;= <code>threshold</code> and <code>newval</code> &lt; <code>threshold</code></li>
+<li>the default is <code>&quot;both&quot;</code> edge</li>
+</ul>
+<h3 id="ondeadband">ondeadband</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">ondeadband<span class="ot">(</span><span class="kw">deadband</span>, <span class="kw">var</span><span class="ot">)</span></code></pre>
+<p>Activated when a value goes outside the <code>deadband</code> range: activated if <code>abs(newval-oldval) &gt;= deadband</code>.</p>
+<p><code>oldval</code> is updated when the trigger is activated.</p>
+<h2 id="predefined-actions">Predefined actions</h2>
+<p>Actions are regular Lua functions. Most of the framework API can be used for that purpose.</p>
+<p>For typical actions, see the <a href="../agent_connector_libraries/Racon_Lua_library.html">Racon Lua library</a>.</p>
+<h2 id="filtering-and-connecting-rules">Filtering and connecting rules</h2>
+<p>The system provides two additional functions to write the rule scriplets.</p>
+<h3 id="connect">connect</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">connect</span><span class="ot">(</span><span class="kw">trigger</span>, <span class="kw">action</span><span class="ot">)</span></code></pre>
+<p>Connects a <code>trigger</code> to an <code>action</code>. The action will be executed each time the trigger is activated.</p>
+<p>Optionally some triggers will pass some parameters to the action function. See the trigger documentation for more details.</p>
+<h3 id="filter">filter</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua">filter<span class="ot">(</span><span class="kw">test</span>, <span class="kw">trigger</span><span class="ot">)</span></code></pre>
+<p>Filter a trigger given a test function.</p>
+<ul>
+<li><code>test</code> is a function that returns a boolean value: <code>true</code> means the actions are executed</li>
+<li><code>trigger</code> output of a trigger function.</li>
+</ul>
+<p>In filter returns a new trigger that has the original trigger behavior filtered by the <code>test</code> function.</p>
+<p>Example:</p>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">connect</span><span class="ot">(</span>
+    filter<span class="ot">(</span>
+           <span class="kw">function</span><span class="ot">()</span> <span class="kw">return</span> <span class="kw">not</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">externalpower</span> <span class="kw">end</span>,
+           onchange<span class="ot">(</span><span class="st">&quot;system.batterylevel&quot;</span><span class="ot">))</span>,
+    <span class="kw">function</span><span class="ot">()</span> <span class="fu">print</span><span class="ot">(</span><span class="st">&quot;Battery Level Changed&quot;</span><span class="ot">)</span> <span class="kw">end</span><span class="ot">)</span></code></pre>
+<p>will only print the battery level when it changes <em>and</em> the power cord is unplugued.</p>
+<h2 id="monitoring-variables">Monitoring variables</h2>
+<p>Each monitoring script has its own execution environment. It means that a global lua variable will not be visible from another monitoring script.</p>
+<p>Scriptlets can register events on device tree variable changes. The whole device tree is accessible, provided the scriptlet has the correct permissions.</p>
+<p>The device tree structure depends heavily on what <a href="Tree_Manager.html">Tree Manager</a> handlers (extensions) has been ported on the device.</p>
+<p>The following list is a guideline to name variables in an homogenous way across devices. Some of there variables might not be available depending on your hardware and how Mihini was ported on the device.</p>
+<h3 id="cellular">Cellular</h3>
+<table>
+<col width="19%" />
+<col width="14%" />
+<col width="26%" />
+<col width="40%" />
+<thead>
+<tr class="header">
+<th align="left">Variable name</th>
+<th align="left">Variable Type</th>
+<th align="left">Variable description</th>
+<th align="left">Available on</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">cellurar.rssi</td>
+<td align="left">integer</td>
+<td align="left">Cellular RSSI level</td>
+<td align="left">On any device that support the standard AT+CSQ AT command</td>
+</tr>
+<tr class="even">
+<td align="left">cellular.ber</td>
+<td align="left">integer</td>
+<td align="left">Cellular BER level</td>
+<td align="left">On any device that support the standard AT+CSQ AT command</td>
+</tr>
+<tr class="odd">
+<td align="left">cellular.imei</td>
+<td align="left">string</td>
+<td align="left">Cellular IMEI</td>
+<td align="left">On any device that support the standard AT+CGSN AT command</td>
+</tr>
+<tr class="even">
+<td align="left">cellular.imsi</td>
+<td align="left">string</td>
+<td align="left">SIM IMSI number</td>
+<td align="left">On any device that support the standard AT+CIMI AT command</td>
+</tr>
+</tbody>
+</table>
+<h3 id="power">Power</h3>
+<table>
+<col width="19%" />
+<col width="14%" />
+<col width="26%" />
+<col width="40%" />
+<thead>
+<tr class="header">
+<th align="left">Variable name</th>
+<th align="left">Variable Type</th>
+<th align="left">Variable description</th>
+<th align="left">Available on</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">batterylevel</td>
+<td align="left">integer</td>
+<td align="left">Level of charge of the device battery</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">externalpower</td>
+<td align="left">boolean</td>
+<td align="left">true if the device is powered by an external source</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<h3 id="memory-cpu">Memory / CPU</h3>
+<table>
+<col width="18%" />
+<col width="13%" />
+<col width="30%" />
+<col width="37%" />
+<thead>
+<tr class="header">
+<th align="left">Variable name</th>
+<th align="left">Variable Type</th>
+<th align="left">Variable description</th>
+<th align="left">Available on</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">luaramusage</td>
+<td align="left">integer</td>
+<td align="left">Quantity of memory used by the Lua VM (the one running the agent) <br />The value is the one returned by collectgarbage(&quot;count&quot;) preceded by a collectgarbage(&quot;collect&quot;) in order to provided consistent numbers. The direct consequence is that reading this variable has a non null CPU cost. Use sparingly.</td>
+<td align="left">All (included in standard lua)</td>
+</tr>
+<tr class="even">
+<td align="left">totalramavailable</td>
+<td align="left">integer</td>
+<td align="left">Total quantity of RAM available on the system</td>
+<td align="left">Linux</td>
+</tr>
+<tr class="odd">
+<td align="left">totalramused</td>
+<td align="left">integer</td>
+<td align="left">Total quantity of RAM used on the system</td>
+<td align="left">Linux</td>
+</tr>
+<tr class="even">
+<td align="left">cpuload</td>
+<td align="left">integer</td>
+<td align="left">Average CPU load</td>
+<td align="left">Linux</td>
+</tr>
+<tr class="odd">
+<td align="left">totalflashavailable</td>
+<td align="left">integer</td>
+<td align="left">Total quantity of flash available on the system</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">totalflashused</td>
+<td align="left">integer</td>
+<td align="left">Total quantity of flash used on the system</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<h3 id="networkmanager">NetworkManager</h3>
+<table>
+<col width="20%" />
+<col width="13%" />
+<col width="30%" />
+<col width="35%" />
+<thead>
+<tr class="header">
+<th align="left">Variable name</th>
+<th align="left">Variable Type</th>
+<th align="left">Variable description</th>
+<th align="left">Available on</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">netman.BEARERNAME.connected</td>
+<td align="left">boolean</td>
+<td align="left">connection state of the bearer</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">netman.BEARERNAME.ipaddr</td>
+<td align="left">string</td>
+<td align="left">ip address of the bearer</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">netman.BEARERNAME.hwaddr</td>
+<td align="left">string</td>
+<td align="left">MAC address of the bearer</td>
+<td align="left">Ethernet bearer</td>
+</tr>
+<tr class="even">
+<td align="left">netman.BEARERNAME.netmask</td>
+<td align="left">string</td>
+<td align="left">netmask address of the bearer</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">netman.BEARERNAME.gw</td>
+<td align="left">string</td>
+<td align="left">gateway address of the bearer</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">netman.BEARERNAME.nameserver1</td>
+<td align="left">string</td>
+<td align="left">dns address #1 (there can be several dns address, usually 2)</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">netman.BEARERNAME.mountdate</td>
+<td align="left">number</td>
+<td align="left">timestamp of the last successful mount</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">netman.BEARERNAME.mountretries</td>
+<td align="left">number</td>
+<td align="left">number of retries used for the last successful mount</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">netman.BEARERNAME.RX</td>
+<td align="left">number</td>
+<td align="left">number of bytes received by this bearer</td>
+<td align="left"><strong>Linux only</strong></td>
+</tr>
+<tr class="even">
+<td align="left">netman.BEARERNAME.TX</td>
+<td align="left">number</td>
+<td align="left">number of bytes transmitted by this bearer</td>
+<td align="left"><strong>Linux only</strong></td>
+</tr>
+<tr class="odd">
+<td align="left">netman.defaultbearer</td>
+<td align="left">string</td>
+<td align="left">Default (=selected) bearer: bearer used as default route, variable value is the BEARERNAME</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<h2 id="monitoring-engine-api">Monitoring Engine API</h2>
+<p>The Monitoring Engine can install and load scripts dynamically.</p>
+<h3 id="load-scriptlets">Load scriptlets</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Load a monitoring script in memory.</span>
+<span class="co">-- name is a string name</span>
+<span class="co">-- script can be either</span>
+<span class="co">--              a string containing a monitoring script</span>
+<span class="co">--              a table string buffer (list of chunk of string)</span>
+<span class="co">--              or an actual Lua function containing the script</span>
+load<span class="ot">(</span><span class="kw">name</span>, <span class="kw">script</span><span class="ot">)</span>
+
+
+<span class="co">-- Unload (and stop) a monitoring script from memory.</span>
+<span class="co">-- name is a string name, given at loading time (see load() )</span>
+unload<span class="ot">(</span><span class="kw">name</span><span class="ot">)</span></code></pre>
+<h3 id="install-scriptlets">Install scriptlets</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Install a monitoring script from a file. Installing a script with an already used name will cause the</span>
+<span class="co">-- initial script to be unloaded and uninstalled (replaced by this script)</span>
+<span class="co">--      name is the name given to the script</span>
+<span class="co">--      filename is the path of the file to install</span>
+<span class="co">--      enable is a boolean. true means that the script will enabled (started)</span>
+install<span class="ot">(</span><span class="kw">name</span>, <span class="kw">filename</span>, <span class="kw">enable</span><span class="ot">)</span>
+
+
+<span class="co">-- Uninstall a monitoring script.</span>
+<span class="co">-- This function automatically stop the given script if it was enabled (running).</span>
+<span class="co">--      name is the name given at installation time.</span>
+uninstall<span class="ot">(</span><span class="kw">name</span><span class="ot">)</span></code></pre>
+<h3 id="manage-scriptlets">Manage scriptlets</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="co">-- Set the enable flag on an already installed script.</span>
+<span class="co">-- Enabling a disabled script will cause a loading, and similarly, disabling an enabled</span>
+<span class="co">-- script will cause an unloading.</span>
+<span class="co">--      name is the name of the script to configure</span>
+<span class="co">--      set is a boolean: true will enable the script, false will disable the script</span>
+enable<span class="ot">(</span><span class="kw">name</span>, <span class="kw">set</span><span class="ot">)</span>
+
+
+<span class="co">-- List installed or loaded scripts.</span>
+<span class="co">--      type: if type is set to &quot;installed&quot;, list the installed scripts</span>
+<span class="co">--            if type is set to &quot;loaded&quot;, list the loaded scripts</span>
+list<span class="ot">(</span><span class="fu">type</span><span class="ot">)</span></code></pre>
+<h2 id="scriptlets-examples">Scriptlets Examples</h2>
+<h3 id="flip-a-gpio-every-10-seconds">Flip a GPIO every 10 seconds</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">connect</span><span class="ot">(</span>
+    onperiod<span class="ot">(</span><span class="dv">10</span><span class="ot">)</span>,
+    <span class="kw">function</span><span class="ot">()</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">gpio</span><span class="ot">[</span><span class="dv">4</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">not</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">gpio</span><span class="ot">[</span><span class="dv">4</span><span class="ot">]</span> <span class="kw">end</span><span class="ot">)</span></code></pre>
+<h3 id="activate-a-gpio-when-battery-is-low">Activate a GPIO when battery is low</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">connect</span><span class="ot">(</span>
+    onthreshold<span class="ot">(</span><span class="dv">10</span>, <span class="st">&quot;system.batterylevel&quot;</span>, <span class="st">&quot;down&quot;</span><span class="ot">)</span>,
+    <span class="kw">function</span><span class="ot">()</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">gpio</span><span class="ot">[</span><span class="dv">4</span><span class="ot">]</span> <span class="ot">=</span> <span class="kw">true</span> <span class="kw">end</span><span class="ot">)</span></code></pre>
+<h3 id="send-an-alarm-on-high-temperature">Send an alarm on high temperature</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="kw">local</span> <span class="kw">t</span> <span class="ot">=</span> onthreshold<span class="ot">(</span><span class="dv">55</span>, <span class="st">&quot;system.temperature&quot;</span>, <span class="st">&quot;up&quot;</span><span class="ot">)</span>
+<span class="kw">local</span> <span class="kw">a</span> <span class="ot">=</span> <span class="kw">function</span><span class="ot">()</span>
+    pushdata<span class="ot">(</span><span class="st">&quot;alarm.temperature&quot;</span>, <span class="ot">{</span><span class="kw">value</span> <span class="ot">=</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">temperature</span>, <span class="kw">timestamp</span> <span class="ot">=</span> time<span class="ot">()})</span>
+<span class="kw">end</span>
+<span class="fu">connect</span><span class="ot">(</span><span class="kw">t</span>, <span class="kw">a</span><span class="ot">)</span></code></pre>
+<h3 id="print-when-battery-level-changes">Print when battery level changes</h3>
+<pre class="sourceCode lua"><code class="sourceCode lua"><span class="fu">connect</span><span class="ot">(</span>
+    filter<span class="ot">(</span>
+           <span class="kw">function</span><span class="ot">()</span> <span class="kw">return</span> <span class="kw">not</span> <span class="kw">system</span><span class="ot">.</span><span class="kw">externalpower</span> <span class="kw">end</span>,
+           onchange<span class="ot">(</span><span class="st">&quot;system.batterylevel&quot;</span><span class="ot">))</span>,
+    <span class="kw">function</span><span class="ot">()</span> <span class="fu">print</span><span class="ot">(</span><span class="st">&quot;Battery Level Changed&quot;</span><span class="ot">)</span> <span class="kw">end</span><span class="ot">)</span></code></pre>
+</body>
+</html>

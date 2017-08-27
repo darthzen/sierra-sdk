@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="network-manager">Network Manager</h1>
+<h1 id="overview">Overview</h1>
+<p>The NetworkManager is responsible for initializing bearers and selecting the appropriate one for external communications.</p>
+<h1 id="configuration">Configuration</h1>
+<p>The NetworkManager configuration parameters are listed under the item network in the ConfigStore:</p>
+<ul>
+<li>network.activate = true, enable / disable the NetworkManager. If activated, the NetworkManager will be automatically started.</li>
+<li>network.maxfailure = 2, if defined this value specifies the number max of failure before reboot on bearer selection (see Connecting state of figure 1).</li>
+<li>network.bearerpriority = {&quot;GPRS&quot;, &quot;ETH&quot;}, list of available bearers ordered by priority. The NetworkManager will search, in this list, for the first appropriate bearer for external communications.</li>
+<li>network.maxconnectiontime = 300, *<em>[OPTIONAL can be overridden per bearer]</em>* maximum connection time for a bearer selected in the bearerpriority list if not the first of the list.</li>
+<li>network.retry = 5, <strong><em>[OPTIONAL can be overridden per bearer]</em></strong> number of retries before trying to connect to the next bearer in list.</li>
+<li>network.retryperiod = 10, <strong><em>[OPTIONAL can be overridden per bearer]</em></strong> number of seconds to wait before retrying to connect to a bearer</li>
+<li>network.smsfallback = &quot;+33102345879&quot;, activate / deactivate (if nil) the sms fall back mode</li>
+<li>network.pinghost = &quot;www.google.com&quot;, host for tcpping</li>
+<li>network.pingport = &quot;www.google.com&quot;, port for tcpping</li>
+</ul>
+<p>Other settings are bearer specific and in the general form of network.bearer.BEARERNAME.bearersetting</p>
+<ul>
+<li>network.bearer.GPRS ={apn = &quot;some APN&quot;, username = &quot;an optional username&quot;, password = &quot;an optional password&quot;, retry='an optional retry', retryperiod='an optional retry period'}
+<ul>
+<li>if no apn is define, the GPRSbearer behavior depends of the target.</li>
+</ul></li>
+<li>network.bearer.ETH = { mode= &quot;dhcp&quot;, retry='an optional retry', retryperiod='an optional retry period'} }</li>
+<li>or network.bearer.ETH = {mode = &quot;static&quot;, address = &quot;10.0.0.189&quot;, netmask = &quot;255.255.0.0&quot;, broadcast = &quot;10.0.255.255&quot;, gateway= &quot;10.0.0.254&quot;, nameserver1 = &quot;10.6.0.224&quot;, nameserver2 = &quot;10.6.0.225&quot;, retry='an optional retry', retryperiod='an optional retry period'} }</li>
+</ul>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<p>If network.retry and network.retryperiod are not specified, specific bearer configuration is <strong>mandatory</strong></p>
+</blockquote>
+<h1 id="architecture">Architecture</h1>
+<p>The NetworkManager is composed of two modules:</p>
+<ul>
+<li>NetworkManager, which holds all the connection logic, mainly initializing and selecting the appropriate bearer.<br /> This module is the interface of the NetworkManager.</li>
+<li>Bearer, which represents and monitors a physical bearer, mainly mounting and unmounting a physical bearer.<br /> This module is not intended to be used by a client.</li>
+</ul>
+<h1 id="functionalities">Functionalities</h1>
+<p>The following diagram presents the initialization of the NetworkManager (network.activate = true).<br /> <img src="images/Network_Manager_init.png" /><br /> Figure 1: NetworkManager init()<br /><br /> - The NetworkManager is started in a <strong>disconnected</strong> state - When the Agent starts up, if ConfigStore parameter network.activate is true, the NetworkManager is required and the init() function is called - The init function initializes one at a time each bearer declared in the ConfigStore (network.bearer.BEARERNAME) - The connect function searches according to the network.bearerpriority list an available bearer for external communications. - If an appropriate bearer is found the NetworkManager emits the signal (CONNECTED), if not (DISCONNECTED). - The NetworkManager will trigger a reboot when the number of failure equals maxfailure (only if maxfailure is defined in the ConfigStore).</p>
+<p>The NetworkManager allow to connect a specific bearer at anytime. The following diagram illustrates this feature.<br /> <img src="images/Network_Manager_connect.png" /><br /> Figure 2: NetworkManager connect(bearer)<br /><br />The Mounting and Selecting stages are describes and the two following diagrams<br /> <img src="images/Network_Manager_mount.png" /><br /> Figure 3: NetworkManager mount()<br /> <img src="images/Network_Manager_select.png" alt="image" /><br /> Figure 4: NetworkManager select()</p>
+<h4 id="server-connection">Server connection</h4>
+<p>The NetworkManager first mission is to ensure connectivity for a communication action (i.e communication to the server).<br /> The following figure illustrates the connection algorithm.<br /> <img src="images/Network_Manager_connection_algorithm.png" /><br /> Figure 5: Ensure connectivity for a communication action</p>
+<h1 id="networkmanager-api">NetworkManager API</h1>
+<h4 id="functions-calls">Functions calls</h4>
+<ul>
+<li>init(), initializes the NetworkManager and all bearers.</li>
+<li>connect(nil or bearername, check_route), tries to connect to the given bearer (if bearername is specified) or tries to connect to a bearer from the <em>network.bearerpriority</em> list (selecting the first appropriate bearer).<br /> If a connection is established the CONNECTED signal is raised (see <a href="Network%2BManager.html">events</a>).<br /> If check_route equals true, the selected bearer will be tested to see if a external communication is possible, In this case if the connection failed the DISCONNECTED signal is raised.</li>
+<li>getStatus(): return current bearer and current mode (auto or manual)</li>
+<li>tryConnectedAction(action, ...) returns action(...) results when the network is working and nil followed by an error on network error. I.E it returns the results of the function action() if its first result is non nil, otherwise try to verify/remount the network connection</li>
+</ul>
+<h4 id="events">Events</h4>
+<p><br /> It raises specifics events on connection / deconnection:</p>
+<ul>
+<li>on connection =&gt; signal(&quot;netman&quot;, &quot;CONNECTED&quot;, <em>bearername</em>)</li>
+<li>on disconnection =&gt; signal(&quot;netman&quot;, &quot;DISCONNECTED&quot;)</li>
+</ul>
+<p>where <em>bearername</em> can be GPRS, ETH...<br /> All those events are raised with &quot;netman&quot; as emitter</p>
+<h1 id="bearers-api">Bearers API</h1>
+<h4 id="function-calls">Function calls</h4>
+<p>Bearers are instancied and initialized by the NetworkManager. They must provide following functions:</p>
+<ul>
+<li>new(bearername, automount), returns an new bearer instance of 'bearername' bearer. initparams is a table that will be given as parameter (key=value) when initializing the bearer shell script<br /> If automount equals true, the bearer will be automatically mounted if disconnected.</li>
+<li>mount(), mounts the connection (unmount and mount)</li>
+<li>isconnected(), returns a boolean stating the connection status (false: not connected, true: connected)</li>
+</ul>
+<h4 id="linux-target-specific-bearer-executables">Linux target specific bearer executables</h4>
+<p>In order to do the real work the bearer instance call an executable to mount/unmount the Linux network interface. The executable name is the bearer name: BEARERNAME, like: ETH or GPRS.</p>
+<p>Those executables are meant to be target specific, while bearer instance logic must be related to embedded system only.<br /> Those executables must use system status code and stdout to sent data to bearer instance within Agent.<br /> As the only constraint is to be executable, those features can be done by a shell script (like those provided in Agent), or using any other language that produces linux executable.</p>
+<blockquote>
+<p><strong>WARNING</strong></p>
+<ul>
+<li>Executables are to be put in <strong>bin</strong> directory in Agent runtime</li>
+<li>Executables must have correct access permissions.</li>
+<li>All parameters are given to executables using shell command line. Example: ./bin/ETH cmdname param1 param2 param3</li>
+<li>Output data are all <strong>mandatory</strong> (unless otherwise specified)</li>
+<li>Output data on stdout can be set to <strong>NULL</strong> value to specified that a data can not be retrieved. Example: in a shell script: echo &quot;outputdata1&quot; &quot;NULL&quot; &quot;outputdata3&quot;, set data 2 to NULL.</li>
+</ul>
+</blockquote>
+<p>The script take a &quot;command&quot; as first parameter. Depending on the command, more parameters may follow.</p>
+<ul>
+<li><strong>init</strong>: initialize the network interface parameters.
+<ul>
+<li>params: It takes as argument some specifics configuration like PIN number, GPRSAPN...</li>
+<li>stdout: the name of the corresponding Linux network interface</li>
+<li>exit status: 0 if bearer init was successful, a positive value in case of error</li>
+</ul></li>
+<li><strong>start</strong>: mount the network interface (synchronous).
+<ul>
+<li>params: the name of the linux interface to be mounted (returned by the init method)</li>
+<li>stdout: IP address, Hardware Address (MAC address), netmask, gateway (ip), dns1 (ip), dns2 (ip), ..., dnsn (ip)</li>
+<li>exit status: 0 if the network is mounted or a positive value in case of error</li>
+</ul></li>
+<li><strong>stop</strong>: unmount the network interface (synchronous).
+<ul>
+<li>params: the name of the linux interface to be mounted (returned by the init method)</li>
+<li>stdout: N.A.</li>
+<li>exit status: 0 if the network is unmounted or a positive value in case of error</li>
+</ul></li>
+<li><strong>default</strong>: set the bearer as default route
+<ul>
+<li>params: interface name, gateway address, dns address(es)</li>
+<li>stdout: N.A.</li>
+<li>exit status: 0 if the action is successful or a positive value in case of error</li>
+</ul></li>
+<li><strong>stats</strong>: get dynamic statistics of the bearer
+<ul>
+<li>params: interface name</li>
+<li>stdout: RX bytes, TX bytes</li>
+<li>exit status: 0 if the action is successful or a positive value in case of error</li>
+</ul></li>
+</ul>
+</body>
+</html>

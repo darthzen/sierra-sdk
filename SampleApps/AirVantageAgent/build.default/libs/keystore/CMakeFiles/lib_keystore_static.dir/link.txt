@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../../static-libs/libkeystore_static.a  CMakeFiles/lib_keystore_static.dir/keystore.c.o
+/usr/bin/ranlib ../../static-libs/libkeystore_static.a

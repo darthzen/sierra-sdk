@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -O3 -DNDEBUG   -shared -Wl,-soname,yajl.so -o ../../runtime/lua/yajl.so CMakeFiles/yajl.dir/lua_yajl.c.o ../../runtime/lib/libyajl.so -Wl,-rpath,/root/ws/SLQSrelease/SLQS04.00.08/SampleApps/AirVantageAgent/build.default/runtime/lib 

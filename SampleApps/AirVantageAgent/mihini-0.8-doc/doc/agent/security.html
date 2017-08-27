@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="default.css" type="text/css" />
+  <script type="text/javascript">
+  
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-594061-12']);
+    _gaq.push(['_setDomainName', 'eclipse.org']);
+    _gaq.push(['_trackPageview']);
+  
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  
+  </script>
+</head>
+<body>
+<h1 id="m3da-server-connection-and-security">M3DA Server connection and security</h1>
+<h2 id="overview">Overview</h2>
+<p>Data transmission from the agent to the server are handled in M3DA. It goes through several modules:</p>
+<ul>
+<li><p>A transport module, which exchanges LTN12 byte streams with the server, called <code>m3da.transport.xxx</code>. Currently supported transport layers are <code>tcp</code> and <code>http</code>.</p></li>
+<li><p>A session module, which converts between M3DA messages on the agent side, and byte streams on the transport side. Messages come from the agent as LTN12 source factories, i.e. functions returning an LTN12 source; the use of LTN12 allows to stream large messages without holding them entirely in RAM; they're passed as factories, because the session might have to emit them more than once, e.g. if an authentication failure occurred at the first attempt.</p></li>
+</ul>
+<p>In the other direction, server messages going to the agent, they're received by the session through an LTN12 sink, then pushed, one serialized message at a time, to a callback passed at initialization time. Those messages are expected to be rather short, hence are passed as strings rather than streams.</p>
+<p>The session layer is in charge of putting sent messages into M3DA envelopes (and extracting incomping messages from their envelopes). Currently supported session layer are <code>m3da.session.default</code> and <code>m3da.session.security</code>, the latter supporting mandatory authentication, plus optional encryption and password provisioning.</p>
+<ul>
+<li><p>The provisioning module is triggered by the security session module when it lacks its authentication+encryption password. It uses a registration password (generally shared by several devices) to retrieve an actual password (proper to a single device).</p></li>
+<li><p>agent.srvcon handles communications for the agent: it initializes transport and session layers, accumulates data streams to send to the server, dispatches incoming server messages to the appropriate asset connector.</p></li>
+</ul>
+<h2 id="detailed-api">Detailed API</h2>
+<h3 id="transport-modules">Transport modules</h3>
+<p>Transport modules must have a function <code>new(url)</code>, which returns <code>nil</code> + error message upon failure, or an object with the following properties:</p>
+<ul>
+<li><p>a <code>:send(src)</code> method, sending the content of an LTN12 source to the server, returning a non-nil value upon success, <code>nil</code>+error message upon failure;</p></li>
+<li><p>a <code>sink</code> field, to be set externally, which contains an LTN12 sink where data coming from the server are fed.</p></li>
+</ul>
+<p>The <code>url</code> parameter of the <code>new()</code> function must be sufficient to fully configure the transport layer, and the scheme part of the url (the initial word before <code>&quot;://&quot;</code>) must match the last part of the module name.</p>
+<h3 id="session-modules">Session modules</h3>
+<p>Session modules must have a function <code>new(cfg)</code>, which returns <code>nil</code> + error message upon failure, or an object with the following properties:</p>
+<ul>
+<li><p>a <code>:send(src_factory, headers)</code> method, whose parameter is a function returning an LTN12 source. The source must stream a serialized M3DA message, and if <code>src_factory</code> is called more than once, it must be able to serve the source more than once. If <code>src_factory</code> is called a second time, returning a second source, the first source will not be used anymore. <code>:send()</code> return non-<code>nil</code>, or <code>nil</code> + error message. <code>headers</code> is an optional table of key/value pairs, which will be passed as the envelope header (inner envelope header in case of secured connection). This table will be modified by <code>:send()</code>: it will add an <code>id</code> field in it.</p></li>
+<li><p>a <code>:newsink()</code> method, which returns an LTN12 sink. This sink will receive data from the transport layer; those data represent (possibly partial) M3DA envelopes sent by the server to the agent.</p></li>
+<li><p>optionally, a <code>:start()</code> method. If it exists, it will be run with the network connection unabled before any other send/receive operation is requested from the session instance object. If this method exists and returns <code>nil</code> + message, the session object will be considered invalid. This mechanism is used by security session objects to provision encryption and authentication keys when they are missing.</p></li>
+</ul>
+<p>The <code>cfg</code> parameter for <code>new()</code> is a table. It must have the following fields, plus optionally some others specific to a given session type:</p>
+<ul>
+<li><p><code>transport</code> is an already initialized transport object. The session initializer must set its <code>sink</code> field.</p></li>
+<li><p><code>msghandler</code> is a function which will be called by the session object everytime a message is received from the server. This function takes a single parameter, which consists of one or several M3DA messages serialized into a string.</p></li>
+<li><p><code>localid</code> is the device's identifier.</p></li>
+<li><p><code>peerid</code> is the server's identifier.</p></li>
+</ul>
+<h3 id="agent.srvcon">agent.srvcon</h3>
+<p>The server connector has the following public APIs:</p>
+<ul>
+<li><p><code>init()</code> initializes the module; it retrieves its parameters from <code>agent.config</code>.</p></li>
+<li><p><code>pushtoserver(src_factory, callback)</code> accumulates data to be sent to the server. Data is represented as an LTN12 source factory; an optional callback function can be provided: it will be executed once the data will have been successfully sent to the server.</p></li>
+<li><p><code>connect(delay)</code> ensures that all data accumulated with <code>pushtoserver()</code> and not yet successfully sent, will be sent to the server in no more than <code>delay</code> seconds.</p></li>
+</ul>
+<h2 id="key-management">Key management</h2>
+<p>Key are stored on embedded devices in a file <code>crypto/crypto.keys</code>. They are obfuscated with an AES key, but this doesn't constitute proper encryption, as the key is in the code and can be retrieved by someone with access to the hardware. The possibility is contemplated, for future versions of the agent, to let users plug alternative obfuscation methods in the system.</p>
+<p>Another risk mitigation measure is that keys retrieved from the key store are never passed directly to Lua. Instead, all Lua cryptographic primitives can access keys through their index in the key store. This means that every key used to encrypt or sign data must be put in the store, even if it is derived from a key already present in the store.</p>
+<p>The keys are, in order:</p>
+<pre><code>PROVIS_KS = MD5(server_id .. MD5(registration_password))
+PROVIS_KD = MD5(device_id .. MD5(registration_password))
+CRYPTO_K  = MD5(password)
+AUTH_KS   = MD5(server_id .. MD5(password))
+AUTH_KD   = MD5(device_id .. MD5(password))</code></pre>
+<p>Where <code>registration_password</code> is the provisioning secret, generally common to a series of devices, and used to download the actual signing and encryption key <code>CRYPTO_K</code>. password is the final, device-specific secret used to generate the actual security keys.</p>
+<p>The keys have indexes 1...5 in Lua. Beware that in the keystore and the C code, they have indexes 0...4.</p>
+<p>Registration passwords as well as actual passwords can be provisionned in a device through telnet as follows:</p>
+<ul>
+<li>after building the agent, run <code>make agent_provisioning</code> in the build directory (the manual key provisioning system isn't built included by default);</li>
+<li>launch the agent and connect through telnet on port 2000;</li>
+<li>then you can set the preshared secret: <code>require 'agent.provisioning' .registration_password &quot;foobar&quot;</code></li>
+<li>you can also set the cipher+authentication password directly: <code>require 'agent.provisioning' .password &quot;letMeIn&quot;</code></li>
+</ul>
+<p>There's also a C API, but at a lower level; you have to compute the keys yourself before writing them down in the store. The writing is preformed by <code>set_plain_bin_keys( first_key, n_keys, keys)</code>, in <code>libs/keystore/keystore.{c,h}</code>.</p>
+<p>In the keystore, keys are ciphered with an AES-128 key embedded in the code. Moreover, this key is rotated n bytes to the left to encrypt the key at index n (this prevents identical keys from having the same encrypted forms).</p>
+</body>
+</html>
